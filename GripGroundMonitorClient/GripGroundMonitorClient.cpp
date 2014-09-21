@@ -9,6 +9,9 @@ EPMTelemetryPacket epmPacket;
 
 // Default path for packet storage is the current directory.
 char *destination_directory = ".\\";
+char rtPacketOutputFilePath[1024];
+char hkPacketOutputFilePath[1024];
+
 
 /***********************************************************************************/
 
@@ -59,26 +62,13 @@ int fOutputDebugString( const char *format, ... ) {
 
 }
 
-void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *prefix ) {
+void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename ) {
 
 	FILE	*fp;
 	errno_t	return_code;
 	size_t	items_written;
-	int		bytes_written;	
 
-	char filename[1024];
-	SYSTEMTIME	systime;
-
-	// Create a unique filename based on the current date and time.
-	GetSystemTime( &systime );
-	bytes_written = sprintf_s( filename, sizeof( filename ), "%s\\%s.%04d.%02d.%02d.%02d.%02d.%02d.%03d.pkt", 
-		destination_directory, prefix, 
-		systime.wYear, systime.wMonth, systime.wDay, systime.wHour, systime.wMinute, systime.wSecond, systime.wMilliseconds );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
-	}
-	return_code = fopen_s( &fp, filename, "wb" );
+	return_code = fopen_s( &fp, filename, "a+b" );
 	if ( return_code ) {
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary write.\nError code: %s", filename, return_code );
 		exit( return_code );
@@ -93,15 +83,15 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *prefix )
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %s", filename, return_code );
 		exit( return_code );
 	}
-	printf( "%s written.\n", filename );
+	printf( "    Appended to %s.\n", filename );
 
 }
 
 void outputHK ( EPMTelemetryPacket *packet ) {
-	outputPacket( packet, hkPacketLengthInBytes, "HK" );
+	outputPacket( packet, hkPacketLengthInBytes, hkPacketOutputFilePath  );
 }
 void outputRT ( EPMTelemetryPacket *packet ) {
-	outputPacket( packet, rtPacketLengthInBytes, "RT" );
+	outputPacket( packet, rtPacketLengthInBytes, rtPacketOutputFilePath );
 }
 
 int __cdecl main(int argc, char **argv) 
@@ -111,6 +101,7 @@ int __cdecl main(int argc, char **argv)
     struct addrinfo *result = NULL, *ptr = NULL, hints;
     int iResult;
 
+	// Parse the command line.
 	char *server_name = "localhost";
 	if ( argc < 2 ) printf( "Using default server name: %s\n", server_name );
 	else {
@@ -122,6 +113,10 @@ int __cdecl main(int argc, char **argv)
 		destination_directory = argv[2];
 		printf( "Using command-line packet output directory: %s\n", destination_directory );
 	}
+
+	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
+	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
+	fprintf( stderr, "\n" );
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -136,8 +131,6 @@ int __cdecl main(int argc, char **argv)
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-
-
     iResult = getaddrinfo( server_name, EPMport, &hints, &result );
     if ( iResult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -146,58 +139,64 @@ int __cdecl main(int argc, char **argv)
     }
 
     // Attempt to connect to an address until one succeeds
-    for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+	printf( "Waiting for connection with host %s on port %s.\n", server_name, EPMport );
+	printf( "Will wait until connection achieved or <ctrl-C>.\n"  );
 
-        // Create a SOCKET for connecting to server
-        ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-        if (ConnectSocket == INVALID_SOCKET) {
-            printf("socket failed with error: %ld\n", WSAGetLastError());
-            WSACleanup();
-            return 104;
-        }
+	while ( 1 ) {
+		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+			// Create a SOCKET for connecting to server
+			ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+			if (ConnectSocket == INVALID_SOCKET) {
+				printf("socket failed with error: %ld\n", WSAGetLastError());
+				WSACleanup();
+				return 104;
+			}
+			// Try to connect to server.
+			iResult = connect( ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+			// If no error, we got a connection. 
+			// Break out of the loop to use this connection.
+			if (iResult != SOCKET_ERROR) break;
+			// Otherwise, try the next element in the list returned by getaddrinfo.
+			else {
+				closesocket(ConnectSocket);
+				ConnectSocket = INVALID_SOCKET;
+			}
+		}
+		// If we get here, it's either because we managed to connect or
+		//  because there are no more items to try. In the latter case,
+		//  ConnectSocket will have the value INVALID_SOCKET.
+		// If we have a valid connect break out of the loop that is waiting for one.
+		if ( ConnectSocket != INVALID_SOCKET ) break;
+		// Otherwise, show some progress and loop back for another try.
+		else printf( "." );
+	}
 
-        // Connect to server.
-        iResult = connect( ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-        if (iResult == SOCKET_ERROR) {
-            closesocket(ConnectSocket);
-            ConnectSocket = INVALID_SOCKET;
-            continue;
-        }
-        break;
-    }
+	// We have a connection. 
+	printf( "\nConnection established with server.\n\n" );
 
+	// We no longer need the address info.
     freeaddrinfo(result);
 
-    if (ConnectSocket == INVALID_SOCKET) {
-		OutputDebugString( "Unable to connect to server!\n" );
-        printf("Unable to connect to server!\n");
-        WSACleanup();
-        return 105;
-    }
+	// We have a connection and are ready to start receiving packets.
+	// Create the file names that will hold the packets. 
+	// The filenames are based on today's date.
+	SYSTEMTIME	systime;
+	int	bytes_written;
+	GetSystemTime( &systime );
+	bytes_written = sprintf_s( rtPacketOutputFilePath, sizeof( rtPacketOutputFilePath ), "%s\\RT.%04d.%02d.%02d.pkt", 
+		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
+	if ( bytes_written < 0 ) {
+			OutputDebugString( "Error in sprintf().\n" );
+			exit( -1 );
+	}
+	bytes_written = sprintf_s( hkPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s\\HK.%04d.%02d.%02d.pkt", 
+		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
+	if ( bytes_written < 0 ) {
+			OutputDebugString( "Error in sprintf().\n" );
+			exit( -1 );
+	}
 
-#if 0
-    // Send an initial buffer
-    iResult = send( ConnectSocket, sendbuf, (int)strlen(sendbuf)+1, 0 );
-    if (iResult == SOCKET_ERROR) {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 106;
-    }
-
-    printf("Bytes Sent: %ld\n", iResult);
-
-    // shutdown the connection since no more data will be sent
-    iResult = shutdown(ConnectSocket, SD_SEND);
-    if (iResult == SOCKET_ERROR) {
-        printf("shutdown failed with error: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 107;
-    }
-#endif 
-
-    // Receive as long as we get packets from the server or until <ctrl-C>.
+	// Receive as long as the server stays connected or until <ctrl-C>.
     do {
 
         iResult = recv(ConnectSocket, epmPacket.buffer, EPM_BUFFER_LENGTH, 0);
@@ -208,9 +207,9 @@ int __cdecl main(int argc, char **argv)
              printf("Bytes received: %4d - flushing (overrun).\n", iResult);
 		}
         else if ( iResult > 0 ) {
-            printf("Bytes received: %4d", iResult);
+            printf("Bytes: %4d", iResult);
 			if ( epmPacket.header.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) printf( " - flushing (non EPM).\n" ); 
-			else printf( " TM Code 0x%04x  TM Counter %03d\n", epmPacket.header.TMIdentifier, epmPacket.header.TMCounter );
+			else printf( " TM Code 0x%04x  TM Counter %03d EPM Time %lf\n", epmPacket.header.TMIdentifier, epmPacket.header.TMCounter, EPMtoSeconds( epmPacket ) );
 			switch ( epmPacket.header.TMIdentifier ) {
 			case GRIP_HK_ID:
 				printf( "    Processing House Keeping Packet.\n" );
@@ -228,15 +227,18 @@ int __cdecl main(int argc, char **argv)
 
 			}
 		}
-        else if ( iResult == 0 )printf("Connection closed\n");
-        else printf("recv failed with error: %d\n", WSAGetLastError());
 
-    } while( iResult > 0 );
+    } while( iResult > 0 ); // End loop if connection is closed or on error.
+	
+	// Show what caused us to exit the receiver loop.
+	if ( iResult == 0 )printf("\nConnection closed by host.\n");
+    else printf("\nrecv failed with error: %d\n", WSAGetLastError());
 
-    // cleanup
+    // In this version, if the server closes the connection, we quit as well.
     closesocket(ConnectSocket);
     WSACleanup();
 	printf( "Press <return>\n" );
+	getchar();
 
 	return 0;
 }
