@@ -9,9 +9,10 @@ EPMTelemetryPacket epmPacket;
 
 // Default path for packet storage is the current directory.
 char *destination_directory = ".\\";
+
+// Buffers to hold the path to the packet caches.
 char rtPacketOutputFilePath[1024];
 char hkPacketOutputFilePath[1024];
-
 
 /***********************************************************************************/
 
@@ -70,7 +71,7 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 
 	return_code = fopen_s( &fp, filename, "a+b" );
 	if ( return_code ) {
-		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary write.\nError code: %s", filename, return_code );
+		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary write.\nError code: %d", filename, return_code );
 		exit( return_code );
 	}
 	items_written = fwrite( packet, n_bytes, 1, fp );
@@ -80,7 +81,7 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 	}
 	return_code = fclose( fp );
 	if ( return_code ) {
-		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %s", filename, return_code );
+		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %d", filename, return_code );
 		exit( return_code );
 	}
 	printf( "    Appended to %s.\n", filename );
