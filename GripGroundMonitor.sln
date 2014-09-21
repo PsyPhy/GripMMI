@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GripGroundMonitorClient", "GripGroundMonitorClient\GripGroundMonitorClient.vcxproj", "{26C677E6-BBA3-4406-9E10-CE856AAC42F2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GRIPserver2", "..\GRIPserver2\GRIPserver2\GRIPserver2.vcxproj", "{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSimultaneousReadFromCache", "TestSimultaneousReadFromCache\TestSimultaneousReadFromCache.vcxproj", "{41255638-1471-465A-AF4F-46769D6DE735}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Useful", "Useful\Useful.vcxproj", "{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GRIPserver2", "GRIPserver2\GRIPserver2.vcxproj", "{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +22,6 @@ Global
 		{26C677E6-BBA3-4406-9E10-CE856AAC42F2}.Debug|Win32.Build.0 = Debug|Win32
 		{26C677E6-BBA3-4406-9E10-CE856AAC42F2}.Release|Win32.ActiveCfg = Release|Win32
 		{26C677E6-BBA3-4406-9E10-CE856AAC42F2}.Release|Win32.Build.0 = Release|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.Build.0 = Debug|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.ActiveCfg = Release|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.Build.0 = Release|Win32
 		{41255638-1471-465A-AF4F-46769D6DE735}.Debug|Win32.ActiveCfg = Debug|Win32
 		{41255638-1471-465A-AF4F-46769D6DE735}.Debug|Win32.Build.0 = Debug|Win32
 		{41255638-1471-465A-AF4F-46769D6DE735}.Release|Win32.ActiveCfg = Release|Win32
@@ -34,6 +30,10 @@ Global
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Debug|Win32.Build.0 = Debug|Win32
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Release|Win32.ActiveCfg = Release|Win32
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Release|Win32.Build.0 = Release|Win32
+		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.Build.0 = Debug|Win32
+		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.ActiveCfg = Release|Win32
+		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
