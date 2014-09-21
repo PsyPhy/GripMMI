@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <tchar.h>
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys\stat.h>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")

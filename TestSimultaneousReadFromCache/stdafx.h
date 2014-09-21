@@ -7,9 +7,13 @@
 
 #include "targetver.h"
 
+#include <Windows.h>
 #include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys\stat.h>
 
 
 

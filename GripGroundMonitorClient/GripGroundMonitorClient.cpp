@@ -65,21 +65,21 @@ int fOutputDebugString( const char *format, ... ) {
 
 void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename ) {
 
-	FILE	*fp;
+	int		fid;
 	errno_t	return_code;
-	size_t	items_written;
+	size_t	bytes_written;
 
-	return_code = fopen_s( &fp, filename, "a+b" );
+	return_code = _sopen_s( &fid, filename, _O_CREAT | _O_WRONLY | _O_APPEND | _O_BINARY, _SH_DENYWR, _S_IREAD | _S_IWRITE );
 	if ( return_code ) {
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary write.\nError code: %d", filename, return_code );
 		exit( return_code );
 	}
-	items_written = fwrite( packet, n_bytes, 1, fp );
-	if ( items_written != 1 ) {
+	bytes_written = _write( fid, packet, n_bytes );
+	if ( bytes_written != n_bytes ) {
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error writing to %s.", filename  );
-		exit( return_code );
+		exit( -1 );
 	}
-	return_code = fclose( fp );
+	return_code = _close( fid );
 	if ( return_code ) {
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %d", filename, return_code );
 		exit( return_code );

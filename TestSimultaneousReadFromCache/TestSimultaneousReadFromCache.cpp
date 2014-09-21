@@ -44,30 +44,40 @@ int _tmain(int argc, char *argv[])
 	while ( 1 ) {
 
 		char *filename = rtPacketOutputFilePath;
+		int  fid;
 		packet = &epmPacket;
 		int packets_read = 0;
+		int bytes_read;
 		int return_code;
-		FILE *fp;
+		unsigned short previousTMCounter = 0;
 
 		fprintf( stderr, "Openning ... " );
-		fp = fopen( filename, "rb" );
+		return_code = _sopen_s( &fid, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IWRITE | _S_IREAD  );
 		fprintf( stderr, "open" );
-		if ( !fp ) {
+		if ( return_code ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary read.", filename );
 			exit( -1 );
 		}
 
-		while ( 1 == fread( packet, rtPacketLengthInBytes, 1, fp ) ) {
+		while ( rtPacketLengthInBytes == (bytes_read = _read( fid, packet, rtPacketLengthInBytes )) ) {
 			packets_read++;
 			fprintf( stderr, "." );
 		}
-		if ( ferror( fp ) ) {
-			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error reading from %s.", filename  );
-			exit( return_code );
+		if ( bytes_read < 0 ) {
+			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error reading from %s.", filename );
+			exit( -1 );
+		}
+		if ( packet->header.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || packet->header.TMIdentifier != GRIP_RT_ID ) {
+			fMessageBox( MB_OK, "GripGroundMonitorClient", "Unrecognized packet from %s.", filename );
+			exit( -1 );
+		}
+		if ( packet->header.TMCounter <= previousTMCounter ) {
+			fMessageBox( MB_OK, "GripGroundMonitorClient", "Packets out of order from %s.", filename );
+			exit( -1 );
 		}
 
 		fprintf( stderr, " closing ... " );
-		return_code = fclose( fp );
+		return_code = _close( fid );
 		if ( return_code ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary read.\nError code: %s", filename, return_code );
 			exit( return_code );
