@@ -3,9 +3,11 @@
 //
 
 #include "stdafx.h"
-#include "GripPackets.h"
+#include "..\Grip\GripPackets.h"
 
 PCSTR EPMport = EPM_DEFAULT_PORT;
+
+EPMTelemetryHeaderInfo hkHeaderInfo, rtHeaderInfo;
 EPMTelemetryPacket hkPacket, rtPacket;
 
 #ifdef _DEBUG
@@ -14,7 +16,7 @@ EPMTelemetryPacket hkPacket, rtPacket;
 	bool _debug = false;
 #endif
 
-void setPacketTime( EPMTelemetryPacket *packet ) {
+void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 
 	// Set the time of the specified packet.
 
@@ -34,10 +36,9 @@ void setPacketTime( EPMTelemetryPacket *packet ) {
 	// header and just copy the 32-bit value, but I'm not sure about word order. 
 	// So to be sure to match the EPM spec as it is written, I transfer each
 	//  two-bye word separately.
-	packet->header.coarseTimeLow = (short)(epmtime.time & 0x0000ffff);
-	packet->header.coarseTimeHigh = (short) ((epmtime.time & 0xffff0000) << 16);
+	header->coarseTime = epmtime.time;
 	// Compute the fine time in 10ths of milliseconds.
-	packet->header.fineTime = epmtime.millitm * 10;
+	header->fineTime = epmtime.millitm * 10;
 
 }
 
@@ -62,9 +63,9 @@ int _tmain(int argc, char *argv[])
 	fprintf( stderr, "It waits for a client to connect and then sends\n out HK and RT packets at 0.5 and 1 Hz respectively.\n" );
 	fprintf( stderr, "\n" );
 
-	// Prepare the packets.
-	memcpy( &hkPacket, &hkHeader, sizeof( hkHeader ) );
-	memcpy( &rtPacket, &rtHeader, sizeof( rtHeader ) );
+	// Prepare the packets by copying constants into local structure.
+	memcpy( &hkHeaderInfo, &hkHeader, sizeof( hkHeaderInfo ) );
+	memcpy( &rtHeaderInfo, &rtHeader, sizeof( rtHeaderInfo ) );
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -155,8 +156,10 @@ int _tmain(int argc, char *argv[])
 			Sleep( (1000 - utctime.millitm ) % 500 );
 
 			// Insert the current packet count and time into the packet.
-			rtPacket.header.TMCounter = packetCount++;
-			setPacketTime( &rtPacket );
+			rtHeaderInfo.TMCounter = packetCount++;
+			setPacketTime( &rtHeaderInfo );
+			InsertEPMTelemetryHeaderInfo( &rtPacket, &rtHeaderInfo );
+			// Now in theory we should fill it with something, but I don't do anything yet.
 			// Send out a realtime data packet.
 			iSendResult = send( ClientSocket, rtPacket.buffer, rtPacketLengthInBytes, 0 );
 			// If we get a socket error it is probably because the client has closed the connection.
@@ -171,8 +174,9 @@ int _tmain(int argc, char *argv[])
 			// The BOOL sendHK is used to turn off and on for each RT cycle.
 			if ( sendHK ) {
 				// Insert the current packet count and time into the packet.
-				hkPacket.header.TMCounter = packetCount++;
-				setPacketTime( &hkPacket );
+				hkHeaderInfo.TMCounter = packetCount++;
+				setPacketTime( &hkHeaderInfo );
+				InsertEPMTelemetryHeaderInfo( &hkPacket, &hkHeaderInfo );
 				// Send out a housekeeping packet.
 				iSendResult = send( ClientSocket, hkPacket.buffer, hkPacketLengthInBytes, 0 );
 				// If we get a socket error it is probably because the client has closed the connection.
@@ -203,9 +207,9 @@ int _tmain(int argc, char *argv[])
 		}
 		else if ( _debug ) fprintf( stderr, "shutdown() OK n" );
 
-		fprintf( stderr, "  Total packets sent: %d\n\n", hkPacket.header.TMCounter + rtPacket.header.TMCounter );
-		hkPacket.header.TMCounter = 0;
-		rtPacket.header.TMCounter = 0;
+		fprintf( stderr, "  Total packets sent: %d\n\n", hkHeaderInfo.TMCounter + rtHeaderInfo.TMCounter );
+		hkHeaderInfo.TMCounter = 0;
+		rtHeaderInfo.TMCounter = 0;
 
 	}
 
