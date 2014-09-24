@@ -1,2 +1,6 @@
 Debug
 debug
+release
+Release
+*.pkt
+
