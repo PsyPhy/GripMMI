@@ -2,12 +2,15 @@
 //
 
 #include "stdafx.h"
-#include "..\..\GRIPserver2\GRIPserver2\GripPackets.h"
+#include "..\Grip\GripPackets.h"
 #include "..\Useful\fMessageBox.h"
+#include "..\Useful\fOutputDebugString.h"
 
 EPMTelemetryPacket epmPacket;
+EPMTelemetryHeaderInfo epmHeader;
 
 char *input_directory = ".\\";
+
 // Buffers to hold the path to the packet caches.
 char rtPacketOutputFilePath[1024];
 char hkPacketOutputFilePath[1024];
@@ -53,7 +56,7 @@ int _tmain(int argc, char *argv[])
 
 		fprintf( stderr, "Openning ... " );
 		return_code = _sopen_s( &fid, filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IWRITE | _S_IREAD  );
-		fprintf( stderr, "open" );
+		fprintf( stderr, "open ... reading ... " );
 		if ( return_code ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error opening %s for binary read.", filename );
 			exit( -1 );
@@ -61,17 +64,17 @@ int _tmain(int argc, char *argv[])
 
 		while ( rtPacketLengthInBytes == (bytes_read = _read( fid, packet, rtPacketLengthInBytes )) ) {
 			packets_read++;
-			fprintf( stderr, "." );
 		}
 		if ( bytes_read < 0 ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Error reading from %s.", filename );
 			exit( -1 );
 		}
-		if ( packet->header.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || packet->header.TMIdentifier != GRIP_RT_ID ) {
+		ExtractEPMTelemetryHeaderInfo( &epmHeader, &epmPacket );
+		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_RT_ID ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Unrecognized packet from %s.", filename );
 			exit( -1 );
 		}
-		if ( packet->header.TMCounter <= previousTMCounter ) {
+		if ( epmHeader.TMCounter <= previousTMCounter ) {
 			fMessageBox( MB_OK, "GripGroundMonitorClient", "Packets out of order from %s.", filename );
 			exit( -1 );
 		}
@@ -84,7 +87,7 @@ int _tmain(int argc, char *argv[])
 		}
 		fprintf( stderr, "closed.\n" );
 
-		fprintf( stderr, "%s Read count: %3d  Items: %d\n", filename, count++, packets_read );
+		fprintf( stderr, "%s\nRead count: %3d  Items: %d\n", filename, count++, packets_read );
 		Sleep( 1000 );
 	}
 	

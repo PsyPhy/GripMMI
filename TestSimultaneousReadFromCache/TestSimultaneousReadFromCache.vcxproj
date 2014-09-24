@@ -25,7 +25,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -86,6 +86,9 @@
     <ClCompile Include="TestSimultaneousReadFromCache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\Debug\Grip.lib">
+      <FileType>Document</FileType>
+    </Library>
     <Library Include="..\Debug\Useful.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
