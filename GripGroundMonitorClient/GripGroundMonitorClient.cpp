@@ -2,10 +2,17 @@
 //
 
 #include "stdafx.h"
-#include "..\\..\\GRIPserver2\GRIPserver2\\GripPackets.h"
+#include "..\Grip\GripPackets.h"
+#include "..\Useful\fMessageBox.h"
+#include "..\Useful\fOutputDebugString.h"
+
+// Need to link with Ws2_32.lib
+#pragma comment (lib, "Ws2_32.lib")
+// #pragma comment (lib, "Mswsock.lib")
 
 PCSTR EPMport = EPM_DEFAULT_PORT;
 EPMTelemetryPacket epmPacket;
+EPMTelemetryHeaderInfo epmPacketHeaderInfo;
 
 // Default path for packet storage is the current directory.
 char *destination_directory = ".\\";
@@ -13,55 +20,13 @@ char *destination_directory = ".\\";
 // Buffers to hold the path to the packet caches.
 char rtPacketOutputFilePath[1024];
 char hkPacketOutputFilePath[1024];
+char anyPacketOutputFilePath[1024];
 
-/***********************************************************************************/
+// Count the number of packets of each type sent to the cache files.
+unsigned long rtCount = 0;
+unsigned long hkCount = 0;
+unsigned long anyCount = 0;
 
-// Some useful routines that I like to have around. Usually I would put them in 
-//  a library so as to share them between projects, but I don't know how to do that
-//  yet in VC++ 2010.
-
-// I get some warnings about some functions that might not be safe. I am continuing 
-//  to use the classical versions because I don't see that the others are that much
-//  safer. But I can change them is required.
-
-// Make it easier to construct messages and display them as a MessageBox.
-int fMessageBox( int mb_type, const char *caption, const char *format, ... ) {
-	
-	int items;
-	
-	va_list args;
-	
-	// The character buffer is really long so that there is little chance of overrunning it.
-	char message[10240];
-	
-	va_start(args, format);
-	items = vsprintf(message, format, args);
-	va_end(args);
-	
-	return( MessageBox( NULL, message, caption, mb_type ) );
-		
-}
-// Make it easier to construct messages to output in the debug window.
-int fOutputDebugString( const char *format, ... ) {
-
-	int items;
-
-	va_list args;
-	// The character buffers are really long so that there is little chance of overrunning.
-	char message[10240];
-	char fmt[10240];
-
-	strcpy( fmt, "*** DEBUG OUTPUT: " );
-	strcat( fmt, format );
-	va_start(args, format);
-	items = vsprintf(message, fmt, args);
-	va_end(args);
-
-	OutputDebugString( message );
-
-	return( items );
-
-}
 
 void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename ) {
 
@@ -90,9 +55,15 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 
 void outputHK ( EPMTelemetryPacket *packet ) {
 	outputPacket( packet, hkPacketLengthInBytes, hkPacketOutputFilePath  );
+	hkCount++;
 }
 void outputRT ( EPMTelemetryPacket *packet ) {
 	outputPacket( packet, rtPacketLengthInBytes, rtPacketOutputFilePath );
+	rtCount++;
+}
+void outputANY ( EPMTelemetryPacket *packet ) {
+	outputPacket( packet, EPM_BUFFER_LENGTH, anyPacketOutputFilePath );
+	anyCount++;
 }
 
 int __cdecl main(int argc, char **argv) 
@@ -196,25 +167,45 @@ int __cdecl main(int argc, char **argv)
 			OutputDebugString( "Error in sprintf().\n" );
 			exit( -1 );
 	}
+	bytes_written = sprintf_s( anyPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s\\ANY.%04d.%02d.%02d.pkt", 
+		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
+	if ( bytes_written < 0 ) {
+			OutputDebugString( "Error in sprintf().\n" );
+			exit( -1 );
+	}
 
 	// Receive as long as the server stays connected or until <ctrl-C>.
     do {
 
         iResult = recv(ConnectSocket, epmPacket.buffer, EPM_BUFFER_LENGTH, 0);
+
 		if ( iResult == EPM_BUFFER_LENGTH ) {
 			// If we get a full buffer of data, it probably means that we have fallen behind.
 			// No packets that we expect from GRIP should use the full EPM buffer length.
 			// So just skip this packet and move on to the next.
-             printf("Bytes received: %4d - flushing (overrun).\n", iResult);
+            printf("Bytes received: %4d - flushing (overrun).\n", iResult);
+			// Write it out anyway to the all-packet cache for debugging.
+			outputANY( &epmPacket );
 		}
         else if ( iResult > 0 ) {
             printf("Bytes: %4d", iResult);
-			if ( epmPacket.header.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) printf( " - flushing (non EPM).\n" ); 
-			else printf( " TM Code 0x%04x  TM Counter %03d EPM Time %lf\n", epmPacket.header.TMIdentifier, epmPacket.header.TMCounter, EPMtoSeconds( epmPacket ) );
-			switch ( epmPacket.header.TMIdentifier ) {
+			
+			// Write it out to the all-packet cache for debugging.
+ 			outputANY( &epmPacket );
+			// Get the EPM header info and process the packet according to the type.
+			// First check for the EPM sync words and discard if not valid.
+			ExtractEPMTelemetryHeaderInfo( &epmPacketHeaderInfo, &epmPacket );
+			if ( epmPacketHeaderInfo.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) printf( " - flushing (non EPM).\n" ); 
+			else printf( " TM Code 0x%04x  TM Counter %03d EPM Time %lf\n", epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter, EPMtoSeconds( epmPacketHeaderInfo ) );
+			// Then check the type of EPM packet and sort into appropriate cache files.
+			// We are only concerned with two packet type: 
+			//   0x0301 for housekeeping data and 0x1001 for realtime science data.
+			switch ( epmPacketHeaderInfo.TMIdentifier ) {
+
 			case GRIP_HK_ID:
 				printf( "    Processing House Keeping Packet.\n" );
 				outputHK( &epmPacket );
+				printf( "    Realtime Data Packets: %8u\n", hkCount );
 				break;
 
 			case GRIP_RT_ID:
@@ -227,6 +218,7 @@ int __cdecl main(int argc, char **argv)
 				break;
 
 			}
+			printf( "    Packets: %8u  %8u\n", rtCount, hkCount );
 		}
 
     } while( iResult > 0 ); // End loop if connection is closed or on error.
@@ -236,8 +228,11 @@ int __cdecl main(int argc, char **argv)
     else printf("\nrecv failed with error: %d\n", WSAGetLastError());
 
     // In this version, if the server closes the connection, we quit as well.
+	// In a future versions, we could go back to listen for a connection again.
     closesocket(ConnectSocket);
     WSACleanup();
+
+	// Make sure that the user sees the final message by requiring a keyboard input.
 	printf( "Press <return>\n" );
 	getchar();
 

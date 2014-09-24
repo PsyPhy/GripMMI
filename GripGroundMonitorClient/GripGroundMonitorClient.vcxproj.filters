@@ -33,4 +33,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\Debug\Useful.lib" />
+    <Library Include="..\Debug\Grip.lib" />
+  </ItemGroup>
 </Project>
