@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="PsyPhy2dGraphicsLib">
+</Property><Property Name="Solution File" Value="Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\PsyPhy2dGraphicsLib.sln">
+</Property><Property Name="Date" Value="Saturday, September 27, 2014">
+</Property><Property Name="Time" Value="17:32 PM">
+</Property></Properties><Event ErrorLevel="0" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="Converting project file 'Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\PsyPhy2dGraphicsLib.vcproj'.">
+</Event><Event ErrorLevel="1" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="VCWebServiceProxyGeneratorTool is no longer supported. The tool has been removed from your project settings.">
+</Event><Event ErrorLevel="1" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="MSB8012: $(TargetPath) ('Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\.\Debug\PsyPhy2dGraphicsLib.lib') does not match the Librarian's OutputFile property value '.\Debug\PsyPhy2dGraphicsLib.lib' ('Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\Debug\PsyPhy2dGraphicsLib.lib') in project configuration 'Debug|Win32'. This may cause your project to build incorrectly. To correct this, please make sure that $(TargetPath) property value matches the value specified in %(Lib.OutputFile).">
+</Event><Event ErrorLevel="1" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="MSB8012: $(TargetPath) ('Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\.\Release\PsyPhy2dGraphicsLib.lib') does not match the Librarian's OutputFile property value '.\Release\PsyPhy2dGraphicsLib.lib' ('Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\Release\PsyPhy2dGraphicsLib.lib') in project configuration 'Release|Win32'. This may cause your project to build incorrectly. To correct this, please make sure that $(TargetPath) property value matches the value specified in %(Lib.OutputFile).">
+</Event><Event ErrorLevel="0" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="Done converting to new project file 'Z:\VS2010\GripGroundMonitorClient\PsyPhy2dGraphicsLib\PsyPhy2dGraphicsLib.vcxproj'.">
+</Event><Event ErrorLevel="3" Project="PsyPhy2dGraphicsLib" Source="PsyPhy2dGraphicsLib.vcproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="GripGroundMonitor" Source="..\..\GripGroundMonitor\GripGroundMonitor.vcproj" Description="Converting project file 'Z:\VS2010\GripGroundMonitor\GripGroundMonitor.vcproj'.">
+</Event><Event ErrorLevel="2" Project="GripGroundMonitor" Source="..\..\GripGroundMonitor\GripGroundMonitor.vcproj" Description="File 'Z:\VS2010\GripGroundMonitor\GripGroundMonitor.vcproj' was not found.">
+</Event><Event ErrorLevel="2" Project="GripGroundMonitor" Source="..\..\GripGroundMonitor\GripGroundMonitor.vcproj" Description="Project upgrade failed.">
+</Event><Event ErrorLevel="3" Project="GripGroundMonitor" Source="..\..\GripGroundMonitor\GripGroundMonitor.vcproj" Description="Not Converted">
+</Event><Event ErrorLevel="0" Project="" Source="PsyPhy2dGraphicsLib.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="PsyPhy2dGraphicsLib.sln" Description="Converted">
+</Event></UpgradeLog>

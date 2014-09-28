@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: 2dGraphicsLib - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP58.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/2dGraphicsLib.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\ArrayPlots.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\Displays.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\FunctionPlots.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\Layouts.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\OglDisplay.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\OglDisplayInterface.c"
+"Z:\SoftwareDevelopement\CoreProjects\2dGraphics\2dGraphicsLib\Views.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP58.tmp" 
+Creating command line "link.exe -lib /nologo /out:"Debug\2dGraphicsLib.lib"  .\Debug\ArrayPlots.obj .\Debug\Displays.obj .\Debug\FunctionPlots.obj .\Debug\Layouts.obj .\Debug\OglDisplay.obj .\Debug\OglDisplayInterface.obj .\Debug\Views.obj "
+<h3>Output Window</h3>
+Compiling...
+ArrayPlots.c
+Displays.c
+FunctionPlots.c
+Layouts.c
+OglDisplay.c
+OglDisplayInterface.c
+Views.c
+Creating library...
+
+
+
+<h3>Results</h3>
+2dGraphicsLib.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
