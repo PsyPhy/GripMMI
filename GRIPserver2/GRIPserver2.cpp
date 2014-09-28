@@ -9,6 +9,7 @@ PCSTR EPMport = EPM_DEFAULT_PORT;
 
 EPMTelemetryHeaderInfo hkHeaderInfo, rtHeaderInfo;
 EPMTelemetryPacket hkPacket, rtPacket;
+EPMTelemetryPacket inputPacket;
 
 #ifdef _DEBUG
 	bool _debug = true;
@@ -57,6 +58,8 @@ int _tmain(int argc, char *argv[])
 
     int iSendResult;
 	int sendHK = 1;
+
+	EPMTransferFrameHeaderInfo transferFrameInfo;
     	
 	if ( _debug ) fprintf( stderr, "%s started.\n\n", argv[0] );
 	fprintf( stderr, "This is the EPM/GRIP packet server emulator.\n" );
@@ -143,6 +146,33 @@ int _tmain(int argc, char *argv[])
 		}
 		else if ( _debug ) fprintf( stderr, "acceot() OK " );
 		fprintf( stderr, "connected.\n" );
+
+		// Wait for a 'Connect' command to start sending packets.
+		fprintf( stderr, "Waiting for a Connect command ... " );
+	   do {
+
+			iResult = recv(ClientSocket, inputPacket.buffer, sizeof( inputPacket.buffer ), 0);
+
+			if ( iResult == EPM_BUFFER_LENGTH ) {
+				// If we get a full buffer of data, it probably means that we have fallen behind.
+				// No packets that we expect from GRIP should use the full EPM buffer length.
+				// So just skip this packet and move on to the next.
+				printf("Bytes received: %4d - flushing (overrun).\n", iResult);
+			}
+			else if ( iResult == connectPacketLengthInBytes ) {
+				ExtractEPMTransferFrameHeaderInfo( &transferFrameInfo, &inputPacket );
+				if ( transferFrameInfo.packetType == TRANSFER_FRAME_CONNECT ) {
+					printf("start packet received.\n", iResult);
+					break;
+				}
+				else {
+				 printf( "unexpected packet type (%x) ... ", transferFrameInfo.packetType );
+				}
+			}
+			else printf( "unexpected packet size (%d) ... ", iResult );
+
+	   }while ( iResult > 0 );
+
 
 		// Send packets until the peer shuts down the connection
 		while ( 1 ) {

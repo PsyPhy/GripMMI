@@ -5,18 +5,12 @@
 
 #pragma once
 
-// In Microsoft Visual C++ Express, the property:
-//	Configuration Properties - General - Project Defaults - Character Set 
-// is set to "Not Set" to stick with regular, old-school stings.
-
 #include "targetver.h"
 
 #include <stdio.h>
 #include <tchar.h>
-
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdio.h>
 #include <SYS\timeb.h>
 
 // Need to link with Ws2_32.lib
