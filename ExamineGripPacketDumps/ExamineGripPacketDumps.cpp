@@ -2,15 +2,20 @@
 //
 
 #include "stdafx.h"
+#include "..\Useful\Useful.h"
 #include "..\Useful\fMessageBox.h"
 #include "..\Grip\GripPackets.h"
 
+
 char *HKfilename = "C:\\GripGroundPacketStore\\grip-fm-RT.txt";
 
-unsigned char buffer[1024];
+unsigned char buffer[2048];
 
 EPMTelemetryHeaderInfo  header;
-GripRealtimeDataPacket	realtime;
+GripRealtimeDataInfo	realtime;
+
+int rtWiresharkPacketSize = 856;
+int hkWiresharkPacketSize = 280;
 
 
 int ReadPacketHexDump( FILE *fp, unsigned char buffer[], int n_bytes ) {
@@ -38,19 +43,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	FILE *fp;
 	int packets = 0;
 
-	int epm = 66;
-	int epmtype1 = epm+8;
-	int epmtype2 = epmtype1+1;
-	int grip = epm + 30;
-	int user = grip + 74;
-	int protocol = grip+76;
-	int task = grip+78;
-	int step = grip+80;
-
-	int i;
+	// Pointer to the start of an EPM packet.
+	EPMTelemetryPacket *epmPacket =(EPMTelemetryPacket *)(buffer + 66);
+	int i, j;
 
 	unsigned long min_time = 0;
 	unsigned long max_time = 0;
+
 
 	EPMTelemetryHeaderInfo header;
 
@@ -59,28 +58,37 @@ int _tmain(int argc, _TCHAR* argv[])
 		fMessageBox( MB_OK, NULL, "Error opening %s for read.\n", HKfilename );
 		exit( -1 );
 	}
-	while ( !ReadPacketHexDump( fp, buffer, 856 ) ) {
+	for ( j = 0; j < 10; j++ ) {
+	
+		// Read in a packet. ReadPacketHexDump returns 0 on success and
+		//  -1 on failure/end-of-file. So if not success break out of loop.
+		if ( ReadPacketHexDump( fp, buffer, rtWiresharkPacketSize  ) ) break;
 
 		// Fill the structures with the telemetry data.
 		// We are reading from a Wiresharc dump, so we have to skip over 66 bytes to get to the TCP packet.
-		ExtractEPMTelemetryHeaderInfo( &header, (EPMTelemetryPacket *) (buffer + 66) );
-		ExtractGripRealtimeDataPacket( &realtime, (EPMTelemetryPacket *) (buffer + 66) );
+		ExtractEPMTelemetryHeaderInfo( &header, epmPacket );
+		ExtractGripRealtimeDataInfo( &realtime, epmPacket );
 
-		printf( "Packet %4d: ", packets );
-		printf( "Sync: 0x%08x  ID: 0x%04x  Counter: %6d  Time:%8.3lf Block: %2d Frame: %5d Ticks: ", 
-			header.epmSyncMarker, header.TMIdentifier, header.TMCounter, EPMtoSeconds( header ),
-			realtime.acquisitionID, realtime.rtPacketCount
-		);
-		for ( i = 0; i < RT_SLICES_PER_PACKET; i += 5 ) printf( " %d", realtime.dataSlice[i].poseTick );
-		printf( "\n" );
 		if ( header.coarseTime > max_time ) max_time = header.coarseTime;
 		if ( min_time == 0 || header.coarseTime < min_time ) min_time = header.coarseTime;
+
+		printf( "Packet %4d: ", packets );
+		printf( "0x%08x SubS:%02d Dst:0x%02x ID:0x%04x Cnt:%6d Time:%8.3lf Blk:%2d Frm:%5d", 
+			header.epmSyncMarker, header.subsystemID, header.destination, header.TMIdentifier, header.TMCounter, EPMtoSeconds( header ) - min_time,
+			realtime.acquisitionID, realtime.rtPacketCount
+		);
+//		for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) printf( " %d:%d", realtime.dataSlice[i].poseTick, realtime.dataSlice[i].analogTick );
+		printf( " Vsbl:" );
+		for ( i = 0; i < RT_SLICES_PER_PACKET; i += 5 ) {
+			printf( " %05x:%05x %1x", realtime.dataSlice[i].markerVisibility[0] & 0x0fffff, realtime.dataSlice[i].markerVisibility[1] & 0x0fffff, ( realtime.dataSlice[i].manipulandumVisibility ? 1 : 0 ) );
+			printf( " <%4d %4d %4d>",  realtime.dataSlice[i].position[X],  realtime.dataSlice[i].position[Y], realtime.dataSlice[i].position[Z] );
+			printf( " %d", realtime.dataSlice[i].acc[Z] );
+		}
+		printf( "\n" );
 		// HK ID
 		packets++;
 	}
 	fclose( fp );
-
-
 	printf( "Time min: %d  max: %d  elapsed: %d (%lf hours) Avg period: %lf\n", min_time, max_time, (max_time - min_time), ((double)(max_time - min_time)) / 60.0 / 60.0, ((double) (max_time - min_time) / (double) packets ) );
 	printf( "Press return.\n" );
 	getchar();
