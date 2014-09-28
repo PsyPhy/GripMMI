@@ -13,17 +13,24 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSimultaneousReadFromCac
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Useful", "Useful\Useful.vcxproj", "{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GRIPserver2", "GRIPserver2\GRIPserver2.vcxproj", "{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExamineGripPacketDumps", "ExamineGripPacketDumps\ExamineGripPacketDumps.vcxproj", "{B98F2D8A-B901-4EA8-9E5E-AA055DB7DCDD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
+		{2B114BED-A19B-4BD5-9CA2-24C6418284F9} = {2B114BED-A19B-4BD5-9CA2-24C6418284F9}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Grip", "Grip\Grip.vcxproj", "{2B114BED-A19B-4BD5-9CA2-24C6418284F9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLWSemulator", "CLWSemulator\CLWSemulator.vcxproj", "{EC91DA99-703D-46A9-BC18-74D21ACE5B66}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
+		{2B114BED-A19B-4BD5-9CA2-24C6418284F9} = {2B114BED-A19B-4BD5-9CA2-24C6418284F9}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PsyPhy2dGraphicsLib", "PsyPhy2dGraphicsLib\PsyPhy2dGraphicsLib.vcxproj", "{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,10 +50,6 @@ Global
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Debug|Win32.Build.0 = Debug|Win32
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Release|Win32.ActiveCfg = Release|Win32
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}.Release|Win32.Build.0 = Release|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Debug|Win32.Build.0 = Debug|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.ActiveCfg = Release|Win32
-		{CD15B84E-2737-4E7E-AE6D-BE53C5B9A813}.Release|Win32.Build.0 = Release|Win32
 		{B98F2D8A-B901-4EA8-9E5E-AA055DB7DCDD}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B98F2D8A-B901-4EA8-9E5E-AA055DB7DCDD}.Debug|Win32.Build.0 = Debug|Win32
 		{B98F2D8A-B901-4EA8-9E5E-AA055DB7DCDD}.Release|Win32.ActiveCfg = Release|Win32
@@ -55,6 +58,14 @@ Global
 		{2B114BED-A19B-4BD5-9CA2-24C6418284F9}.Debug|Win32.Build.0 = Debug|Win32
 		{2B114BED-A19B-4BD5-9CA2-24C6418284F9}.Release|Win32.ActiveCfg = Release|Win32
 		{2B114BED-A19B-4BD5-9CA2-24C6418284F9}.Release|Win32.Build.0 = Release|Win32
+		{EC91DA99-703D-46A9-BC18-74D21ACE5B66}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EC91DA99-703D-46A9-BC18-74D21ACE5B66}.Debug|Win32.Build.0 = Debug|Win32
+		{EC91DA99-703D-46A9-BC18-74D21ACE5B66}.Release|Win32.ActiveCfg = Release|Win32
+		{EC91DA99-703D-46A9-BC18-74D21ACE5B66}.Release|Win32.Build.0 = Release|Win32
+		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Debug|Win32.Build.0 = Debug|Win32
+		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Release|Win32.ActiveCfg = Release|Win32
+		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
