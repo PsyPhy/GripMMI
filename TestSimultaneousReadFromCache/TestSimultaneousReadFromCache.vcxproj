@@ -14,6 +14,7 @@
     <ProjectGuid>{41255638-1471-465A-AF4F-46769D6DE735}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>TestSimultaneousReadFromCache</RootNamespace>
+    <ProjectName>GripMMIlite</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -63,6 +64,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -83,13 +85,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestSimultaneousReadFromCache.cpp" />
+    <ClCompile Include="GripMMIlite.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Debug\Grip.lib">
-      <FileType>Document</FileType>
-    </Library>
-    <Library Include="..\Debug\Useful.lib" />
+    <ProjectReference Include="..\Grip\Grip.vcxproj">
+      <Project>{2b114bed-a19b-4bd5-9ca2-24c6418284f9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Useful\Useful.vcxproj">
+      <Project>{9dcdabb9-8979-4ef4-9d74-10ed8c1d7a56}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

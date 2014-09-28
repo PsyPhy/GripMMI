@@ -29,12 +29,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestSimultaneousReadFromCache.cpp">
+    <ClCompile Include="GripMMIlite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\Debug\Useful.lib" />
-    <Library Include="..\Debug\Grip.lib" />
   </ItemGroup>
 </Project>
