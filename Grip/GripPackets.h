@@ -191,6 +191,8 @@ static EPMTelemetryHeaderInfo rtHeader = {
 	EPM_TELEMETRY_SYNC_VALUE, 0, GRIP_SUBSYSTEM_ID, 0, 0, GRIP_RT_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 static int rtPacketLengthInBytes = 796;
 
+typedef enum { GRIP_RT_SCIENCE_PACKET, GRIP_HK_BULK_PACKET, GRIP_UNKNOWN_PACKET } GripPacketType;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -201,6 +203,8 @@ void ExtractEPMTelemetryHeaderInfo ( EPMTelemetryHeaderInfo *header, const EPMTe
 int  InsertEPMTelemetryHeaderInfo ( EPMTelemetryPacket *epm_packet,  const EPMTelemetryHeaderInfo *header  );
 void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const EPMTelemetryPacket *epm_packet );
 void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, const EPMTelemetryPacket *epm_packet );
+
+void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root );
 
 #ifdef __cplusplus
 }

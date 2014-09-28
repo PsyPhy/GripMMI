@@ -19,9 +19,9 @@ char *packetCacheFilenameRoot = ".\\";
 char *server_name = "localhost";
 
 // Buffers to hold the path to the packet caches.
-char rtPacketOutputFilePath[1024];
-char hkPacketOutputFilePath[1024];
-char anyPacketOutputFilePath[1024];
+char rtPacketCacheFilePath[1024];
+char hkPacketCacheFilePath[1024];
+char anyPacketCacheFilePath[1024];
 
 // Count the number of packets of each type sent to the cache files.
 unsigned long rtCount = 0;
@@ -55,15 +55,15 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 }
 
 void outputHK ( EPMTelemetryPacket *packet ) {
-	outputPacket( packet, hkPacketLengthInBytes, hkPacketOutputFilePath  );
+	outputPacket( packet, hkPacketLengthInBytes, hkPacketCacheFilePath  );
 	hkCount++;
 }
 void outputRT ( EPMTelemetryPacket *packet ) {
-	outputPacket( packet, rtPacketLengthInBytes, rtPacketOutputFilePath );
+	outputPacket( packet, rtPacketLengthInBytes, rtPacketCacheFilePath );
 	rtCount++;
 }
 void outputANY ( EPMTelemetryPacket *packet ) {
-	outputPacket( packet, EPM_BUFFER_LENGTH, anyPacketOutputFilePath );
+	outputPacket( packet, EPM_BUFFER_LENGTH, anyPacketCacheFilePath );
 	anyCount++;
 }
 
@@ -76,7 +76,8 @@ int __cdecl main(int argc, char **argv)
 
 	struct __timeb32 utctime;
 	long	previous_alive_time = 0;
-	BOOL	verbose = true;
+	bool	verbose = true;
+	bool	cache_all = true;
 
 	// Parse the command line.
 	if ( argc < 2 ) printf( "Using default output root: %s\n", packetCacheFilenameRoot );
@@ -89,6 +90,11 @@ int __cdecl main(int argc, char **argv)
 		server_name = argv[2];
 		printf( "Using command-line server name: %s\n", server_name );
 	}
+	if ( argc > 3 ) {
+		if ( !strcmp( argv[3], "-all" )) cache_all = true;
+		printf( "Saving all packet types.\n" );
+	}
+	
 
 	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
 	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
@@ -159,7 +165,7 @@ int __cdecl main(int argc, char **argv)
 		getchar();
 		exit( -100 );
 	}
-	else fprintf( stderr, "Command packet bytes sent: %3d\n", iResult);
+	else fprintf( stderr, "Command packet bytes sent: %3d\n\n", iResult);
 
 	// We no longer need the address info.
     freeaddrinfo(result);
@@ -167,17 +173,15 @@ int __cdecl main(int argc, char **argv)
 	// We have a connection and are ready to start receiving packets.
 	// Create the file names that will hold the packets. 
 	// The filenames are based on today's date.
-	int	bytes_written;
-	bytes_written = sprintf_s( rtPacketOutputFilePath, sizeof( rtPacketOutputFilePath ), "%s.rt.gpk", packetCacheFilenameRoot );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
+	CreateGripPacketCacheFilename( hkPacketCacheFilePath, sizeof( hkPacketCacheFilePath ), GRIP_HK_BULK_PACKET,    packetCacheFilenameRoot );
+	fprintf( stderr, "Output HK packets to: %s\n", hkPacketCacheFilePath );
+	CreateGripPacketCacheFilename( rtPacketCacheFilePath, sizeof( rtPacketCacheFilePath ), GRIP_RT_SCIENCE_PACKET, packetCacheFilenameRoot );
+	fprintf( stderr, "Output RT packets to: %s\n", rtPacketCacheFilePath );
+	if ( cache_all ) {
+		CreateGripPacketCacheFilename( anyPacketCacheFilePath, sizeof( anyPacketCacheFilePath ), GRIP_UNKNOWN_PACKET, packetCacheFilenameRoot );
+		fprintf( stderr, "Output ALL packets to: %s\n", anyPacketCacheFilePath );
 	}
-	bytes_written = sprintf_s( hkPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s.hk.gpk", packetCacheFilenameRoot );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
-	}
+	fprintf( stderr, "\n" );
 
 	// Receive as long as the server stays connected or until <ctrl-C>.
     do {
@@ -192,6 +196,9 @@ int __cdecl main(int argc, char **argv)
             printf("Bytes: %4d - flushing (overrun).\n", iResult);
 		}
         else if ( iResult > 0 ) {
+
+			// Collect all packets, according to the command line flag.
+			if ( cache_all ) outputANY( &epmPacket );
 			
 			// Get the EPM header info and process the packet according to the type.
 			// First check for the EPM sync words and discard if not valid.

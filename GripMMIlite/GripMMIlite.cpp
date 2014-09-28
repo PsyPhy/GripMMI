@@ -76,7 +76,7 @@ BOOL readHK ( char *filename, EPMTelemetryPacket *packet ) {
 	int retry_count;
 	int mb_answer;
 
-	// Attempt to open the packet cache to read the accumated packets.
+	// Attempt to open the packet cache to read the accumulated packets.
 	// If it is not immediately available, try for a few seconds then query the user.
 	// The user can choose to continue to wait or cancel program execution.
 	do {
@@ -140,7 +140,7 @@ BOOL readRT ( char *filename, EPMTelemetryPacket *packet ) {
 	static unsigned short previousTMCounter = 0;
 	unsigned short bit = 0;
 
-	// Attempt to open the packet cache to read the accumated packets.
+	// Attempt to open the packet cache to read the accumulated packets.
 	// If it is not immediately available, try for a few seconds then query the user.
 	// The user can choose to continue to wait or cancel program execution.
 	do {
@@ -203,30 +203,26 @@ int _tmain(int argc, char *argv[])
 		printf( "Using command-line root path for cache files: %s\n", packetCacheFilenameRoot );
 	}
 
-	// Create the file names that hold the packets.
-	int	bytes_written;
-	bytes_written = sprintf_s( rtPacketCacheFilePath, sizeof( rtPacketCacheFilePath ), "%s.rt.gpk", packetCacheFilenameRoot );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
-	}
-	bytes_written = sprintf_s( hkPacketCacheFilePath, sizeof( hkPacketCacheFilePath ), "%s.hk.gpk", packetCacheFilenameRoot );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
-	}
+	// Construct the paths to the cache files where we expect to read the incoming packets.
+	CreateGripPacketCacheFilename( hkPacketCacheFilePath, sizeof( hkPacketCacheFilePath ), GRIP_HK_BULK_PACKET, packetCacheFilenameRoot );
+	CreateGripPacketCacheFilename( rtPacketCacheFilePath, sizeof( rtPacketCacheFilePath ), GRIP_RT_SCIENCE_PACKET, packetCacheFilenameRoot );
 
 	while ( 1 ) {
 
+		// Read the cache files and leave the last packet in each packet buffer.
+		// Each routine returns TRUE if new packets have been added, FALSE otherwise.
 		new_hk = readHK( hkPacketCacheFilePath, &hkPacket );
 		new_rt = readRT( rtPacketCacheFilePath, &rtPacket );
 
+		// Output a new line to the display if one or the packet caches has new info.
 		if ( new_hk || new_rt ) {
 
 			// Show the pertinent information from the last frame read.
 			ExtractGripHealthAndStatusInfo( &hkInfo, &hkPacket );
+			// Where are we in the script.
 			fprintf( stdout, "  User: %3d Protocol: %3d Task: %3d Step: %3d", 
 				hkInfo.user, hkInfo.protocol, hkInfo.task, hkInfo.step );
+			// State of the horizontal and vertical target LEDs.
 			fprintf( stdout, " H: " );
 			for ( i = 0, bit = 0x01; i < 10; i++, bit = bit << 1 ) {
 				if ( bit & hkInfo.horizontalTargetFeedback ) fprintf( stdout, "O" );
@@ -237,20 +233,26 @@ int _tmain(int argc, char *argv[])
 				if ( bit & hkInfo.verticalTargetFeedback ) fprintf( stdout, "O" );
 				else fprintf( stdout, "." );
 			}
+			// State of the tone generator.
 			fprintf( stdout, "  S: %s", soundBar[hkInfo.toneFeedback] );
 			fprintf( stdout, "  M: %c%c%c", 
 				massDecoder[ hkInfo.cradleDetectors & 0x03 ],
 				massDecoder[ (hkInfo.cradleDetectors >> 2) & 0x03 ],
 				massDecoder[ (hkInfo.cradleDetectors >> 4) & 0x03 ] );
+			// Indicate if coda and/or camera is acquiring.
 			fprintf( stdout, "  %s  %s", 
 				( hkInfo.motionTrackerStatusEnum == 2 ? "acquiring" : "    -    " ),
 				( hkInfo.crewCameraStatusEnum == 2 ? "smile!" : "  -   " )
 				);
-
-			// Show the pertinent information from the last frame read.
+			// Show some of the realtime science data.
 			ExtractGripRealtimeDataInfo( &rtInfo, &rtPacket );
+			// Show the acquisition count and the GRIP realtime packet count.
 			fprintf( stdout, "%4d %8d", rtInfo.acquisitionID, rtInfo.rtPacketCount );
-			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+			// Show for each slice in the packet the tick for the coda data
+			//  and whether or not the manipulandum is visible.
+			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
+				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+			}
 			fprintf( stdout, "\n" );
 
 		}

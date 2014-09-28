@@ -2,6 +2,11 @@
 // Packet definitions for realtime data from Grip.
 //
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <Windows.h>
+
+#include "..\Useful\fMessageBox.h"
 #include "../Useful/Useful.h"
 #include "GripPackets.h"
 
@@ -249,3 +254,29 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 	
 
 }
+
+void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root ) {
+		
+	// Create the file names that hold the packets according to packet type.
+	int	bytes_written;
+
+	switch ( type ) {
+
+	case GRIP_RT_SCIENCE_PACKET:
+		bytes_written = sprintf_s( filename, max_characters, "%s.rt.gpk", root );
+		break;
+	case GRIP_HK_BULK_PACKET:
+		bytes_written = sprintf_s( filename, max_characters, "%s.hk.gpk", root );
+		break;
+	default:
+		bytes_written = sprintf_s( filename, max_characters, "%s.any.gpk", root );
+		break;
+
+	}
+	if ( bytes_written < 0 ) {
+			fMessageBox( MB_OK, "Grip", "Error in sprintf()." );
+			exit( -1 );
+	}
+
+}
+
