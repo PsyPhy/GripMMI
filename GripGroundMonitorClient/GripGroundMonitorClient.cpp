@@ -15,7 +15,8 @@ EPMTelemetryPacket epmPacket;
 EPMTelemetryHeaderInfo epmPacketHeaderInfo;
 
 // Default path for packet storage is the current directory.
-char *destination_directory = ".\\";
+char *packetCacheFilenameRoot = ".\\";
+char *server_name = "localhost";
 
 // Buffers to hold the path to the packet caches.
 char rtPacketOutputFilePath[1024];
@@ -49,7 +50,7 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %d", filename, return_code );
 		exit( return_code );
 	}
-	printf( "    Appended to %s.\n", filename );
+//	printf( "    Appended to %s.\n", filename );
 
 }
 
@@ -73,17 +74,20 @@ int __cdecl main(int argc, char **argv)
     struct addrinfo *result = NULL, *ptr = NULL, hints;
     int iResult;
 
+	struct __timeb32 utctime;
+	long	previous_alive_time = 0;
+	BOOL	verbose = true;
+
 	// Parse the command line.
-	char *server_name = "localhost";
-	if ( argc < 2 ) printf( "Using default server name: %s\n", server_name );
+	if ( argc < 2 ) printf( "Using default output root: %s\n", packetCacheFilenameRoot );
 	else {
-		server_name = argv[1];
-		printf( "Using command-line server name: %s\n", server_name );
+		packetCacheFilenameRoot = argv[1];
+		printf( "Using command-line packet output root: %s\n", packetCacheFilenameRoot );
 	}
-	if ( argc < 3 ) printf( "Using default output path: %s\n", destination_directory );
+	if ( argc < 3 ) printf( "Using default server name: %s\n", server_name );
 	else {
-		destination_directory = argv[2];
-		printf( "Using command-line packet output directory: %s\n", destination_directory );
+		server_name = argv[2];
+		printf( "Using command-line server name: %s\n", server_name );
 	}
 
 	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
@@ -144,7 +148,18 @@ int __cdecl main(int argc, char **argv)
 	}
 
 	// We have a connection. 
-	printf( "\nConnection established with server.\n\n" );
+	printf( "\nConnection established with server.\n" );
+	printf( "Sending Connect command.\n" );
+	InsertEPMTransferFrameHeaderInfo( &epmPacket, &connectPacket );
+	iResult = send( ConnectSocket, epmPacket.buffer, connectPacketLengthInBytes, 0 );
+	// If we get a socket error it is probably because the client has closed the connection.
+	// So we break out of the loop.
+	if ( iResult == SOCKET_ERROR ) {
+		fprintf( stderr, "Command packet send failed with error: %3d\n", WSAGetLastError());
+		getchar();
+		exit( -100 );
+	}
+	else fprintf( stderr, "Command packet bytes sent: %3d\n", iResult);
 
 	// We no longer need the address info.
     freeaddrinfo(result);
@@ -152,23 +167,13 @@ int __cdecl main(int argc, char **argv)
 	// We have a connection and are ready to start receiving packets.
 	// Create the file names that will hold the packets. 
 	// The filenames are based on today's date.
-	SYSTEMTIME	systime;
 	int	bytes_written;
-	GetSystemTime( &systime );
-	bytes_written = sprintf_s( rtPacketOutputFilePath, sizeof( rtPacketOutputFilePath ), "%s\\RT.%04d.%02d.%02d.pkt", 
-		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
+	bytes_written = sprintf_s( rtPacketOutputFilePath, sizeof( rtPacketOutputFilePath ), "%s.rt.gpk", packetCacheFilenameRoot );
 	if ( bytes_written < 0 ) {
 			OutputDebugString( "Error in sprintf().\n" );
 			exit( -1 );
 	}
-	bytes_written = sprintf_s( hkPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s\\HK.%04d.%02d.%02d.pkt", 
-		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
-	if ( bytes_written < 0 ) {
-			OutputDebugString( "Error in sprintf().\n" );
-			exit( -1 );
-	}
-	bytes_written = sprintf_s( anyPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s\\ANY.%04d.%02d.%02d.pkt", 
-		destination_directory, systime.wYear, systime.wMonth, systime.wDay );
+	bytes_written = sprintf_s( hkPacketOutputFilePath, sizeof( hkPacketOutputFilePath ), "%s.hk.gpk", packetCacheFilenameRoot );
 	if ( bytes_written < 0 ) {
 			OutputDebugString( "Error in sprintf().\n" );
 			exit( -1 );
@@ -180,47 +185,81 @@ int __cdecl main(int argc, char **argv)
         iResult = recv(ConnectSocket, epmPacket.buffer, EPM_BUFFER_LENGTH, 0);
 
 		if ( iResult == EPM_BUFFER_LENGTH ) {
+
 			// If we get a full buffer of data, it probably means that we have fallen behind.
 			// No packets that we expect from GRIP should use the full EPM buffer length.
 			// So just skip this packet and move on to the next.
-            printf("Bytes received: %4d - flushing (overrun).\n", iResult);
-			// Write it out anyway to the all-packet cache for debugging.
-			outputANY( &epmPacket );
+            printf("Bytes: %4d - flushing (overrun).\n", iResult);
 		}
         else if ( iResult > 0 ) {
-            printf("Bytes: %4d", iResult);
 			
-			// Write it out to the all-packet cache for debugging.
- 			outputANY( &epmPacket );
 			// Get the EPM header info and process the packet according to the type.
 			// First check for the EPM sync words and discard if not valid.
 			ExtractEPMTelemetryHeaderInfo( &epmPacketHeaderInfo, &epmPacket );
-			if ( epmPacketHeaderInfo.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) printf( " - flushing (non EPM).\n" ); 
-			else printf( " TM Code 0x%04x  TM Counter %03d EPM Time %lf\n", epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter, EPMtoSeconds( epmPacketHeaderInfo ) );
-			// Then check the type of EPM packet and sort into appropriate cache files.
-			// We are only concerned with two packet type: 
-			//   0x0301 for housekeeping data and 0x1001 for realtime science data.
-			switch ( epmPacketHeaderInfo.TMIdentifier ) {
-
-			case GRIP_HK_ID:
-				printf( "    Processing House Keeping Packet.\n" );
-				outputHK( &epmPacket );
-				printf( "    Realtime Data Packets: %8u\n", hkCount );
-				break;
-
-			case GRIP_RT_ID:
-				printf( "    Processing Realtime Data Packet.\n" );
-				outputRT( &epmPacket );
-				break;
-
-			default:
-				printf( "    discardng unrecognized EPM packet.\n" );
-				break;
-
+			if ( epmPacketHeaderInfo.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) {
+				if ( verbose ) printf( "Bytes: %4d (non EPM).\n", iResult ); 
 			}
-			printf( "    Packets: %8u  %8u\n", rtCount, hkCount );
+			else {
+				// Check that the packet came from GRIP.
+				if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) {
+					if ( verbose ) printf( "Bytes: %4d %02x:%02x:%02x TM: 0x%04x %06d (non GRIP).\n",
+						iResult,
+						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
+						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
+						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
+						);
+				}
+				else {
+					printf( "Bytes: %4d %02x:%02x:%02x TM: 0x%04x %06d",
+						iResult,
+						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
+						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
+						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
+						);
+					// Then check the type of EPM packet and sort into appropriate cache files.
+					// We are only concerned with two packet types: 
+					//   0x0301 for housekeeping data and 0x1001 for realtime science data.
+					switch ( epmPacketHeaderInfo.TMIdentifier ) {
+
+					case GRIP_HK_ID:
+						printf( " HK   \n" );
+						outputHK( &epmPacket );
+						break;
+
+					case GRIP_RT_ID:
+						printf( "    RT\n" );
+						outputRT( &epmPacket );
+						break;
+
+					default:
+						// It would be surprising to get here as it would
+						//  mean that GRIP sent an unexpected packet type.
+						printf( " ??????\n" );
+						break;
+
+					}
+				}
+			}
 		}
 
+		// Every second or so we should send an Alive command to the server.
+		_ftime32_s( &utctime );
+		if ( utctime.time > previous_alive_time ) {
+			previous_alive_time = utctime.time;
+			// printf( "Sending Alive command.\n" );
+			InsertEPMTransferFrameHeaderInfo( &epmPacket, &alivePacket );
+			iResult = send( ConnectSocket, epmPacket.buffer, alivePacketLengthInBytes, 0 );
+			// If we get a socket error it is probably because the client has closed the connection.
+			// So we break out of the loop.
+			if ( iResult == SOCKET_ERROR ) {
+				fprintf( stderr, "Alive packet send failed with error: %3d\n", WSAGetLastError());
+				getchar();
+				exit( -100 );
+			}
+			// else fprintf( stderr, "Alive packet bytes sent: %3d\n", iResult);
+		}
+
+	// Keep looping as long as we are receiving packets.
     } while( iResult > 0 ); // End loop if connection is closed or on error.
 	
 	// Show what caused us to exit the receiver loop.
