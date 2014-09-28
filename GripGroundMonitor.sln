@@ -6,7 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GripGroundMonitorClient", "
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSimultaneousReadFromCache", "TestSimultaneousReadFromCache\TestSimultaneousReadFromCache.vcxproj", "{41255638-1471-465A-AF4F-46769D6DE735}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GripMMIlite.old", "TestSimultaneousReadFromCache\TestSimultaneousReadFromCache.vcxproj", "{41255638-1471-465A-AF4F-46769D6DE735}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56} = {9DCDABB9-8979-4EF4-9D74-10ED8C1D7A56}
 	EndProjectSection
@@ -31,6 +31,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CLWSemulator", "CLWSemulato
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PsyPhy2dGraphicsLib", "PsyPhy2dGraphicsLib\PsyPhy2dGraphicsLib.vcxproj", "{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GripMMIlite", "GripMMIlite\GripMMIlite.vcxproj", "{C7F47A3E-3545-4460-9CB3-1E6A0B434BE0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +68,10 @@ Global
 		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Debug|Win32.Build.0 = Debug|Win32
 		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Release|Win32.ActiveCfg = Release|Win32
 		{415BAC9D-F0EF-42C3-88F7-7B1386DF49DE}.Release|Win32.Build.0 = Release|Win32
+		{C7F47A3E-3545-4460-9CB3-1E6A0B434BE0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C7F47A3E-3545-4460-9CB3-1E6A0B434BE0}.Debug|Win32.Build.0 = Debug|Win32
+		{C7F47A3E-3545-4460-9CB3-1E6A0B434BE0}.Release|Win32.ActiveCfg = Release|Win32
+		{C7F47A3E-3545-4460-9CB3-1E6A0B434BE0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
