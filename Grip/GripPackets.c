@@ -263,13 +263,13 @@ void CreateGripPacketCacheFilename( char *filename, int max_characters, const Gr
 	switch ( type ) {
 
 	case GRIP_RT_SCIENCE_PACKET:
-		bytes_written = sprintf_s( filename, max_characters, "%s.rt.gpk", root );
+		bytes_written = sprintf( filename, "%s.rt.gpk", root );
 		break;
 	case GRIP_HK_BULK_PACKET:
-		bytes_written = sprintf_s( filename, max_characters, "%s.hk.gpk", root );
+		bytes_written = sprintf( filename, "%s.hk.gpk", root );
 		break;
 	default:
-		bytes_written = sprintf_s( filename, max_characters, "%s.any.gpk", root );
+		bytes_written = sprintf( filename, "%s.any.gpk", root );
 		break;
 
 	}
