@@ -233,6 +233,7 @@ int _tmain(int argc, char *argv[])
 				if ( bit & hkInfo.verticalTargetFeedback ) fprintf( stdout, "O" );
 				else fprintf( stdout, "." );
 			}
+#if 0
 			// State of the tone generator.
 			fprintf( stdout, "  S: %s", soundBar[hkInfo.toneFeedback] );
 			fprintf( stdout, "  M: %c%c%c", 
@@ -244,6 +245,7 @@ int _tmain(int argc, char *argv[])
 				( hkInfo.motionTrackerStatusEnum == 2 ? "acquiring" : "    -    " ),
 				( hkInfo.crewCameraStatusEnum == 2 ? "smile!" : "  -   " )
 				);
+#endif 
 			// Show some of the realtime science data.
 			ExtractGripRealtimeDataInfo( &rtInfo, &rtPacket );
 			// Show the acquisition count and the GRIP realtime packet count.
