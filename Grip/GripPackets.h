@@ -82,8 +82,8 @@ typedef struct {
 	unsigned char	manipulandumVisibility;
 	// DATA_IOC_FTG
 	unsigned long	analogTick;
-	short			ft[2][6];
-	long			acc[3];
+	float			ft[2][6];
+	float			acceleration[3];
 } ManipulandumPacket;
  
 #define RT_SLICES_PER_PACKET 10

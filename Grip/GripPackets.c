@@ -7,7 +7,7 @@
 #include <Windows.h>
 
 #include "..\Useful\fMessageBox.h"
-#include "../Useful/Useful.h"
+#include "..\Useful\Useful.h"
 #include "GripPackets.h"
 
 // Routines to change the byte order in various data types.
@@ -190,7 +190,11 @@ void ExtractEPMTelemetryHeaderInfo ( EPMTelemetryHeaderInfo *header, const EPMTe
 void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const EPMTelemetryPacket *epm_packet ) {
 	const char *ptr;
 	int slice;
+	int sensor;
 	int i;
+	short value;
+	long lvalue;
+
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;
 	// Get the acquisition ID and packet count for that acquisition.
@@ -205,8 +209,16 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 		realtime_packet->dataSlice[slice].manipulandumVisibility = ExtractChar( ptr );
 		// Get the analog data.
 		realtime_packet->dataSlice[slice].analogTick = ExtractReversedLong( ptr );
-		// For now we skip over the analog values.
-		ptr += 36;
+		for ( sensor = 0; sensor < 2; sensor++ ) {
+			for ( i = 0; i < 6; i++ ) {
+				value = ExtractReversedShort( ptr );
+				realtime_packet->dataSlice[slice].ft[sensor][i] = (double) value / 100.0;
+			}
+		}
+		for ( i = X; i <= Z; i++ ) {
+			lvalue = ExtractReversedLong( ptr );
+			realtime_packet->dataSlice[slice].acceleration[i] = ((double) lvalue) / 1000.0 / 9.8;
+		}
 	}
 }
 
@@ -215,8 +227,6 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, const EPMTelemetryPacket *epm_packet ) {
 
 	const char *ptr;
-	int slice;
-	int i;
 
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;

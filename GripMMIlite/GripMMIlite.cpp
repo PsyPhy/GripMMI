@@ -253,7 +253,8 @@ int _tmain(int argc, char *argv[])
 			// Show for each slice in the packet the tick for the coda data
 			//  and whether or not the manipulandum is visible.
 			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
-				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+//				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].analogTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
 			}
 			fprintf( stdout, "\n" );
 
