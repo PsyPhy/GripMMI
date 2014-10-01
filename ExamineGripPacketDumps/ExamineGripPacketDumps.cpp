@@ -82,7 +82,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		for ( i = 0; i < RT_SLICES_PER_PACKET; i += 5 ) {
 			printf( " %05x:%05x %1x", realtime.dataSlice[i].markerVisibility[0] & 0x0fffff, realtime.dataSlice[i].markerVisibility[1] & 0x0fffff, ( realtime.dataSlice[i].manipulandumVisibility ? 1 : 0 ) );
 			printf( " <%4d %4d %4d>",  realtime.dataSlice[i].position[X],  realtime.dataSlice[i].position[Y], realtime.dataSlice[i].position[Z] );
-			printf( " %d", realtime.dataSlice[i].acc[Z] );
+			printf( " %d", realtime.dataSlice[i].acceleration[Z] );
 		}
 		printf( "\n" );
 		// HK ID
