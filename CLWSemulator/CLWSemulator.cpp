@@ -29,7 +29,7 @@ EPMTelemetryPacket recordedPacket;
 // These packets were stored during a real (albeit abbreviated) Grip sesion.
 // For the moment, this path is hard coded. Perhaps there should be a way
 //  to change it, but as this program is not a deliverable, it is not high priority.
-char *PacketSourceFile = "C:\\GripGroundPacketStore\\GripPacketsForSimulator.gpk";
+char *PacketSourceFile = ".\\GripPacketsForSimulator.gpk";
 
 #ifdef _DEBUG
 	bool _debug = true;

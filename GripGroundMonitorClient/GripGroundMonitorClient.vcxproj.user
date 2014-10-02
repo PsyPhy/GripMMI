@@ -5,7 +5,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>c:\GripGroundPacketStore\GripPackets 192.168.10.126</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>c:\GripGroundPacketStore\GripPackets localhost</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
