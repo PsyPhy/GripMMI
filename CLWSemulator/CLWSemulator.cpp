@@ -121,7 +121,7 @@ void sendRecordedPackets ( SOCKET socket ) {
 						}
 						// What we should do here is sleep based on the difference in time between the previous
 						//  recorded packet and this one. For now we just sleep and let it run fast.
-						Sleep( 50 );
+						Sleep( 400 );
 					}
 				}
 			}

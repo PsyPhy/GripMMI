@@ -189,7 +189,7 @@ BOOL readRT ( char *filename, EPMTelemetryPacket *packet ) {
 }
 
 
-int _tmain(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	BOOL new_hk;
 	BOOL new_rt;
