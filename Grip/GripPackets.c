@@ -7,7 +7,9 @@
 #include <Windows.h>
 
 #include "..\Useful\fMessageBox.h"
+#include "..\Useful\fOutputDebugString.h"
 #include "..\Useful\Useful.h"
+
 #include "GripPackets.h"
 
 // Routines to change the byte order in various data types.
@@ -39,7 +41,7 @@ unsigned long swapbytes_long( unsigned long input ) {
 
 // These routines are used to insert or extract various data types 
 //  from a byte buffer without changing the byte order.
-unsigned  short extract_short( const unsigned char bytes[2] ) {
+short extract_short( const unsigned char bytes[2] ) {
 	union {
 		unsigned short value;
 		unsigned char  byte[2];
@@ -51,20 +53,20 @@ unsigned  short extract_short( const unsigned char bytes[2] ) {
 
 // These routines are used to insert or extract various data types 
 //  in reverse byte order from a byte buffer.
-unsigned  short extract_reversed_short( const unsigned char bytes[2] ) {
+short extract_reversed_short( const unsigned char bytes[2] ) {
 	union {
-		unsigned short value;
-		unsigned char  byte[2];
+		short			value;
+		unsigned char	byte[2];
 	} out;
 	out.byte[0] = bytes[1];
 	out.byte[1] = bytes[0];
 	return( out.value );
 }
 
-unsigned long extract_reversed_long( const unsigned char bytes[4] ) {
+long extract_reversed_long( const unsigned char bytes[4] ) {
 	union {
-		unsigned long value;
-		unsigned char  byte[4];
+		long			value;
+		unsigned char	byte[4];
 	} out;
 	out.byte[0] = bytes[3];
 	out.byte[1] = bytes[2];
@@ -200,6 +202,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	// Get the acquisition ID and packet count for that acquisition.
 	realtime_packet->acquisitionID = ExtractReversedLong( ptr );
 	realtime_packet->rtPacketCount = ExtractReversedLong( ptr );
+	fOutputDebugString( "%d Acc raw: ", realtime_packet->rtPacketCount );
 	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
 		// Get the manipulandum pose data. 
 		realtime_packet->dataSlice[slice].poseTick = ExtractReversedLong( ptr );
@@ -209,10 +212,15 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 		realtime_packet->dataSlice[slice].manipulandumVisibility = ExtractChar( ptr );
 		// Get the analog data.
 		realtime_packet->dataSlice[slice].analogTick = ExtractReversedLong( ptr );
+		fOutputDebugString( "  %6d", realtime_packet->dataSlice[slice].analogTick );
 		for ( sensor = 0; sensor < 2; sensor++ ) {
-			for ( i = 0; i < 6; i++ ) {
+			for ( i = X; i <=Z; i++ ) {
 				value = ExtractReversedShort( ptr );
-				realtime_packet->dataSlice[slice].ft[sensor][i] = (double) value / 100.0;
+				realtime_packet->dataSlice[slice].ft[sensor].force[i] = (double) value / 100.0;
+			}
+			for ( i = X; i <=Z; i++ ) {
+				value = ExtractReversedShort( ptr );
+				realtime_packet->dataSlice[slice].ft[sensor].torque[i] = (double) value / 1000.0;
 			}
 		}
 		for ( i = X; i <= Z; i++ ) {
@@ -220,6 +228,8 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 			realtime_packet->dataSlice[slice].acceleration[i] = ((double) lvalue) / 1000.0 / 9.8;
 		}
 	}
+	fOutputDebugString( "\n" );
+
 }
 
 // Extract a Grip housekeeping packet from an EPM packet.
