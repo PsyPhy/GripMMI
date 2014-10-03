@@ -3,6 +3,8 @@
 //
 #pragma once
 
+#include "..\Useful\Useful.h"
+
 // The port number used to access EPM servers.
 // EPM-OHB-SP-0005 says:
 //  The Port number for all EPM LAN connections is 2345.
@@ -76,14 +78,17 @@ typedef struct {
 typedef struct {
 	// DATA_MANIP_POSE
 	unsigned long	poseTick;
-	short			position[3];
-	float			quaternion[4];
+	Vector3			position;
+	Quaternion		quaternion;
 	unsigned long	markerVisibility[2];  // One for each coda;
 	unsigned char	manipulandumVisibility;
 	// DATA_IOC_FTG
 	unsigned long	analogTick;
-	float			ft[2][6];
-	float			acceleration[3];
+	struct	{
+		Vector3	force;
+		Vector3	torque;
+	} ft[2];
+	Vector3			acceleration;
 } ManipulandumPacket;
  
 #define RT_SLICES_PER_PACKET 10

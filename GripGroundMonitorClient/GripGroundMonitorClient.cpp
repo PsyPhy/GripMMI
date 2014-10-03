@@ -209,17 +209,18 @@ int __cdecl main(int argc, char **argv)
 			else {
 				// Check that the packet came from GRIP.
 				if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) {
-					if ( verbose ) printf( "Bytes: %4d %02x:%02x:%02x TM: 0x%04x %06d (non GRIP).\n",
-						iResult,
+					if ( verbose ) printf( "Bytes: %4d %4d %4d %02x:%02x:%02x TM: 0x%04x %06d (non GRIP).\n",
+						iResult, 
+						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2, epmPacketHeaderInfo.numberOfWords * 2, 
 						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
 						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
 						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
 						);
 				}
 				else {
-					printf( "Bytes: %4d %02x:%02x:%02x TM: 0x%04x %06d",
-						iResult,
-						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
+					printf( "Bytes: %4d %4d %4d %02x:%02x:%02x TM: 0x%04x %06d",
+						iResult, 
+						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2, epmPacketHeaderInfo.numberOfWords * 2, 
 						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
 						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
 						);
