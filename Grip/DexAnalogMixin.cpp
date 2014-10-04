@@ -42,6 +42,15 @@ DexAnalogMixin::DexAnalogMixin( void ) {
 	SetQuaterniond( align, ATIRotationAngle[1], kVector );
 	SetQuaterniond( flip, 180.0, iVector );
 	MultiplyQuaternions( ftAlignmentQuaternion[1], flip, align );
+
+	// Set a default filter constant.
+	SetFilterConstant( 100.0 );
+	CopyVector( filteredManipulandumPosition, zeroVector );
+	CopyVector( filteredLoadForce, zeroVector );
+	CopyVector( filteredAcceleration, zeroVector );
+	for (int ati = 0; ati < N_FORCE_TRANSDUCERS; ati++ ) CopyVector( filteredCoP[ati], zeroVector );
+	filteredGripForce = 0.0;
+
 }
 
 /***************************************************************************/
@@ -96,13 +105,56 @@ double DexAnalogMixin::ComputePlanarLoadForce( Vector3 &load, Vector3 &force1, V
 	return( VectorNorm( load ) );
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
-double DexAnalogMixin::FilteredLoad( float new_load, float filter_constant ) {
-	filteredLoad = (new_load + filter_constant * filteredLoad) / (1.0 + filter_constant);
-	return( filteredLoad );
+// Take a vector or a scalar, recursively filter it and return the filtered value.
+// Filtering is the same for all quantities in the instance.
+// The larger the filterConstant value, the more the data is smoothed.
+// A filterConstant of zero results in no filtering.
+
+void DexAnalogMixin::SetFilterConstant( double filter_constant ) {
+	filterConstant = filter_constant;
 }
 
-double DexAnalogMixin::FilteredGrip( float new_grip, float filter_constant ) {
-	filteredGrip = (new_grip + filter_constant * filteredGrip) / (1.0 + filter_constant);
-	return( filteredGrip );
+double DexAnalogMixin::GetFilterConstant( void ) {
+	return( filterConstant );
+}
+
+// Vectors are filtered 'in place', i.e. returned in the same vector.
+// The magnitude of the vector is returned as a scalar value.
+
+double DexAnalogMixin::FilterLoadForce( Vector3 load_force ) {
+	// Combine the new force sample with previous filtered value (recursive filtering).
+	ScaleVector( filteredLoadForce, filteredLoadForce, filterConstant );
+	AddVectors( filteredLoadForce, filteredLoadForce, load_force );
+	ScaleVector( filteredLoadForce, filteredLoadForce, 1.0 / (1.0 + filterConstant ));
+	// Return the filtered value in place.
+	CopyVector( load_force, filteredLoadForce );
+	return( VectorNorm( filteredLoadForce ) );
+}
+
+double DexAnalogMixin::FilterCoP( int which_ati, Vector3 center_of_pressure ) {
+	// Combine the new force sample with previous filtered value (recursive filtering).
+	ScaleVector( filteredCoP[which_ati], filteredCoP[which_ati], filterConstant );
+	AddVectors( filteredCoP[which_ati], filteredCoP[which_ati], center_of_pressure );
+	ScaleVector( filteredCoP[which_ati], filteredCoP[which_ati], 1.0 / (1.0 + filterConstant ));
+	// Return the filtered value in place.
+	CopyVector( center_of_pressure, filteredCoP[which_ati] );
+	return( VectorNorm( filteredCoP[which_ati] ) );
+}
+
+double DexAnalogMixin::FilterManipulandumPosition( Vector3 position ) {
+	// Combine the new force sample with previous filtered value (recursive filtering).
+	ScaleVector( filteredManipulandumPosition, filteredManipulandumPosition, filterConstant );
+	AddVectors( filteredManipulandumPosition, filteredManipulandumPosition, position );
+	ScaleVector( filteredManipulandumPosition, filteredManipulandumPosition, 1.0 / (1.0 + filterConstant ));
+	// Return the filtered value in place.
+	CopyVector( position, filteredManipulandumPosition );
+	return( VectorNorm( position ) );
+}
+
+
+double DexAnalogMixin::FilterGripForce( double grip_force ) {
+	filteredGripForce = (grip_force + filterConstant * filteredGripForce) / (1.0 + filterConstant );
+	return( filteredGripForce );
 }

@@ -11,6 +11,7 @@
 
 #define N_FORCE_TRANSDUCERS		2
 #define DEFAULT_COP_THRESHOLD	0.25
+#define DEFAULT_FILTER_CONSTANT	1.0
 
 #define LEFT_ATI	0
 #define RIGHT_ATI	1
@@ -25,11 +26,6 @@ public:
 	// Constructor
 	DexAnalogMixin( void );
 
-	// Saves force values between calls, so that recursive filtering 
-	// can be applied.
-	double		filteredLoad;
-	double		filteredGrip;
-
 	// Structures needed to use the ATI Force/Torque transducer library.
 	Quaternion			ftAlignmentQuaternion[N_FORCE_TRANSDUCERS];
 
@@ -43,7 +39,33 @@ public:
 	double ComputeLoadForce( Vector3 &load, Vector3 &force1, Vector3 &force2 );
 	double ComputePlanarLoadForce( Vector3 &load, Vector3 &force1, Vector3 &force2 );
 
-	double FilteredLoad( float new_load, float filter_constant );
-	double FilteredGrip( float new_grip, float filter_constant );
+	// Recursive filtering of certain vector and matrix quantities.
+
+	// Saves force values between calls, so that recursive filtering 
+	// can be applied.
+	Vector3		filteredLoadForce;
+	double		filteredGripForce;
+	Vector3		filteredAcceleration;
+	Vector3		filteredManipulandumPosition;
+	Vector3		filteredCoP[N_FORCE_TRANSDUCERS];
+
+	double		filterConstant;
+	// The filter constant sets the amount of lowpass filtering.
+	// Setting a high value filters a lot. Setting to 0 means no filtering.
+	// Fractional values are permitted to achieve less filtering.
+	// The effective cut-off frequency will depend on your samping rate.
+	void SetFilterConstant( double constant = 0.0 ); // Default is no filtering.
+	double GetFilterConstant( void );
+
+
+	// Values that can be filtered. Note that vector values are filtered 'in place'
+	//  meaning that the filtered value is returned in the vector that was used
+	//  to input the new data sample. Vector routines, as a bonus, return the
+	//  magnitude of the vector as a scalar return value.
+	double FilterLoadForce( Vector3 load_force );
+	double FilterCoP( int which_transducer, Vector3 center_of_pressure );
+	double FilterManipulandumPosition( Vector3 position );
+
+	double FilterGripForce( double grip_force );
 
 };

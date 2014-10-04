@@ -206,7 +206,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
 		// Get the manipulandum pose data. 
 		realtime_packet->dataSlice[slice].poseTick = ExtractReversedLong( ptr );
-		for ( i = X; i <= Z; i++ ) realtime_packet->dataSlice[slice].position[i] = ExtractReversedShort( ptr );
+		for ( i = X; i <= Z; i++ ) realtime_packet->dataSlice[slice].position[i] = (double) ExtractReversedShort( ptr );
 		for ( i = X; i <= M; i++ ) realtime_packet->dataSlice[slice].quaternion[i] = ExtractReversedFloat( ptr );
 		for ( i = 0; i < 2; i++ ) realtime_packet->dataSlice[slice].markerVisibility[i] = ExtractReversedLong( ptr );
 		realtime_packet->dataSlice[slice].manipulandumVisibility = ExtractChar( ptr );
