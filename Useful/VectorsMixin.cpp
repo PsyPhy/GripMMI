@@ -623,7 +623,23 @@ bool VectorsMixin::ComputeRigidBodyPose( Vector3 position, Quaternion orientatio
 	return( true );
 
 }
-								
+
+/***********************************************************************************/
+
+// Compute a set of angles that is representative of the rotation of an object
+//  away from the null orientation around each of the X, Y and Z axies. 
+// This set of 3 angles is NOT a set of Euler angles. You cannot reconstruct the
+//  final 3D orientation by concatenating these 3 rotations. 
+// Rather, it is the first rotation of each of 3 sets of Euler angles. I find it
+//  as an intuitive way to represent the attitude of an object.
+ 
+void VectorsMixin::QuaternionToCannonicalRotations( Vector3 r, Quaternion q ) {
+	
+	r[X] = atan2(2 * (q[M] * q[X] + q[Y] * q[Z]), 1.0 - (q[X] * q[X] + q[Y] * q[Y]));
+	r[Y] = atan2(2 * (q[M] * q[Y] + q[X] * q[Z]), 1.0 - (q[Y] * q[Y] + q[Z] * q[Z]));
+	r[Z] = atan2(2 * (q[M] * q[Z] + q[X] * q[Y]), 1.0 - (q[X] * q[X] + q[Z] * q[Z]));
+
+}
 										
 /***********************************************************************************/
 

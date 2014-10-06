@@ -91,6 +91,8 @@ public:
 	void RotateVector( Vector3 result, const Quaternion q, const Vector3 v );
 	void MatrixToQuaternion( Quaternion result, Matrix3x3 m );
 
+	void QuaternionToCannonicalRotations( Vector3 rotations, Quaternion q );
+
 	bool ComputeRigidBodyPose( Vector3 position, Quaternion orientation,
 								Vector3 model[], Vector3 actual[], 
 								int N, Quaternion default_orientation );

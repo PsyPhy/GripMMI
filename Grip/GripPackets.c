@@ -202,7 +202,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	// Get the acquisition ID and packet count for that acquisition.
 	realtime_packet->acquisitionID = ExtractReversedLong( ptr );
 	realtime_packet->rtPacketCount = ExtractReversedLong( ptr );
-	fOutputDebugString( "%d Acc raw: ", realtime_packet->rtPacketCount );
+//	fOutputDebugString( "%d Acc raw: ", realtime_packet->rtPacketCount );
 	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
 		// Get the manipulandum pose data. 
 		realtime_packet->dataSlice[slice].poseTick = ExtractReversedLong( ptr );
@@ -212,7 +212,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 		realtime_packet->dataSlice[slice].manipulandumVisibility = ExtractChar( ptr );
 		// Get the analog data.
 		realtime_packet->dataSlice[slice].analogTick = ExtractReversedLong( ptr );
-		fOutputDebugString( "  %6d", realtime_packet->dataSlice[slice].analogTick );
+//		fOutputDebugString( "  %6d", realtime_packet->dataSlice[slice].analogTick );
 		for ( sensor = 0; sensor < 2; sensor++ ) {
 			for ( i = X; i <=Z; i++ ) {
 				value = ExtractReversedShort( ptr );
@@ -228,7 +228,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 			realtime_packet->dataSlice[slice].acceleration[i] = ((double) lvalue) / 1000.0 / 9.8;
 		}
 	}
-	fOutputDebugString( "\n" );
+//	fOutputDebugString( "\n" );
 
 }
 

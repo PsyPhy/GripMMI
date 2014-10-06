@@ -47,6 +47,7 @@ public:
 	double		filteredGripForce;
 	Vector3		filteredAcceleration;
 	Vector3		filteredManipulandumPosition;
+	Vector3		filteredManipulandumRotations;
 	Vector3		filteredCoP[N_FORCE_TRANSDUCERS];
 
 	double		filterConstant;
@@ -65,7 +66,7 @@ public:
 	double FilterLoadForce( Vector3 load_force );
 	double FilterCoP( int which_transducer, Vector3 center_of_pressure );
 	double FilterManipulandumPosition( Vector3 position );
-
+	double FilterManipulandumRotations( Vector3 rotations );
 	double FilterGripForce( double grip_force );
 
 };
