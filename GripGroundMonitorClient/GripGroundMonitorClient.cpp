@@ -79,6 +79,10 @@ int __cdecl main(int argc, char **argv)
 	bool	verbose = true;
 	bool	cache_all = true;
 
+	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
+	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
+	fprintf( stderr, "\n" );
+
 	// Parse the command line.
 	if ( argc < 2 ) printf( "Using default output root: %s\n", packetCacheFilenameRoot );
 	else {
@@ -91,13 +95,11 @@ int __cdecl main(int argc, char **argv)
 		printf( "Using command-line server name: %s\n", server_name );
 	}
 	if ( argc > 3 ) {
-		if ( !strcmp( argv[3], "-all" )) cache_all = true;
-		printf( "Saving all packet types.\n" );
+		if ( !strcmp( argv[3], "-only" )) cache_all = false;
 	}
+	if ( cache_all ) fprintf( stderr, "Saving all packets.\n" );
+	else fprintf( stderr, "Saving only GRIP packets.\n" );
 	
-
-	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
-	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
 	fprintf( stderr, "\n" );
 
     // Initialize Winsock
@@ -219,11 +221,14 @@ int __cdecl main(int argc, char **argv)
 				}
 				else {
 					printf( "Bytes: %4d %4d %4d %02x:%02x:%02x TM: 0x%04x %06d",
-						iResult, 
-						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2, epmPacketHeaderInfo.numberOfWords * 2, 
-						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
-						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
-						);
+						iResult,													// Actual # bytes received.
+						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2,	// Bytes supposedly received according to transfer frame header.
+						epmPacketHeaderInfo.numberOfWords * 2,						// Bytes supposedly recieved according to the EPM Telemetry packet, excluding transfer frame info.  
+						epmPacketHeaderInfo.subsystemID, 
+						epmPacketHeaderInfo.subsystemUnitID, 
+						epmPacketHeaderInfo.TMIdentifier,
+						epmPacketHeaderInfo.TMCounter
+					);
 					// Then check the type of EPM packet and sort into appropriate cache files.
 					// We are only concerned with two packet types: 
 					//   0x0301 for housekeeping data and 0x1001 for realtime science data.
