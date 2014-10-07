@@ -4,11 +4,9 @@
 /*                                                                         */
 /***************************************************************************/
 
-/*    (c) Copyright 1994, 1995 - PsyPhy Consulting. All Rights Reserved.    */
+/*    (c) Copyright 1994, 1995, 2014 - PsyPhy Consulting. All Rights Reserved.    */
 
-/*
-	Plot functions within a view.
-*/
+/*	Plot functions within a view. */
 
 #include <stdio.h>
 #include <math.h>
@@ -254,6 +252,8 @@ void ViewPlotFilledEllipse (View view, double matrix[2][2], double scale, double
   ViewFillPolygon( view );
 
 }
+
+extern void invert_matrix_2d( const double matrix[2][2], double inverse[2][2] );
 
 void ViewPlotSquaredEllipse (View view, double matrix[2][2], 
 			     double scale, double center[2] ) {

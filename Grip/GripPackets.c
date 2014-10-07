@@ -2,6 +2,10 @@
 // Packet definitions for realtime data from Grip.
 //
 
+// Disable warnings about unsafe functions.
+// We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <Windows.h>
@@ -242,6 +246,8 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 	ptr = epm_packet->sections.rawData;
 
 	// Skip to the script information.
+	// ICD says that these items should be at an offset of 68 bytes.
+	// I found them at 76.
 	ptr += 76;
 
 	health_packet->horizontalTargetFeedback = ExtractReversedShort( ptr );

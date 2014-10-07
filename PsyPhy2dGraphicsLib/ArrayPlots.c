@@ -6,6 +6,10 @@
 
 /*    (c) Copyright 1994, 1995 - PsyPhy Consulting. All Rights Reserved.    */
 
+// Disable warnings about unsafe functions.
+// We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>

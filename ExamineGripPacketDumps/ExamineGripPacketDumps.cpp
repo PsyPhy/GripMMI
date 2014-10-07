@@ -6,7 +6,6 @@
 #include "..\Useful\fMessageBox.h"
 #include "..\Grip\GripPackets.h"
 
-
 char *HKfilename = "C:\\GripGroundPacketStore\\grip-fm-RT.txt";
 
 unsigned char buffer[2048];
