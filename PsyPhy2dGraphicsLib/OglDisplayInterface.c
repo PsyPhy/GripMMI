@@ -1,3 +1,8 @@
+// Disable warnings about unsafe functions.
+// We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
+#define _CRT_SECURE_NO_WARNINGS
+
+// Enable enhanced monitoring of memory leaks.
 #define _CRTDBG_MAP_ALLOC
 #include <windows.h>
 #include <mmsystem.h>
@@ -9,7 +14,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
-
 
 #define true  1
 #define false 0
