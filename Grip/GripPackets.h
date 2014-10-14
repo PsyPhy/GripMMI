@@ -40,6 +40,7 @@
 
 // Compute the time in seconds.
 #define EPMtoSeconds( header ) ((long double)header.coarseTime + ((long double) header.fineTime / 10000.0))
+#define RT_SLICES_PER_PACKET 10
 
 typedef struct {
 	unsigned long	epmLanSyncMarker;
@@ -91,7 +92,6 @@ typedef struct {
 	Vector3			acceleration;
 } ManipulandumPacket;
  
-#define RT_SLICES_PER_PACKET 10
 typedef struct {
 	unsigned long acquisitionID;
 	unsigned long rtPacketCount;
@@ -207,7 +207,9 @@ void ExtractEPMTransferFrameHeaderInfo ( EPMTransferFrameHeaderInfo *header, con
 void ExtractEPMTelemetryHeaderInfo ( EPMTelemetryHeaderInfo *header, const EPMTelemetryPacket *epm_packet  );
 int  InsertEPMTelemetryHeaderInfo ( EPMTelemetryPacket *epm_packet,  const EPMTelemetryHeaderInfo *header  );
 void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const EPMTelemetryPacket *epm_packet );
+void InsertGripRealtimeDataInfo( EPMTelemetryPacket *epm_packet, const GripRealtimeDataInfo *realtime_packet );
 void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, const EPMTelemetryPacket *epm_packet );
+void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHealthAndStatusInfo *health_packet );
 
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root );
 

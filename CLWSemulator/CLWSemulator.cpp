@@ -37,7 +37,7 @@ char *PacketSourceFile = ".\\GripPacketsForSimulator.gpk";
 	bool _debug = false;
 #endif
 
-BOOL verbose = false;
+BOOL verbose = true;
 
 
 void setPacketTime( EPMTelemetryHeaderInfo *header ) {
@@ -102,27 +102,25 @@ void sendRecordedPackets ( SOCKET socket ) {
 			}
 			else {
 				if ( verbose ) printf( "Bytes: %4d EPM.\n", bytes_read );
+				if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) printf( "." );
 				else {
-					if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) printf( "." );
-					else {
-						printf( "G" );
-						// Set the timestamp of the packet to the current time.
-						setPacketTime( &epmPacketHeaderInfo );
-						// Set the packet counter based on a local count.
-						epmPacketHeaderInfo.TMCounter = packetCount++;
-						// Put the new header info back into the packet.
-						InsertEPMTelemetryHeaderInfo( &rtPacket, &epmPacketHeaderInfo );
-						iSendResult = send( socket, recordedPacket.buffer, EPM_BUFFER_LENGTH - 1, 0 );
-						// If we get a socket error it is probably because the client has closed the connection.
-						// So we break out of the loop.
-						if (iSendResult == SOCKET_ERROR) {
-							fprintf( stderr, "Recorded packet send failed with error: %3d\n", WSAGetLastError());
-							return;
-						}
-						// What we should do here is sleep based on the difference in time between the previous
-						//  recorded packet and this one. For now we just sleep and let it run fast.
-						Sleep( 400 );
+					printf( "G" );
+					// Set the timestamp of the packet to the current time.
+					setPacketTime( &epmPacketHeaderInfo );
+					// Set the packet counter based on a local count.
+					epmPacketHeaderInfo.TMCounter = packetCount++;
+					// Put the new header info back into the packet.
+					InsertEPMTelemetryHeaderInfo( &rtPacket, &epmPacketHeaderInfo );
+					iSendResult = send( socket, recordedPacket.buffer, EPM_BUFFER_LENGTH - 1, 0 );
+					// If we get a socket error it is probably because the client has closed the connection.
+					// So we break out of the loop.
+					if (iSendResult == SOCKET_ERROR) {
+						fprintf( stderr, "Recorded packet send failed with error: %3d\n", WSAGetLastError());
+						return;
 					}
+					// What we should do here is sleep based on the difference in time between the previous
+					//  recorded packet and this one. For now we just sleep and let it run fast.
+					Sleep( 400 );
 				}
 			}
 		}
@@ -201,6 +199,88 @@ void sendConstructedPackets ( SOCKET socket ) {
 	}
 }
 
+void sendPrimingPackets ( SOCKET socket ) {
+
+	int packetCount = 0;
+    int iSendResult;
+	int slice;
+
+	GripHealthAndStatusInfo hkInfo;
+	GripRealtimeDataInfo rtInfo;
+
+	// Prepare the packets by copying constants into local structure.
+	memcpy( &hkHeaderInfo, &hkHeader, sizeof( hkHeaderInfo ) );
+	memcpy( &rtHeaderInfo, &rtHeader, sizeof( rtHeaderInfo ) );
+
+	// Send just one packet of each type;
+
+	// Insert the current packet count and time into the packet.
+	rtHeaderInfo.TMCounter = packetCount++;
+	setPacketTime( &rtHeaderInfo );
+	InsertEPMTelemetryHeaderInfo( &rtPacket, &rtHeaderInfo );
+
+	// Fill in null data.
+	rtInfo.acquisitionID = 0;
+	rtInfo.rtPacketCount = packetCount++;
+	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
+		int i, unit;
+
+		rtInfo.dataSlice[slice].poseTick = 0;
+		for ( i = X; i <=Z; i++ ) rtInfo.dataSlice[slice].position[i] = 0.0;
+		for ( i = X; i <=M; i++ ) rtInfo.dataSlice[slice].quaternion[i] = 0.0;
+		for ( i = 0; i < 2; i++ ) rtInfo.dataSlice[slice].markerVisibility[i] = 0x00000000;
+		rtInfo.dataSlice[slice].manipulandumVisibility = 0;
+		rtInfo.dataSlice[slice].analogTick = 0;
+		for ( unit = 0; unit < 2; unit++ ) {
+			for ( i = X; i <=Z; i++ ) rtInfo.dataSlice[slice].ft[unit].force[i] = 0.0;
+			for ( i = X; i <=Z; i++ ) rtInfo.dataSlice[slice].ft[unit].torque[i] = 0.0;
+		}
+		for ( i = X; i <=Z; i++ ) rtInfo.dataSlice[slice].acceleration[i] = 0.0;
+	}
+	InsertGripRealtimeDataInfo( &rtPacket, &rtInfo );
+
+	// Send out a realtime data packet.
+	iSendResult = send( socket, rtPacket.buffer, rtPacketLengthInBytes, 0 );
+	// If we get a socket error it is probably because the client has closed the connection.
+	// So we break out of the loop.
+	if (iSendResult == SOCKET_ERROR) {
+		fprintf( stderr, "RT packet send failed with error: %3d\n", WSAGetLastError());
+		return;
+	}
+	fprintf( stderr, "  RT packet %3d Bytes sent: %3d\n", packetCount, iSendResult);
+	Sleep( 200 );
+
+	// Insert the current packet count and time into the packet.
+	hkHeaderInfo.TMCounter = packetCount++;
+	setPacketTime( &hkHeaderInfo );
+	InsertEPMTelemetryHeaderInfo( &hkPacket, &hkHeaderInfo );
+	// Give user, protocol, task and step info as if the subject has already started a task.
+	// This is to overcome a bug in the MMI. It will be removed later.
+	hkInfo.user = 11;
+	hkInfo.protocol = 201;
+	hkInfo.task = 201;
+	hkInfo.step = 0;
+
+	hkInfo.horizontalTargetFeedback = 0;	// No targets on.
+	hkInfo.verticalTargetFeedback = 0;		
+	hkInfo.toneFeedback = 0x01;				// Lowest tone, muted.
+	hkInfo.cradleDetectors = 0x01B;			// S, M, L, I think.
+
+	InsertGripHealthAndStatusInfo( &hkPacket, &hkInfo );
+
+	// Send out a housekeeping packet.
+	iSendResult = send( socket, hkPacket.buffer, hkPacketLengthInBytes, 0 );
+	// If we get a socket error it is probably because the client has closed the connection.
+	// So we break out of the loop.
+	if (iSendResult == SOCKET_ERROR) {
+		fprintf( stderr, "HK send failed with error: %3d\n", WSAGetLastError());
+		return;
+	}
+	fprintf( stderr, "  HK packet %3d Bytes sent: %3d\n", packetCount, iSendResult);
+
+	Sleep( 1000 );
+
+}
 int _tmain(int argc, char* argv[])
 {
 
@@ -215,7 +295,7 @@ int _tmain(int argc, char* argv[])
 	struct addrinfo *result = NULL;
 	struct addrinfo hints;
 
-	enum { RECORDED_PACKETS, CONSTRUCTED_PACKETS } packet_source = RECORDED_PACKETS;
+	enum { RECORDED_PACKETS, CONSTRUCTED_PACKETS, PRIMING_PACKETS } packet_source = RECORDED_PACKETS;
 	int arg;
 
 	EPMTransferFrameHeaderInfo transferFrameInfo;
@@ -230,9 +310,11 @@ int _tmain(int argc, char* argv[])
 	for ( arg = 1; arg < argc; arg++ ) {
 		if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
 		if ( !strcmp( argv[arg], "-constructed" ) ) packet_source = CONSTRUCTED_PACKETS;
+		if ( !strcmp( argv[arg], "-prime" ) ) packet_source = PRIMING_PACKETS;
 	}	
 	if ( packet_source == RECORDED_PACKETS ) fprintf( stderr, "Sending pre-recorded packets.\n\n" );
 	else if ( packet_source == CONSTRUCTED_PACKETS ) fprintf( stderr, "Constructing simulated packets.\n\n" );
+	else if ( packet_source == PRIMING_PACKETS ) fprintf( stderr, "Sending priming packets.\n\n" );
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -338,8 +420,21 @@ int _tmain(int argc, char* argv[])
 		}while ( iResult > 0 );
 
 		// Send out recorded artifically constructed packets, depending on a flag.
-		if ( packet_source == RECORDED_PACKETS ) sendRecordedPackets( ClientSocket );
-		else sendConstructedPackets( ClientSocket );
+		switch ( packet_source ) {
+
+		case RECORDED_PACKETS:
+			sendRecordedPackets( ClientSocket );
+			break;
+
+		case CONSTRUCTED_PACKETS:
+			sendConstructedPackets( ClientSocket );
+			break;
+
+		case PRIMING_PACKETS:
+			sendPrimingPackets( ClientSocket );
+			break;
+
+		}
 
 		// shutdown the connection since we're done
 		iResult = shutdown(ClientSocket, SD_SEND);

@@ -206,7 +206,6 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	// Get the acquisition ID and packet count for that acquisition.
 	realtime_packet->acquisitionID = ExtractReversedLong( ptr );
 	realtime_packet->rtPacketCount = ExtractReversedLong( ptr );
-//	fOutputDebugString( "%d Acc raw: ", realtime_packet->rtPacketCount );
 	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
 		// Get the manipulandum pose data. 
 		realtime_packet->dataSlice[slice].poseTick = ExtractReversedLong( ptr );
@@ -216,7 +215,6 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 		realtime_packet->dataSlice[slice].manipulandumVisibility = ExtractChar( ptr );
 		// Get the analog data.
 		realtime_packet->dataSlice[slice].analogTick = ExtractReversedLong( ptr );
-//		fOutputDebugString( "  %6d", realtime_packet->dataSlice[slice].analogTick );
 		for ( sensor = 0; sensor < 2; sensor++ ) {
 			for ( i = X; i <=Z; i++ ) {
 				value = ExtractReversedShort( ptr );
@@ -232,8 +230,83 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 			realtime_packet->dataSlice[slice].acceleration[i] = ((double) lvalue) / 1000.0 / 9.8;
 		}
 	}
-//	fOutputDebugString( "\n" );
+}
 
+union {
+	float	float_value;
+	long	long_value;
+	unsigned long	ulong_value;
+	short	short_value;
+	unsigned short	ushort_value;
+	char  bytes[16]; // More bytes than we need.
+} __item;
+
+int insert_float( char *ptr, float value ) {
+	int i;
+	__item.float_value = value;
+	for (i = sizeof( float ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( float ) );
+}
+int insert_long( char *ptr, long value ) {
+	int i;
+	__item.long_value = value;
+	for (i = sizeof( long ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( long ) );
+}
+int insert_ulong( char *ptr, unsigned long value ) {
+	int i;
+	__item.ulong_value = value;
+	for (i = sizeof( unsigned long ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( unsigned long ) );
+}
+int insert_short( char *ptr, short value ) {
+	int i;
+	__item.short_value = value;
+	for (i = sizeof( short ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( short ) );
+}
+
+// Inssert real-time science data into an EPM data packet.
+void InsertGripRealtimeDataInfo( EPMTelemetryPacket *epm_packet, const GripRealtimeDataInfo *realtime_packet ) {
+
+	char *ptr;
+	int slice;
+	int sensor;
+	int i;
+
+	// Point to the actual data in the packet.
+	ptr = epm_packet->sections.rawData;
+
+	// Set the acquisition ID and packet count for that acquisition.
+	ptr += insert_ulong( ptr, realtime_packet->acquisitionID );
+	ptr += insert_ulong( ptr, realtime_packet->rtPacketCount ); 
+	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
+		// Insert the manipulandum pose data. 
+		ptr += insert_ulong( ptr, realtime_packet->dataSlice[slice].poseTick );
+		for ( i = X; i <= Z; i++ ) ptr += insert_short( ptr, (short) (realtime_packet->dataSlice[slice].position[i] * 10.0));
+		for ( i = X; i <= M; i++ ) ptr += insert_float( ptr, (float) realtime_packet->dataSlice[slice].quaternion[i] );
+		for ( i = 0; i < 2; i++ ) ptr += insert_ulong( ptr, realtime_packet->dataSlice[slice].markerVisibility[i] );
+		*ptr = realtime_packet->dataSlice[slice].manipulandumVisibility; ptr++;
+		// Insert the analog data.
+		ptr += insert_ulong( ptr, realtime_packet->dataSlice[slice].analogTick );
+		for ( sensor = 0; sensor < 2; sensor++ ) {
+			for ( i = X; i <=Z; i++ ) insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].force[i] * 100.0));
+			for ( i = X; i <=Z; i++ ) insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].torque[i] * 1000.0));
+		}
+		for ( i = X; i <= Z; i++ ) insert_long( ptr, (long) (realtime_packet->dataSlice[slice].acceleration[i] * 1000.0 * 9.8));
+	}
 }
 
 // Extract a Grip housekeeping packet from an EPM packet.
@@ -281,6 +354,50 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 
 }
 
+// Insert data destined for a Grip housekeeping packet into an EPM packet.
+// Careful! It is not complete. Not all values are filled.
+void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHealthAndStatusInfo *health_packet ) {
+
+	char *ptr;
+
+	// Point to the actual data in the packet.
+	ptr = epm_packet->sections.rawData;
+
+	// Skip to the script information.
+	// ICD says that these items should be at an offset of 68 bytes.
+	// I found them at 76.
+	ptr += 76;
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->horizontalTargetFeedback ); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->verticalTargetFeedback); ptr += sizeof( unsigned short );
+
+	*ptr = health_packet->toneFeedback; ptr++;
+	*ptr = health_packet->cradleDetectors; ptr++;
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->user); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->protocol); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->task); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->step); ptr += sizeof( unsigned short );
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->scriptEngineStatusEnum); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->iochannelStatusEnum ); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->motionTrackerStatusEnum ); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->crewCameraStatusEnum ); ptr += sizeof( unsigned short );
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->crewCameraRate ); ptr += sizeof( unsigned short );
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->runningBits ); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->cpuUsage ); ptr += sizeof( unsigned short );
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->memoryUsage ); ptr += sizeof( unsigned short );
+
+	*((unsigned long *)ptr) = swapbytes_long( health_packet->freeDiskSpaceC ); ptr += sizeof( unsigned long );
+	*((unsigned long *)ptr) = swapbytes_long( health_packet->freeDiskSpaceD ); ptr += sizeof( unsigned long );
+	*((unsigned long *)ptr) = swapbytes_long( health_packet->freeDiskSpaceE ); ptr += sizeof( unsigned long );
+
+	*((unsigned short *)ptr) = swapbytes_short( health_packet->crc ); ptr += sizeof( unsigned short );
+	
+
+}
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root ) {
 		
 	// Create the file names that hold the packets according to packet type.
