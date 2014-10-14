@@ -1,7 +1,8 @@
+*.suo
+*.pkt
 Debug
 debug
 release
 Release
-*.suo
-*.pkt
+
 
