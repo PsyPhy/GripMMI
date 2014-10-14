@@ -3,4 +3,5 @@ debug
 release
 Release
 *.pkt
+*.suo
 
