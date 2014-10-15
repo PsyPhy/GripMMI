@@ -212,21 +212,30 @@ int __cdecl main(int argc, char **argv)
 				// Check that the packet came from GRIP.
 				if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) {
 					if ( verbose ) printf( "Bytes: %4d %4d %4d %02x:%02x:%02x TM: 0x%04x %06d (non GRIP).\n",
+
 						iResult, 
 						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2, 
 						epmPacketHeaderInfo.numberOfWords * 2, 
+
 						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
-						epmPacketHeaderInfo.subsystemID, epmPacketHeaderInfo.subsystemUnitID, 
-						epmPacketHeaderInfo.TMIdentifier, epmPacketHeaderInfo.TMCounter
+						epmPacketHeaderInfo.subsystemID, 
+						epmPacketHeaderInfo.subsystemUnitID, 
+
+						epmPacketHeaderInfo.TMIdentifier, 
+						epmPacketHeaderInfo.TMCounter
 						);
 				}
 				else {
 					printf( "Bytes: %4d %4d %4d %02x:%02x:%02x TM: 0x%04x %06d",
+						
 						iResult,													// Actual # bytes received.
 						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2,	// Bytes supposedly received according to transfer frame header.
-						epmPacketHeaderInfo.numberOfWords * 2,						// Bytes supposedly recieved according to the EPM Telemetry packet, excluding transfer frame info.  
+						epmPacketHeaderInfo.numberOfWords * 2,					// Bytes supposedly recieved according to the EPM Telemetry packet, excluding transfer frame info.  
+						
+						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
 						epmPacketHeaderInfo.subsystemID, 
 						epmPacketHeaderInfo.subsystemUnitID, 
+						
 						epmPacketHeaderInfo.TMIdentifier,
 						epmPacketHeaderInfo.TMCounter
 					);
