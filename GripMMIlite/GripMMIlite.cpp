@@ -222,6 +222,7 @@ int main(int argc, char *argv[])
 			// Where are we in the script.
 			fprintf( stdout, "  User: %3d Protocol: %3d Task: %3d Step: %3d", 
 				hkInfo.user, hkInfo.protocol, hkInfo.task, hkInfo.step );
+#if 0
 			// State of the horizontal and vertical target LEDs.
 			fprintf( stdout, " H: " );
 			for ( i = 0, bit = 0x01; i < 10; i++, bit = bit << 1 ) {
@@ -233,7 +234,6 @@ int main(int argc, char *argv[])
 				if ( bit & hkInfo.verticalTargetFeedback ) fprintf( stdout, "O" );
 				else fprintf( stdout, "." );
 			}
-#if 0
 			// State of the tone generator.
 			fprintf( stdout, "  S: %s", soundBar[hkInfo.toneFeedback] );
 			fprintf( stdout, "  M: %c%c%c", 
@@ -254,7 +254,8 @@ int main(int argc, char *argv[])
 			//  and whether or not the manipulandum is visible.
 			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
 //				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
-				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].analogTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+//				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].analogTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+				fprintf( stdout, " %6.2f", rtInfo.dataSlice[i].acceleration[Z] );
 			}
 			fprintf( stdout, "\n" );
 

@@ -37,7 +37,7 @@ char *PacketSourceFile = ".\\GripPacketsForSimulator.gpk";
 	bool _debug = false;
 #endif
 
-BOOL verbose = true;
+BOOL verbose = false;
 
 
 void setPacketTime( EPMTelemetryHeaderInfo *header ) {
@@ -120,7 +120,7 @@ void sendRecordedPackets ( SOCKET socket ) {
 					}
 					// What we should do here is sleep based on the difference in time between the previous
 					//  recorded packet and this one. For now we just sleep and let it run fast.
-					Sleep( 400 );
+					Sleep( 40 );
 				}
 			}
 		}

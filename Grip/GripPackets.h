@@ -163,7 +163,8 @@ typedef union {
 	struct {
 		char rawTransferFrameHeader[EPM_TRANSFER_FRAME_HEADER_LENGTH];
 		char rawTelemetryHeader[EPM_TELEMETRY_HEADER_LENGTH];
-		char rawData[EPM_BUFFER_LENGTH - (EPM_TRANSFER_FRAME_HEADER_LENGTH + EPM_TELEMETRY_HEADER_LENGTH)];
+		char rawData[EPM_BUFFER_LENGTH - (EPM_TRANSFER_FRAME_HEADER_LENGTH + EPM_TELEMETRY_HEADER_LENGTH) - 2];
+		char rawCRC[2];
 	} sections;
 } EPMTelemetryPacket; 
 
@@ -180,21 +181,25 @@ static int alivePacketLengthInWords = 6;
 // We don't try to simulate all the details, so most of the parameters are set to zero.
 // The TM Identifier is 0x0301 for DATA_BULK_HK per DEX-ICD-00383-QS.
 // The total number of words is 114 / 2 = 57 for the GRIP packet, 6 for the Transfer Frame header, 
-//  15 for the Telemetry header and 1 for the checksum.
+//  15 for the Telemetry header and 1 for the checksum = 79 words = 158 bytes.
+// THIS IS WRONG AS IT IGNORES CERTAIN HOUSEKEEPING VALUES.
+#define BULK_HK_BYTES	158
 static EPMTelemetryHeaderInfo hkHeader = { 
-	EPM_TRANSFER_FRAME_SYNC_VALUE, SPARE, GRIP_MMI_SOFTWARE_UNIT_ID, TRANSFER_FRAME_TELEMETRY, SPARE, 158,
+	EPM_TRANSFER_FRAME_SYNC_VALUE, SPARE, GRIP_MMI_SOFTWARE_UNIT_ID, TRANSFER_FRAME_TELEMETRY, SPARE, BULK_HK_BYTES,
 	EPM_TELEMETRY_SYNC_VALUE, 0, GRIP_SUBSYSTEM_ID, 0, 0, GRIP_HK_ID, UNKNOWN, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-static int hkPacketLengthInBytes = 158;
+static int hkPacketLengthInBytes = BULK_HK_BYTES;
 
 // Define a static packet header that is representative of a realtime data packet.
 // Not all of the members are properly filled. Just the ones important for the GripMMMI.
 // The TM Identifier is 0x1001 for DATA_RT_SCIENCE per DEX-ICD-00383-QS.
 // The total number of words is 758 / 2 = 379 for the GRIP packet, 6 for the Transfer Frame header,
-//  15 for the EPM header and 1 for the checksum.
+//  15 for the EPM header and 1 for the checksum = 401 words = 802 bytes.
+#define RT_SCIENCE_BYTES	802
 static EPMTelemetryHeaderInfo rtHeader = { 
-	EPM_TRANSFER_FRAME_SYNC_VALUE, SPARE, GRIP_MMI_SOFTWARE_UNIT_ID, TRANSFER_FRAME_TELEMETRY, SPARE, 796,
+	EPM_TRANSFER_FRAME_SYNC_VALUE, SPARE, GRIP_MMI_SOFTWARE_UNIT_ID, TRANSFER_FRAME_TELEMETRY, SPARE, RT_SCIENCE_BYTES,
 	EPM_TELEMETRY_SYNC_VALUE, 0, GRIP_SUBSYSTEM_ID, 0, 0, GRIP_RT_ID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-static int rtPacketLengthInBytes = 796;
+static int rtPacketLengthInBytes = RT_SCIENCE_BYTES;
+
 
 typedef enum { GRIP_RT_SCIENCE_PACKET, GRIP_HK_BULK_PACKET, GRIP_UNKNOWN_PACKET } GripPacketType;
 
