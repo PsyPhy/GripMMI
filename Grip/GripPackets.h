@@ -104,12 +104,19 @@ typedef struct {
 
 	// ExtractGripHealthAndStatusInfo() does not yet fill in the entire structure.
 	// These values are hidden inside the #if 0 so that no one tries to use them.
-	// When ExtractGripHealthAndStatusInfo() gets update, these items can be exposed again.
+	// When ExtractGripHealthAndStatusInfo() gets updated, these items can be exposed again.
+
+	unsigned short	nHousekeepingValue;
+	unsigned short	checkStatusListOffset;
+	unsigned short	unused1;
+	unsigned short	unused2;
+
 	unsigned short	currentMode;
 	unsigned short	nextMode;
 	unsigned short	timerStatus;
 	unsigned short	correctiveAction;
 	unsigned short	fileTransferStatus;
+
 	// Various temperature and voltage readings.
 	// We don't use them, so I don't name them separately.
 	short	temperature[10];
