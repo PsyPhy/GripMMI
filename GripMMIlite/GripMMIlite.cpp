@@ -31,7 +31,7 @@ char rtPacketCacheFilePath[1024];
 char hkPacketCacheFilePath[1024];
 
 // Max times to try to open the cache file before asking user to continue or not.
-#define MAX_OPEN_CACHE_RETRIES	5
+#define MAX_OPEN_CACHE_RETRIES	50
 // Pause time in milliseconds between file open retries.
 #define RETRY_PAUSE	2000		
 // Error code to return if the cache file cannot be opened.
