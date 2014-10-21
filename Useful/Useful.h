@@ -20,4 +20,4 @@ typedef double Matrix3x3[3][3];
 #define MISSING_FLOAT	999999.999999f
 #define MISSING_CHAR	127
 
-#define ERROR_RETURN
+#define UNDEFINED		-1

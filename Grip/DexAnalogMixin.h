@@ -45,6 +45,7 @@ public:
 	// can be applied.
 	Vector3		filteredLoadForce;
 	double		filteredGripForce;
+	double		filteredNormalForce[N_FORCE_TRANSDUCERS];
 	Vector3		filteredAcceleration;
 	Vector3		filteredManipulandumPosition;
 	Vector3		filteredManipulandumRotations;
@@ -68,5 +69,6 @@ public:
 	double FilterManipulandumPosition( Vector3 position );
 	double FilterManipulandumRotations( Vector3 rotations );
 	double FilterGripForce( double grip_force );
+	double FilterNormalForce( double normal_force, int ati );
 
 };

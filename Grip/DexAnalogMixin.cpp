@@ -168,3 +168,8 @@ double DexAnalogMixin::FilterGripForce( double grip_force ) {
 	filteredGripForce = (grip_force + filterConstant * filteredGripForce) / (1.0 + filterConstant );
 	return( filteredGripForce );
 }
+
+double DexAnalogMixin::FilterNormalForce( double normal_force, int ati ) {
+	filteredNormalForce[ati] = (normal_force + filterConstant * filteredNormalForce[ati]) / (1.0 + filterConstant );
+	return( filteredNormalForce[ati] );
+}
