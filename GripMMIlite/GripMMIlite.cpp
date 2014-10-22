@@ -195,7 +195,6 @@ int main(int argc, char *argv[])
 	BOOL new_rt;
 
 	int i;
-	unsigned int bit;
 
 	if ( argc < 2 ) printf( "Using default root path for cache files: %s\n", packetCacheFilenameRoot );
 	else {
