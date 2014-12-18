@@ -60,14 +60,15 @@ struct _display	_OglDisplay = {
 	NULL,						/* Linked list next element */
     &_ogl_params
 };
-Display		OglDisplay = &_OglDisplay; // Pointer to the static OglDisplay.
-Display		_ogl_display_list = NULL;
+Display		OglDisplay = &_OglDisplay;	// Pointer to the static OglDisplay.
+Display		_ogl_display_list = NULL;	// Pointer to a list of dynamic OglDisplays.
 
 /***************************************************************************/
 
 void OglDisplayRedraw ( Display display ) {
-	DisplayWalkCache( display, display );  
-	Swap();
+	OglActivate( display );
+	// DisplayWalkCache( display, display );  
+	OglSwap( display );
 }
 
 /***************************************************************************/
@@ -124,7 +125,6 @@ void OglHardcopy ( Display display, char *filename ) {
     Swap();
 
     fprintf( params->cpy, "U\n" );
-
     fprintf( params->cpy, "%%%%Trailer\n" );
     fclose( params->cpy );
 
@@ -144,6 +144,7 @@ Display CreateOglDisplay( void ) {
 	OglParams *params;
 	Display	  display;
 
+	// Allocate memory for an new instance.
 	params = malloc( sizeof( OglParams ) );
 	params->ogl_window.hDC = NULL;
 	params->ogl_window.hRC = NULL;
@@ -158,6 +159,7 @@ Display CreateOglDisplay( void ) {
 		MessageBox( NULL, "Error allocating memory for Display.", "OglDisplay.c", MB_OK );
 		exit( -101 );
 	}
+	// Add newly created instance to the list of OglDisplays.
 	memcpy( display, OglDisplay, sizeof( *display ) );
 	display->parameters = params;
 	display->next = _ogl_display_list;
@@ -167,7 +169,7 @@ Display CreateOglDisplay( void ) {
 
 }
 
-DestroyOglDisplays( void ) {
+void DestroyOglDisplays( void ) {
 
 	Display display = _ogl_display_list;
 	Display display_to_kill;
@@ -259,9 +261,8 @@ void	OglInit ( Display display ) {
 /***************************************************************************/
 
 void OglSwap ( Display display ) {
-
-  Swap();
-
+	register OglParams	*params = (OglParams *) display->parameters;
+	SwapWindowFromHandle( &params->ogl_window );
 }
 
 /***************************************************************************/
@@ -835,7 +836,7 @@ void	OglText	( Display display, char *string, float x, float y, double dir ) {
     item->param.text.x = x;
     item->param.text.y = y;
     item->param.text.dir = dir;
-    item->param.text.string = strdup( string );
+    item->param.text.string = _strdup( string );
     
   }
   

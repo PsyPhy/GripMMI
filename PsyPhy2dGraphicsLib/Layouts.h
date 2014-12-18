@@ -5,9 +5,6 @@
 /*****************************************************************************/
 
 #ifndef _Layouts_
-
-#include "Views.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

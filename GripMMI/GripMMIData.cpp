@@ -1,0 +1,449 @@
+// GripMMIData.cpp : methods for drawing the various graphs on the screen.
+
+#include "stdafx.h"
+#include <Windows.h>
+
+#include <stdio.h>
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys\stat.h>
+#include <conio.h>
+#include <math.h>
+#include <float.h>
+#include <vcclr.h>
+
+#include "GripMMIDesktop.h"
+#include "..\Useful\Useful.h"
+#include "..\Useful\VectorsMixin.h"
+#include "..\Useful\fMessageBox.h"
+#include "..\Useful\fOutputDebugString.h"
+#include "..\Grip\GripPackets.h"
+#include "..\Grip\DexAnalogMixin.h"
+
+using namespace GripMMI;
+
+// Max times to try to open the cache file before asking user to continue or not.
+#define MAX_OPEN_CACHE_RETRIES	(5)
+// Pause time in milliseconds between file open retries.
+#define RETRY_PAUSE	20		
+// Error code to return if the cache file cannot be opened.
+#define ERROR_CACHE_NOT_FOUND	-1000
+
+int windowSpan[SPAN_VALUES]  = { 20 * 60 * 60, 20 * 60 * 30, 20 * 60 * 10, 20 * 60 * 5, 20 * 60, 20 * 30 };
+// Character strings to indicate the state of the tone generator output.
+// Lowest bit on is a mute switch, so odd elements are empty while each
+// even element has a bar who's left-right position represents a frequency.
+char *soundBar[16] = {
+	"|.......",
+	"........",
+	".|......",
+	"........",
+	"..|.....",
+	"........",
+	"...|....",
+	"........",
+	"....|...",
+	"........",
+	".....|..",
+	"........",
+	"......|.",
+	"........",
+	".......|",
+	"........" 
+};
+
+// Decode the 2 bits of the mass detectors in the cradles.
+// 00 = empty, 10 = 400gm, 01 = 600gm, 11 = 800gm
+// Note discrepancy in DEX-ICD-00383-QS Iss E Rev 1 where in one place it is stated that bit 0 is LSB
+//  and that 00 = no mass, 01 = 400 gm, 10 = 600 gm, 11 = 800 gm. Bert confirms that the bit order 
+//  is actually the EPM order (bit 0 is MSB). Therefore 01 = 600 gm and 10 = 400 gm.
+char *massDecoder[4] = {".", "M", "S", "L" };
+
+Vector3 ManipulandumRotations[MAX_FRAMES];
+Vector3 ManipulandumPosition[MAX_FRAMES];
+float Acceleration[MAX_FRAMES][3];
+float GripForce[MAX_FRAMES];
+Vector3 LoadForce[MAX_FRAMES];
+float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
+double LoadForceMagnitude[MAX_FRAMES];
+Vector3 CenterOfPressure[N_FORCE_TRANSDUCERS][MAX_FRAMES];
+float RealMarkerTime[MAX_FRAMES];
+float CompressedMarkerTime[MAX_FRAMES];
+float RealAnalogTime[MAX_FRAMES];
+float CompressedAnalogTime[MAX_FRAMES];
+char  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
+char  ManipulandumVisibility[MAX_FRAMES];
+char markerVisibilityString[CODA_UNITS][32];
+unsigned int nFrames = 0;
+
+DexAnalogMixin	dex;
+
+void GripMMIDesktop::ResetBuffers( void ){
+	nFrames = 0;
+}
+
+int GripMMIDesktop::GetGripRT( void ) {
+
+	static int count = 0;
+
+	int  fid;
+	int packets_read = 0;
+	int bytes_read;
+	int return_code;
+	static unsigned short previousTMCounter = 0;
+	unsigned short bit = 0;
+	int retry_count;
+
+	EPMTelemetryPacket		packet;
+	EPMTelemetryHeaderInfo	epmHeader;
+	GripRealtimeDataInfo	rt;
+
+	int mrk, grp, coda;
+
+	char filename[MAX_PATHLENGTH];
+
+	// Create the path to the packet file, based on the root and the packet type.
+	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_RT_SCIENCE_PACKET, packetBufferPathRoot );
+
+	// Empty the data buffers, or more precisely, fill them with missing values.
+	ResetBuffers();
+
+	// Attempt to open the packet cache to read the accumulated packets.
+	// If it is not immediately available, try for a few seconds.
+	for ( retry_count = 0; retry_count  < MAX_OPEN_CACHE_RETRIES; retry_count ++ ) {
+		// Try to open the packet cache file.
+		fid = _sopen( filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IWRITE | _S_IREAD  );
+		// If open succeeds, it will return zero. So if zero return, break from retry loop.
+		if ( fid >= 0 ) break;
+		// Wait a second before trying again.
+		Sleep( RETRY_PAUSE );
+	}
+	// If fid is negative, cannot be opened.
+	if ( fid < 0 ) return( FALSE );
+
+	// Read in all of the data packets in the file.
+	packets_read = 0;
+	while ( nFrames < MAX_FRAMES && rtPacketLengthInBytes == (bytes_read = _read( fid, &packet, rtPacketLengthInBytes )) ) {
+		packets_read++;
+		if ( bytes_read < 0 ) {
+			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+			exit( -1 );
+		}
+		// Check that it is a valid GRIP packet. It would be strange if it was not.
+		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
+		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_RT_ID ) {
+			fMessageBox( MB_OK, "GripMMIlite", "Unrecognized packet from %s.", filename );
+			exit( -1 );
+		}
+			
+		// Transfer the data to the buffers for plotting.
+		ExtractGripRealtimeDataInfo( &rt, &packet );
+		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
+
+			// Approximate the time, assuming 20 samples per second.
+			// I know that this is not true. A future version will do
+			//  something more clever to compute the real time of each data point.
+			RealMarkerTime[nFrames] = nFrames * .05f;
+			if ( rt.dataSlice[slice].manipulandumVisibility ) {
+
+				ManipulandumPosition[nFrames][X] = rt.dataSlice[slice].position[X] / 10.0;
+				ManipulandumPosition[nFrames][Y] = rt.dataSlice[slice].position[Y] / 10.0;
+				ManipulandumPosition[nFrames][Z] = rt.dataSlice[slice].position[Z] / 10.0;
+
+				dex.QuaternionToCannonicalRotations( ManipulandumRotations[nFrames], rt.dataSlice[slice].quaternion );
+
+				dex.FilterManipulandumPosition( ManipulandumPosition[nFrames] );
+				if ( _finite( ManipulandumRotations[nFrames][X] ) ) dex.FilterManipulandumRotations( ManipulandumRotations[nFrames] );
+			}
+			else {
+				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
+				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
+				ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
+
+				ManipulandumRotations[nFrames][X] = MISSING_DOUBLE;
+				ManipulandumRotations[nFrames][Y] = MISSING_DOUBLE;
+				ManipulandumRotations[nFrames][Z] = MISSING_DOUBLE;
+			}
+			RealAnalogTime[nFrames] = nFrames * 0.05f;
+			
+			// The ICD does not say what is the reference frame for the force data.
+			// I'm pretty sure that this is right.
+			GripForce[nFrames] = (float) dex.ComputeGripForce( rt.dataSlice[slice].ft[LEFT_ATI].force, rt.dataSlice[slice].ft[RIGHT_ATI].force );
+			GripForce[nFrames] = (float) dex.FilterGripForce( GripForce[nFrames] );
+			// It is useful to plot the normal force from each ATI sensor. They should be very similar unless
+			//  the subject is touching the manipulandum outside the ATI sensor surfaces.
+			NormalForce[LEFT_ATI][nFrames] = - (float) rt.dataSlice[slice].ft[LEFT_ATI].force[X];
+			NormalForce[LEFT_ATI][nFrames] = (float) dex.FilterNormalForce( NormalForce[LEFT_ATI][nFrames], LEFT_ATI );
+			NormalForce[RIGHT_ATI][nFrames] = (float) rt.dataSlice[slice].ft[RIGHT_ATI].force[X];
+			NormalForce[RIGHT_ATI][nFrames] = (float) dex.FilterNormalForce( NormalForce[RIGHT_ATI][nFrames], RIGHT_ATI );
+
+			dex.ComputeLoadForce( LoadForce[nFrames], rt.dataSlice[slice].ft[0].force, rt.dataSlice[slice].ft[1].force );
+			LoadForceMagnitude[nFrames] = dex.FilterLoadForce( LoadForce[nFrames] );
+
+			for ( int ati = 0; ati < N_FORCE_TRANSDUCERS; ati++ ) {
+				double cop_distance = dex.ComputeCoP( CenterOfPressure[ati][nFrames], rt.dataSlice[slice].ft[ati].force, rt.dataSlice[slice].ft[ati].torque );
+				if ( cop_distance >= 0.0 ) dex.FilterCoP( ati, CenterOfPressure[ati][nFrames] );
+			}
+
+			for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
+
+				// Fill some data arrays to show when each marker is visible.
+				// We consider a marker visible if it is seen by either coda.
+				// Set a non-zero value if it is visible, MISSING_CHAR if it is obscured.
+				// The non-zero values that are set when the marker is visible are a convenient
+				//  trick to make it easy to plot the traces for all markers in one graph.
+				grp = ( mrk >= 8 ? ( mrk >= 12 ? mrk + 20 : mrk + 10 ) : mrk ) + 35;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = grp;
+				else MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
+
+			}
+			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
+			else ManipulandumVisibility[nFrames] = 0;
+
+			Acceleration[nFrames][X] = (float) rt.dataSlice[slice].acceleration[X];
+			Acceleration[nFrames][Y] = (float) rt.dataSlice[slice].acceleration[Y];
+			Acceleration[nFrames][Z] = (float) rt.dataSlice[slice].acceleration[Z];
+
+			nFrames++;
+		}
+
+	}
+	// Finished reading. Close the file and check for errors.
+	return_code = _close( fid );
+	if ( return_code ) {
+		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
+		exit( return_code );
+	}
+
+	// Compute the visibility strings for the markers from the last frame.
+	for (coda = 0; coda < CODA_UNITS; coda++ ) {
+		strcpy( markerVisibilityString[coda], "" );
+		for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
+			if ( mrk == 8 || mrk == 12 ) strcat( markerVisibilityString[coda], "  " );
+			if ( rt.dataSlice[RT_SLICES_PER_PACKET - 1].markerVisibility[coda] & bit ) strcat( markerVisibilityString[coda], "u" );
+			else strcat( markerVisibilityString[coda], "m" );
+		}
+	}
+
+	fOutputDebugString( "Acquired Frames (max %d): %d\n", MAX_FRAMES, nFrames );
+	if ( nFrames >= MAX_FRAMES ) {
+		char filename2[MAX_PATHLENGTH];
+		//CreateGripPacketCacheFilename( filename2, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
+		CreateGripPacketCacheFilename( filename2, sizeof( filename ), GRIP_HK_BULK_PACKET, "Joe" );
+		fMessageBox( MB_OK | MB_ICONERROR, "GripMMI", 
+			"Internal buffers are full.\nYou can continue plotting existing data.\nTo display latest acquisitons:\n\n1) Halt GripGroundMonitorClient.\n2) Rename or move:\n      %s\n      %s\n3) Restart GripGroundMonitorClient.",
+			filename, filename2 );
+		dataLiveCheckbox->Checked = false;
+	}
+	// Check if there were new packets since the last time we read the cache.
+	// Return TRUE if yes, FALSE if no.
+	if ( previousTMCounter != epmHeader.TMCounter ) {
+		previousTMCounter = epmHeader.TMCounter;
+		return( TRUE );
+	}
+	else return ( FALSE );
+}
+
+void GripMMIDesktop::SimulateGripRT ( void ) {
+
+	// Simulate some data to test memory limites and graphics functions.
+	// Each time through it adds more data to the buffers, so as to 
+	//  simulate the progressive arrival of real-time data packets.
+
+	int i, mrk;
+
+	static int count = 0;
+
+	fOutputDebugString( "Start SimulateGripRT().\n" );
+	count++;
+	unsigned int fill_frames = 60 * 20 * count;
+	for ( nFrames = 0; nFrames <= fill_frames && nFrames < MAX_FRAMES; nFrames++ ) {
+
+		RealMarkerTime[nFrames] = (float) nFrames * 0.05f;
+		ManipulandumPosition[nFrames][X] = 30.0 * sin( RealMarkerTime[nFrames] * Pi * 2.0 / 30.0 );
+		ManipulandumPosition[nFrames][Y] = 300.0 * cos( RealMarkerTime[nFrames] * Pi * 2.0 / 30.0 ) + 200.0;
+		ManipulandumPosition[nFrames][Z] = -75.0 * sin( RealMarkerTime[nFrames] * Pi * 2.0 / 155.0 ) - 300.0;
+
+		GripForce[nFrames] = (float) abs( -5.0 * sin( RealMarkerTime[nFrames] * Pi * 2.0 / 155.0 )  );
+		for ( i = X; i <= Z; i++ ) {
+			LoadForce[nFrames][i] = ManipulandumPosition[nFrames][ (i+2) % 3] / 200.0;
+		}
+
+		for ( mrk = 0; mrk <CODA_MARKERS; mrk++ ) {
+
+			int grp = ( mrk >= 8 ? ( mrk >= 16 ? mrk + 20 : mrk + 10 ) : mrk ) + 35;
+			if ( nFrames == 0 ) MarkerVisibility[nFrames][mrk] = grp;
+			else {
+				if ( MarkerVisibility[nFrames-1][mrk] != MISSING_CHAR ) {
+					if ( rand() % 1000 < 1 ) MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
+					else MarkerVisibility[nFrames][mrk] = grp;
+				}
+				else {
+					if ( rand() % 1000 < 1 ) MarkerVisibility[nFrames][mrk] = grp;
+					else MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
+				}
+			}
+		}
+			
+		ManipulandumVisibility[nFrames] = 0;
+		for ( mrk = MANIPULANDUM_FIRST_MARKER; mrk <= MANIPULANDUM_LAST_MARKER; mrk++ ) {
+			if ( MarkerVisibility[nFrames][mrk] != MISSING_CHAR ) ManipulandumVisibility[nFrames]++;
+		}
+		if ( ManipulandumVisibility[nFrames] < 3 ) ManipulandumPosition[nFrames][X] = ManipulandumPosition[nFrames][Y] = ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
+		ManipulandumVisibility[nFrames] *= 3;
+
+	}
+	fOutputDebugString( "End SimulateGripRT().\n" );
+	fOutputDebugString( "nFrames: %d %d\n", nFrames, MAX_FRAMES );
+}
+
+int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
+
+	static int count = 0;
+
+	int  fid;
+	int packets_read = 0;
+	int bytes_read;
+	int return_code;
+	static unsigned short previousTMCounter = 0;
+	unsigned short bit = 0;
+	int retry_count;
+
+	EPMTelemetryPacket packet;
+	EPMTelemetryHeaderInfo epmHeader;
+
+	char filename[1024];
+
+	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
+
+	// Attempt to open the packet cache to read the accumulated packets.
+	// If it is not immediately available, try for a few seconds.
+	for ( retry_count = 0; retry_count  < MAX_OPEN_CACHE_RETRIES; retry_count ++ ) {
+		// Try to open the packet cache file.
+		fid = _open( filename, _O_RDONLY | _O_BINARY, _S_IWRITE | _S_IREAD  );
+		// If open succeeds, it will return zero. So if zero return, break from retry loop.
+		if ( fid >= 0 ) break;
+		// Wait a second before trying again.
+		Sleep( RETRY_PAUSE );
+	}
+	// If fid is negative, file is not open, so return saying that no new data is available.
+	if ( fid < 0 ) return( FALSE );
+
+	// Read in all of the data packets in the file.
+	packets_read = 0;
+	while ( true ) {
+		bytes_read = _read( fid, &packet, hkPacketLengthInBytes );
+		// Return less than zero means read error.
+		if ( bytes_read < 0 ) {
+			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+			exit( -1 );
+		}
+		// Return less than expected number of bytes means we have read all packets.
+		if ( bytes_read < hkPacketLengthInBytes ) break;
+
+		packets_read++;
+		// Check that it is a valid GRIP packet. It would be strange if it was not.
+		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
+		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_HK_ID ) {
+			fMessageBox( MB_OK, "GripMMIlite", "Unrecognized packet from %s.", filename );
+			exit( -1 );
+		}
+		// Extract the interesting info in proper byte order.
+		ExtractGripHealthAndStatusInfo( hk, &packet );
+	}
+	// Finished reading. Close the file and check for errors.
+	return_code = _close( fid );
+	if ( return_code ) {
+		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
+		exit( return_code );
+	}
+
+	// Check if there were new packets since the last time we read the cache.
+	// Return TRUE if yes, FALSE if no.
+	if ( previousTMCounter != epmHeader.TMCounter ) {
+		previousTMCounter = epmHeader.TMCounter;
+		return( TRUE );
+	}
+	else return ( FALSE );
+}
+
+void GripMMIDesktop::UpdateStatus( bool force ) {
+
+	int i;
+	unsigned long bit;
+	char target_state_string[256];
+	char mass_state_string[16];
+	char coda_state_string[256];
+	char acquisition_state_string[16];
+
+	GripHealthAndStatusInfo hk_info;
+
+	int return_code;
+
+	// Get the latest hk packet info.
+	return_code = GetLatestGripHK( &hk_info );
+	if ( ERROR_CACHE_NOT_FOUND == return_code ) {
+		return;
+	}
+	else if ( return_code == TRUE || force ) {
+
+		// Show the state of the script engine.
+		if ( hk_info.task != 0 && hk_info.scriptEngineStatusEnum == 0x1000 ) scriptErrorCheckbox->Checked = true;
+		else scriptErrorCheckbox->Checked = false;
+
+		// Show the selected subject and protocol in the menus.
+		//SetDlgItemInt( IDC_SUBJECTID, hk_info.user );
+		//SetDlgItemInt( IDC_PROTOCOLID, hk_info.protocol );
+		//SetDlgItemInt( IDC_TASKID, hk_info.task );
+		//SetDlgItemInt( IDC_STEPID, hk_info.step );
+
+		// Update everything as if the subject, protocol, task and step had been entered by
+		//  hand and then someone pushes the GoTo button.
+		GoToSpecifiedIDs( hk_info.user, hk_info.protocol, hk_info.task, hk_info.step );
+
+		// State of the target LEDs.
+		strcpy( target_state_string, "" );
+		for ( i = 0, bit = 0x01; i < 10; i++, bit = bit << 1 ) {
+			if ( bit & hk_info.horizontalTargetFeedback ) strcat( target_state_string, "u" );
+			else strcat( target_state_string, "m" );
+		}
+		strcat( target_state_string, "\r\n" );
+		for ( i = 0, bit = 0x01; i < 13; i++, bit = bit << 1 ) {
+			if ( bit & hk_info.verticalTargetFeedback ) strcat( target_state_string, "u" );
+			else strcat( target_state_string, "m" );
+		}
+		targetsTextBox->Clear();
+		targetsTextBox->AppendText( gcnew String( target_state_string ));
+
+		// State of the tone generator.
+		tonesTextBox->Clear();
+		tonesTextBox->AppendText( gcnew String( soundBar[ hk_info.toneFeedback] ));
+
+		// State of the mass cradles.
+		strcpy( mass_state_string, "" );
+		strcat( mass_state_string, massDecoder[ hk_info.cradleDetectors >> 0 & 0x03 ] );
+		strcat( mass_state_string, " " );
+		strcat( mass_state_string, massDecoder[ hk_info.cradleDetectors >> 2 & 0x03 ] );
+		strcat( mass_state_string, " " );
+		strcat( mass_state_string, massDecoder[ hk_info.cradleDetectors >> 4 & 0x03 ] );
+		cradlesTextBox->Clear();
+		cradlesTextBox->AppendText( gcnew String( mass_state_string ));
+
+		markersTextBox->Clear();
+		strcpy( coda_state_string, markerVisibilityString[0] );
+		//markersTextBox->AppendText( gcnew String( coda_state_string ));
+		strcat( coda_state_string, "\r\n" );
+		strcat( coda_state_string, markerVisibilityString[1] );
+		markersTextBox->AppendText( gcnew String( coda_state_string ));
+
+		strcpy( acquisition_state_string, "");
+		if ( hk_info.motionTrackerStatusEnum == 2 ) strcat( acquisition_state_string, "A" );
+		else strcat( acquisition_state_string, " " );
+		if ( hk_info.crewCameraStatusEnum == 2 ) strcat( acquisition_state_string, " F" );
+		else strcat( acquisition_state_string, " " );
+		acquisitionTextBox->Clear();
+		acquisitionTextBox->AppendText( gcnew String( acquisition_state_string ));
+
+	}
+}

@@ -93,7 +93,7 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			switch (wParam) {
 				
 			case 27:			/* ESC key */
-				PostMessage(hWnd, WM_QUIT, 0, 0);
+				// PostMessage(hWnd, WM_QUIT, 0, 0);
 				break;
 				
 			case ' ':
@@ -393,11 +393,14 @@ void PrepOglWindow( void ) {
 /*********************************************************************************/
 
 void Swap ( void ) {
-	
 	glFlush();
 	SwapBuffers( s_hDC );
-	
 }
+void SwapWindowFromHandle ( OglWindow *params ) {
+	glFlush();
+	SwapBuffers( params->hDC );
+}
+
 
 /*********************************************************************************/
 

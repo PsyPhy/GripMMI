@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 Display CreateOglDisplay( void );
-DestroyOglDisplays( void );
+void DestroyOglDisplays( void );
 
 void	OglInit( Display display );
 void	OglActivate( Display display );

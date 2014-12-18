@@ -8,7 +8,7 @@
 
 
 #ifndef	_Displays_
-#include "Graphics.h"
+//#include "Graphics.h"
 	
 typedef enum { null_token, point_token, line_token, moveto_token, lineto_token, 
 	start_token, continue_token, end_token,

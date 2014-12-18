@@ -29,6 +29,7 @@ extern void HideOglWindow( void );
 extern void RunOglWindow( void );
 extern int  RunOglWindowOnce( void );
 extern void Swap( void );
+extern void SwapWindowFromHandle ( OglWindow *params );
 extern void ShutdownOglWindow( void );
 extern void ShutdownOglWindowFromHandle ( OglWindow *params );
 

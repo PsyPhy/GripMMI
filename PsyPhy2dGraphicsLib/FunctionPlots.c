@@ -16,6 +16,7 @@
 #include <gl/gl.h>
 #include "glut.h"
 
+#include "Displays.h"
 #include "Views.h"
 
 /***************************************************************************/

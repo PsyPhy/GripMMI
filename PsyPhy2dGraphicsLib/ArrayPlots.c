@@ -15,7 +15,9 @@
 #include <malloc.h>
 #include <math.h>
 #include "useful.h"
+#include "Displays.h"
 #include "Views.h"
+#include "Graphics.h"
 
 /***************************************************************************/
 

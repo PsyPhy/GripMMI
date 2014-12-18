@@ -94,8 +94,9 @@ Select default display at run time, if the machine has multiple
 displays and you want to be able to change on the run.
 */
 
+extern Display	OglDisplay;
 Display DefaultDisplay ( void ) {
-  return(ScreenDisplay);  
+  return( OglDisplay );  
 }
 
 /****************************************************************************/
@@ -156,18 +157,14 @@ void DisplaySetDefaults( Display display ) {
 /***************************************************************************/
 
 void  DisplayInit( Display display ) {
-  
   (*(display->init))( display );
   DisplaySetDefaults( display );
-  
 }
 
 /***************************************************************************/
 
 void  DisplayActivate( Display display ) {
-  
   (*(display->activate))( display );
-  
 }
 
 /***************************************************************************/

@@ -655,7 +655,7 @@ char *VectorsMixin::vstr( const Vector3 v ) {
 	// This assumes that we will never need the results of more than 256 at the same time.
 
 	static char str[256][256];
-	static instance = 0;
+	static int instance = 0;
 	instance++;
 	instance %= 256;
 
@@ -670,7 +670,7 @@ char *VectorsMixin::vstr( const Vector3 v ) {
 // The others work in a similar fashion.
 char *VectorsMixin::qstr( const Quaternion q ) {
 	static char str[256][256];
-	static instance = 0;
+	static int instance = 0;
 	instance++;
 	instance %= 256;
 	sprintf( str[instance], "{%8.3fi + %8.3fj + %8.3fk + %8.3f}", q[X], q[Y], q[Z], q[M] );
@@ -679,7 +679,7 @@ char *VectorsMixin::qstr( const Quaternion q ) {
 
 char *VectorsMixin::mstr( const Matrix3x3 m ) {
 	static char str[256][256];
-	static instance = 0;
+	static int instance = 0;
 	instance++;
 	instance %= 256;
 	sprintf( str[instance], "[%8.3f %8.3f %8.3f | %8.3f %8.3f %8.3f | %8.3f %8.3f %8.3f ]", 

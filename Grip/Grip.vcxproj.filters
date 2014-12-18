@@ -14,5 +14,8 @@
     <ClCompile Include="GripPackets.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DexAnalogMixin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

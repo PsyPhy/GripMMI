@@ -17,6 +17,9 @@
 #include <math.h>
 #include <string.h>
 
+#include "Displays.h"
+#include "Views.h"
+#include "Graphics.h"
 #include "Layouts.h"
 
 Layout _layout_destroy_list = 0;

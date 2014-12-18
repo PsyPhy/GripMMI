@@ -21,6 +21,12 @@
     <ClCompile Include="fOutputDebugString.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VectorsMixin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParseCommaDelimitedLine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fMessageBox.h">

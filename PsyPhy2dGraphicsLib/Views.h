@@ -11,9 +11,6 @@
 */
 
 #ifndef	_Views_
-
-#include "Displays.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
