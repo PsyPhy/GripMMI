@@ -54,10 +54,6 @@
     <None Include="CleanStandaloneGripMMI.bat" />
     <None Include="readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GripMMIShowVersionInfo\GripMMIShowVersionInfo.vcxproj" />
-    <ProjectReference Include="..\GripMMI\GripMMI.vcxproj" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
