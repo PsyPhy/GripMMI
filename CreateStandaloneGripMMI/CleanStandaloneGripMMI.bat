@@ -13,6 +13,7 @@ del /Q %DEST%\*.exe
 REM Remove the previous timestamps as well.
 echo Dummy file. > %DEST%\Timestamp.txt
 del %DEST%\Timestamp.txt
+echo Dummy file. > %DEST%\LatestBuildInfo.txt
 del %DEST%\LatestBuildInfo.txt
 
 REM Clean the packet cache directory as well.
