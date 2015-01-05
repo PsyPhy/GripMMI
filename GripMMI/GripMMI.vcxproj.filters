@@ -42,6 +42,9 @@
     <ClCompile Include="GripMMIScripts.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GripMMIAbout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -53,6 +56,9 @@
     <ClInclude Include="GripMMIDesktop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GripMMIAbout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -61,6 +67,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GripMMIDesktop.resX">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GripMMIAbout.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

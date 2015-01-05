@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0CE14600-FF39-408E-9E0A-CE9804C00957}</ProjectGuid>
+    <ProjectGuid>{6AD8B336-2D20-4E2A-9766-91B367578405}</ProjectGuid>
     <Keyword>MakeFileProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -35,16 +35,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>BuildStandaloneGripMMI.bat Debug</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>BuildStandaloneGripMMI.bat Debug</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>CleanStandaloneGripMMI.bat</NMakeCleanCommandLine>
+    <NMakeOutput>
+    </NMakeOutput>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <NMakeBuildCommandLine>ReleaseGripMMIToWorld.bat</NMakeBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>BuildStandaloneGripMMI.bat Release</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>BuildStandaloneGripMMI.bat Release</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>CleanStandaloneGripMMI.bat</NMakeCleanCommandLine>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="BuildStandaloneGripMMI.bat" />
+    <None Include="CleanStandaloneGripMMI.bat" />
     <None Include="readme.txt" />
-    <None Include="ReleaseGripMMIToWorld.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GripMMIShowVersionInfo\GripMMIShowVersionInfo.vcxproj" />
+    <ProjectReference Include="..\GripMMI\GripMMI.vcxproj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

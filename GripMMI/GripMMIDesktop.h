@@ -1,8 +1,14 @@
 #pragma once
+
+#include "GripMMIAbout.h"
+#include "..\GripMMIVersionControl\GripMMIVersionControl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <vcclr.h>
 #include <string.h>
+#include <Windows.h>
+
 #include "..\Useful\fOutputDebugString.h"
 #include "..\PsyPhy2dGraphicsLib\Displays.h"
 #include "..\PsyPhy2dGraphicsLib\Views.h"
@@ -76,9 +82,9 @@ namespace GripMMI {
 		GripMMIDesktop( String^ packet_buffer_root, String^ script_directory )
 		{
 			InitializeComponent();
-			//
-			//TODO: Add the constructor code here
-			//
+
+			// Show the version number in the window title.
+			this->Text = gcnew String( GripMMIVersion );
 
 			// A lot of code to convert a String to char *.
 			char filename[MAX_PATHLENGTH];
@@ -426,7 +432,7 @@ private: System::Windows::Forms::Label^  label5;
 			// LogoPictureBox
 			// 
 			this->LogoPictureBox->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"LogoPictureBox.Image")));
-			this->LogoPictureBox->Location = System::Drawing::Point(35, 35);
+			this->LogoPictureBox->Location = System::Drawing::Point(15, 32);
 			this->LogoPictureBox->Name = L"LogoPictureBox";
 			this->LogoPictureBox->Size = System::Drawing::Size(200, 200);
 			this->LogoPictureBox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
@@ -448,7 +454,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox1->Controls->Add(this->XYPlot);
 			this->groupBox1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox1->Location = System::Drawing::Point(260, 12);
+			this->groupBox1->Location = System::Drawing::Point(240, 9);
 			this->groupBox1->Name = L"groupBox1";
 			this->groupBox1->Size = System::Drawing::Size(279, 235);
 			this->groupBox1->TabIndex = 4;
@@ -460,7 +466,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox2->Controls->Add(this->ZYPlot);
 			this->groupBox2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox2->Location = System::Drawing::Point(545, 12);
+			this->groupBox2->Location = System::Drawing::Point(525, 9);
 			this->groupBox2->Name = L"groupBox2";
 			this->groupBox2->Size = System::Drawing::Size(279, 235);
 			this->groupBox2->TabIndex = 5;
@@ -482,7 +488,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox3->Controls->Add(this->CoPPlot);
 			this->groupBox3->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox3->Location = System::Drawing::Point(830, 12);
+			this->groupBox3->Location = System::Drawing::Point(810, 9);
 			this->groupBox3->Name = L"groupBox3";
 			this->groupBox3->Size = System::Drawing::Size(279, 235);
 			this->groupBox3->TabIndex = 6;
@@ -504,7 +510,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox4->Controls->Add(this->StripCharts);
 			this->groupBox4->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox4->Location = System::Drawing::Point(24, 328);
+			this->groupBox4->Location = System::Drawing::Point(4, 325);
 			this->groupBox4->Name = L"groupBox4";
 			this->groupBox4->Size = System::Drawing::Size(1087, 646);
 			this->groupBox4->TabIndex = 7;
@@ -528,7 +534,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox5->Controls->Add(this->dataLiveCheckbox);
 			this->groupBox5->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox5->Location = System::Drawing::Point(24, 253);
+			this->groupBox5->Location = System::Drawing::Point(4, 250);
 			this->groupBox5->Name = L"groupBox5";
 			this->groupBox5->Size = System::Drawing::Size(1087, 69);
 			this->groupBox5->TabIndex = 8;
@@ -600,7 +606,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox6->Controls->Add(this->dexText);
 			this->groupBox6->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox6->Location = System::Drawing::Point(1118, 12);
+			this->groupBox6->Location = System::Drawing::Point(1098, 9);
 			this->groupBox6->Name = L"groupBox6";
 			this->groupBox6->Size = System::Drawing::Size(423, 457);
 			this->groupBox6->TabIndex = 9;
@@ -689,7 +695,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox7->Controls->Add(this->messageTypeBox);
 			this->groupBox7->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox7->Location = System::Drawing::Point(1120, 471);
+			this->groupBox7->Location = System::Drawing::Point(1100, 468);
 			this->groupBox7->Name = L"groupBox7";
 			this->groupBox7->Size = System::Drawing::Size(342, 50);
 			this->groupBox7->TabIndex = 10;
@@ -713,7 +719,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->scriptLiveCheckbox->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->scriptLiveCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->scriptLiveCheckbox->Location = System::Drawing::Point(1470, 477);
+			this->scriptLiveCheckbox->Location = System::Drawing::Point(1450, 474);
 			this->scriptLiveCheckbox->Name = L"scriptLiveCheckbox";
 			this->scriptLiveCheckbox->Size = System::Drawing::Size(56, 24);
 			this->scriptLiveCheckbox->TabIndex = 11;
@@ -726,7 +732,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->scriptErrorCheckbox->AutoSize = true;
 			this->scriptErrorCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, 
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			this->scriptErrorCheckbox->Location = System::Drawing::Point(1470, 501);
+			this->scriptErrorCheckbox->Location = System::Drawing::Point(1450, 498);
 			this->scriptErrorCheckbox->Name = L"scriptErrorCheckbox";
 			this->scriptErrorCheckbox->Size = System::Drawing::Size(62, 24);
 			this->scriptErrorCheckbox->TabIndex = 12;
@@ -744,7 +750,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox8->Controls->Add(this->subjectIDBox);
 			this->groupBox8->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox8->Location = System::Drawing::Point(1120, 524);
+			this->groupBox8->Location = System::Drawing::Point(1100, 521);
 			this->groupBox8->Name = L"groupBox8";
 			this->groupBox8->Size = System::Drawing::Size(421, 50);
 			this->groupBox8->TabIndex = 11;
@@ -820,7 +826,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox9->Controls->Add(this->subjectList);
 			this->groupBox9->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox9->Location = System::Drawing::Point(1121, 577);
+			this->groupBox9->Location = System::Drawing::Point(1101, 574);
 			this->groupBox9->Name = L"groupBox9";
 			this->groupBox9->Size = System::Drawing::Size(136, 167);
 			this->groupBox9->TabIndex = 13;
@@ -845,7 +851,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox10->Controls->Add(this->protocolList);
 			this->groupBox10->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox10->Location = System::Drawing::Point(1121, 746);
+			this->groupBox10->Location = System::Drawing::Point(1101, 743);
 			this->groupBox10->Name = L"groupBox10";
 			this->groupBox10->Size = System::Drawing::Size(136, 228);
 			this->groupBox10->TabIndex = 14;
@@ -870,7 +876,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox11->Controls->Add(this->taskList);
 			this->groupBox11->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox11->Location = System::Drawing::Point(1263, 577);
+			this->groupBox11->Location = System::Drawing::Point(1243, 574);
 			this->groupBox11->Name = L"groupBox11";
 			this->groupBox11->Size = System::Drawing::Size(136, 397);
 			this->groupBox11->TabIndex = 15;
@@ -895,7 +901,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox12->Controls->Add(this->stepList);
 			this->groupBox12->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox12->Location = System::Drawing::Point(1405, 576);
+			this->groupBox12->Location = System::Drawing::Point(1385, 573);
 			this->groupBox12->Name = L"groupBox12";
 			this->groupBox12->Size = System::Drawing::Size(136, 397);
 			this->groupBox12->TabIndex = 16;
@@ -919,7 +925,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->fullStep->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->fullStep->Location = System::Drawing::Point(1126, 980);
+			this->fullStep->Location = System::Drawing::Point(1106, 977);
 			this->fullStep->Multiline = true;
 			this->fullStep->Name = L"fullStep";
 			this->fullStep->Size = System::Drawing::Size(411, 32);
@@ -929,7 +935,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->groupBox13->Controls->Add(this->label1);
 			this->groupBox13->Controls->Add(this->markersTextBox);
-			this->groupBox13->Location = System::Drawing::Point(25, 974);
+			this->groupBox13->Location = System::Drawing::Point(5, 971);
 			this->groupBox13->Name = L"groupBox13";
 			this->groupBox13->Size = System::Drawing::Size(302, 40);
 			this->groupBox13->TabIndex = 18;
@@ -965,7 +971,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->groupBox14->Controls->Add(this->targetsTextBox);
 			this->groupBox14->Controls->Add(this->label2);
-			this->groupBox14->Location = System::Drawing::Point(346, 974);
+			this->groupBox14->Location = System::Drawing::Point(326, 971);
 			this->groupBox14->Name = L"groupBox14";
 			this->groupBox14->Size = System::Drawing::Size(214, 40);
 			this->groupBox14->TabIndex = 21;
@@ -1012,7 +1018,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->groupBox15->Controls->Add(this->tonesTextBox);
 			this->groupBox15->Controls->Add(this->label3);
-			this->groupBox15->Location = System::Drawing::Point(578, 974);
+			this->groupBox15->Location = System::Drawing::Point(558, 971);
 			this->groupBox15->Name = L"groupBox15";
 			this->groupBox15->Size = System::Drawing::Size(187, 40);
 			this->groupBox15->TabIndex = 22;
@@ -1035,7 +1041,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->groupBox16->Controls->Add(this->cradlesTextBox);
 			this->groupBox16->Controls->Add(this->label4);
-			this->groupBox16->Location = System::Drawing::Point(782, 974);
+			this->groupBox16->Location = System::Drawing::Point(762, 971);
 			this->groupBox16->Name = L"groupBox16";
 			this->groupBox16->Size = System::Drawing::Size(156, 40);
 			this->groupBox16->TabIndex = 23;
@@ -1070,7 +1076,7 @@ private: System::Windows::Forms::Label^  label5;
 			// 
 			this->groupBox17->Controls->Add(this->acquisitionTextBox);
 			this->groupBox17->Controls->Add(this->label5);
-			this->groupBox17->Location = System::Drawing::Point(954, 974);
+			this->groupBox17->Location = System::Drawing::Point(934, 971);
 			this->groupBox17->Name = L"groupBox17";
 			this->groupBox17->Size = System::Drawing::Size(156, 40);
 			this->groupBox17->TabIndex = 24;
@@ -1106,7 +1112,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1546, 1016);
+			this->ClientSize = System::Drawing::Size(1532, 1016);
 			this->Controls->Add(this->fullStep);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
@@ -1136,6 +1142,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->Load += gcnew System::EventHandler(this, &GripMMIDesktop::GripMMIDesktop_Load);
 			this->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &GripMMIDesktop::GripMMIDesktop_Paint);
 			this->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::GripMMIDesktop_KeyPress);
+			this->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::GripMMIDesktop_MouseClick);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->EndInit();
 			this->groupBox1->ResumeLayout(false);
@@ -1327,6 +1334,45 @@ private: System::Void FilterCheckbox_CheckedChanged(System::Object^  sender, Sys
 			 else dex.SetFilterConstant( 0.0 );
 			 forceUpdate = true;
 		 }
+private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+			// Show an about box on right click in the main window.
+			if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
+				GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
+				about->ShowDialog();
+			}
+		 }
+
+
+// Add an 'About ...' item to the system menu.
+		 
+#define SYSMENU_ABOUT_ID 0x01
+protected:  virtual void OnHandleCreated( System::EventArgs^ e) override {	
+
+			// Do what one would normally do when the handle is created.
+			Form::OnHandleCreated( e );
+
+			// Get a handle to a copy of this form's system (window) menu
+			HWND hWnd;
+			hWnd = static_cast<HWND>( Handle.ToPointer() );
+			HMENU hSysMenu = GetSystemMenu( hWnd, false );
+			// Add a separator
+			AppendMenu(hSysMenu, MF_SEPARATOR, 0, "" );
+			// Add the About menu item
+			AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About …");
+	
+		}
+
+protected:  virtual void WndProc(System::Windows::Forms::Message% m) override {	
+			// Test if the About item was selected from the system menu
+			if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
+			{
+				GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
+				about->ShowDialog();
+				return;
+			}
+			// Do what one would normally do.
+				Form::WndProc( m );
+			}
 };
 
 }

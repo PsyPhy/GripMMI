@@ -52,6 +52,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -90,6 +92,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="GripMMI.cpp" />
+    <ClCompile Include="GripMMIAbout.cpp" />
     <ClCompile Include="GripMMIData.cpp" />
     <ClCompile Include="GripMMIGraphics.cpp" />
     <ClCompile Include="GripMMIScripts.cpp" />
@@ -99,6 +102,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GripMMIAbout.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="GripMMIDesktop.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -109,12 +115,21 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="GripMMIAbout.resx">
+      <DependentUpon>GripMMIAbout.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GripMMIDesktop.resX">
       <DependentUpon>GripMMIDesktop.h</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GripMMIShowVersionInfo\GripMMIShowVersionInfo.vcxproj">
+      <Project>{6da9ed6e-c775-49c7-9526-38ebd30cd8cc}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GripMMIVersionControl\GripMMIVersionControl.vcxproj">
+      <Project>{4329f637-d4ed-43c3-b510-6e7cfc14bfa3}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Grip\Grip.vcxproj">
       <Project>{2b114bed-a19b-4bd5-9ca2-24c6418284f9}</Project>
     </ProjectReference>

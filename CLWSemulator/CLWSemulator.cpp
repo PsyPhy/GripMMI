@@ -14,6 +14,7 @@
 #include "..\Useful\fMessageBox.h"
 #include "..\Useful\fOutputDebugString.h"
 #include "..\Grip\GripPackets.h"
+#include "..\GripMMIVersionControl\GripMMIVersionControl.h"
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -300,7 +301,7 @@ int _tmain(int argc, char* argv[])
 
 	EPMTransferFrameHeaderInfo transferFrameInfo;
 
-	if ( _debug ) fprintf( stderr, "%s started.\n\n", argv[0] );
+	fprintf( stderr, "CLWS Emulator started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
 	fprintf( stderr, "This is the EPM/GRIP packet server emulator.\n" );
 	fprintf( stderr, "It waits for a client to connect and then sends\n" );
 	fprintf( stderr, " out HK and RT packets.\n" );
@@ -308,8 +309,12 @@ int _tmain(int argc, char* argv[])
 
 	// Parse command line.
 	for ( arg = 1; arg < argc; arg++ ) {
+		// Playback previously recorded packets.
 		if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
+		// Construct packets with sine waves and such.
 		if ( !strcmp( argv[arg], "-constructed" ) ) packet_source = CONSTRUCTED_PACKETS;
+		// Write out single null packets to prime the pump.
+		// This allows the GripGroundMonitorClient to start up.
 		if ( !strcmp( argv[arg], "-prime" ) ) packet_source = PRIMING_PACKETS;
 	}	
 	if ( packet_source == RECORDED_PACKETS ) fprintf( stderr, "Sending pre-recorded packets.\n\n" );
@@ -419,7 +424,7 @@ int _tmain(int argc, char* argv[])
 
 		}while ( iResult > 0 );
 
-		// Send out recorded artifically constructed packets, depending on a flag.
+		// Send out recorded or artifically constructed packets, depending on a flag.
 		switch ( packet_source ) {
 
 		case RECORDED_PACKETS:

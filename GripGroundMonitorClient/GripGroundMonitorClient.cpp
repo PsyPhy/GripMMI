@@ -5,6 +5,7 @@
 #include "..\Grip\GripPackets.h"
 #include "..\Useful\fMessageBox.h"
 #include "..\Useful\fOutputDebugString.h"
+#include "..\GripMMIVersionControl\GripMMIVersionControl.h"
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -79,6 +80,7 @@ int __cdecl main(int argc, char **argv)
 	bool	verbose = true;
 	bool	cache_all = true;
 
+	fprintf( stderr, "GripGroundMonitorClient started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
 	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
 	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
 	fprintf( stderr, "\n" );
