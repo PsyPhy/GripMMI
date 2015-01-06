@@ -1226,6 +1226,12 @@ private: System::Void taskList_MouseDown(System::Object^  sender, System::Window
 private: System::Void taskList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 			// Update when a different subject is selected.
 			int task = taskList->SelectedIndex;
+			// Keep the selected task near the top of the box
+			//  so that we can see what is coming next.
+			int top_index = task - 10;
+			if ( top_index < 0 ) top_index = 0;
+			taskList->TopIndex = top_index;
+			// Now update to show the selected task.
 			GoToSpecifiedTask( task );
 		 }
 private: System::Void stepList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
@@ -1240,6 +1246,12 @@ private: System::Void stepList_MouseDown(System::Object^  sender, System::Window
 private: System::Void stepList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 			// Update when a different subject is selected.
 			int step = stepList->SelectedIndex;
+			// Keep the selected step near the top of the box
+			//  so that we can see what is coming next.
+			int top_index = step - 10;
+			if ( top_index < 0 ) top_index = 0;
+			stepList->TopIndex = top_index;
+			// Now update the picture and text.
 			GoToSpecifiedStep( step );
 		 }
 private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {
