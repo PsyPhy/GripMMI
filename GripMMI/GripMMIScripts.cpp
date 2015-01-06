@@ -524,7 +524,7 @@ void GripMMIDesktop::GoToSpecifiedStep( int step )
 		// Clear the DEX display;
 		strcpy( local_message, "" );
 		strcpy( local_picture, "blank.bmp" );
-		fullStep->Text = "";
+		fullStepForm->fullStep->Text = "";
 		messageTypeBox->Text =	"";
 	}
 	else {
@@ -535,7 +535,7 @@ void GripMMIDesktop::GoToSpecifiedStep( int step )
 		stepIDBox->Text = Convert::ToString( stepID[step] );
 
 		// Show the full line in a larger box.
-		fullStep->Text = stepList->SelectedItem->ToString();
+		fullStepForm->fullStep->Text = stepList->SelectedItem->ToString();
 		if ( type[step] == type_alert ) {
 			// Show or hide buttons accordingly.
 			fakeOK->Visible = false;

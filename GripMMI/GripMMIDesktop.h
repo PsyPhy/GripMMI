@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GripMMIAbout.h"
+#include "GripMMIFullStep.h"
 #include "..\GripMMIVersionControl\GripMMIVersionControl.h"
 
 #include <stdio.h>
@@ -83,6 +84,8 @@ namespace GripMMI {
 		{
 			InitializeComponent();
 
+			fullStepForm = gcnew GripMMIFullStep();
+
 			// Show the version number in the window title.
 			this->Text = gcnew String( GripMMIVersion );
 
@@ -130,6 +133,8 @@ namespace GripMMI {
 			}
 		}
 
+
+	private: GripMMIFullStep^ fullStepForm;
 
 	private: System::Windows::Forms::GroupBox^  groupBox1;
 	private: System::Windows::Forms::GroupBox^  groupBox2;
@@ -199,7 +204,7 @@ namespace GripMMI {
 	private: System::Windows::Forms::ListBox^  taskList;
 	private: System::Windows::Forms::GroupBox^  groupBox12;
 	private: System::Windows::Forms::ListBox^  stepList;
-private: System::Windows::Forms::TextBox^  fullStep;
+
 private: System::Windows::Forms::GroupBox^  groupBox13;
 private: System::Windows::Forms::Label^  label1;
 private: System::Windows::Forms::TextBox^  markersTextBox;
@@ -387,7 +392,6 @@ private: System::Windows::Forms::Label^  label5;
 			this->taskList = (gcnew System::Windows::Forms::ListBox());
 			this->groupBox12 = (gcnew System::Windows::Forms::GroupBox());
 			this->stepList = (gcnew System::Windows::Forms::ListBox());
-			this->fullStep = (gcnew System::Windows::Forms::TextBox());
 			this->groupBox13 = (gcnew System::Windows::Forms::GroupBox());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->markersTextBox = (gcnew System::Windows::Forms::TextBox());
@@ -828,7 +832,7 @@ private: System::Windows::Forms::Label^  label5;
 				static_cast<System::Byte>(0)));
 			this->groupBox9->Location = System::Drawing::Point(1101, 574);
 			this->groupBox9->Name = L"groupBox9";
-			this->groupBox9->Size = System::Drawing::Size(136, 167);
+			this->groupBox9->Size = System::Drawing::Size(136, 184);
 			this->groupBox9->TabIndex = 13;
 			this->groupBox9->TabStop = false;
 			this->groupBox9->Text = L"Subject";
@@ -839,9 +843,9 @@ private: System::Windows::Forms::Label^  label5;
 				static_cast<System::Byte>(0)));
 			this->subjectList->FormattingEnabled = true;
 			this->subjectList->ItemHeight = 15;
-			this->subjectList->Location = System::Drawing::Point(5, 23);
+			this->subjectList->Location = System::Drawing::Point(5, 25);
 			this->subjectList->Name = L"subjectList";
-			this->subjectList->Size = System::Drawing::Size(125, 139);
+			this->subjectList->Size = System::Drawing::Size(125, 154);
 			this->subjectList->TabIndex = 0;
 			this->subjectList->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::subjectList_SelectedIndexChanged);
 			this->subjectList->MouseDown += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::subjectList_MouseDown);
@@ -851,9 +855,9 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox10->Controls->Add(this->protocolList);
 			this->groupBox10->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox10->Location = System::Drawing::Point(1101, 743);
+			this->groupBox10->Location = System::Drawing::Point(1101, 767);
 			this->groupBox10->Name = L"groupBox10";
-			this->groupBox10->Size = System::Drawing::Size(136, 228);
+			this->groupBox10->Size = System::Drawing::Size(136, 244);
 			this->groupBox10->TabIndex = 14;
 			this->groupBox10->TabStop = false;
 			this->groupBox10->Text = L"Protocol";
@@ -864,9 +868,9 @@ private: System::Windows::Forms::Label^  label5;
 				static_cast<System::Byte>(0)));
 			this->protocolList->FormattingEnabled = true;
 			this->protocolList->ItemHeight = 15;
-			this->protocolList->Location = System::Drawing::Point(5, 20);
+			this->protocolList->Location = System::Drawing::Point(5, 25);
 			this->protocolList->Name = L"protocolList";
-			this->protocolList->Size = System::Drawing::Size(125, 199);
+			this->protocolList->Size = System::Drawing::Size(125, 214);
 			this->protocolList->TabIndex = 1;
 			this->protocolList->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::protocolList_SelectedIndexChanged);
 			this->protocolList->MouseDown += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::protocolList_MouseDown);
@@ -876,9 +880,9 @@ private: System::Windows::Forms::Label^  label5;
 			this->groupBox11->Controls->Add(this->taskList);
 			this->groupBox11->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox11->Location = System::Drawing::Point(1243, 574);
+			this->groupBox11->Location = System::Drawing::Point(1243, 573);
 			this->groupBox11->Name = L"groupBox11";
-			this->groupBox11->Size = System::Drawing::Size(136, 397);
+			this->groupBox11->Size = System::Drawing::Size(136, 438);
 			this->groupBox11->TabIndex = 15;
 			this->groupBox11->TabStop = false;
 			this->groupBox11->Text = L"Task";
@@ -891,7 +895,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->taskList->ItemHeight = 15;
 			this->taskList->Location = System::Drawing::Point(4, 25);
 			this->taskList->Name = L"taskList";
-			this->taskList->Size = System::Drawing::Size(128, 364);
+			this->taskList->Size = System::Drawing::Size(128, 409);
 			this->taskList->TabIndex = 2;
 			this->taskList->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::taskList_SelectedIndexChanged);
 			this->taskList->MouseDown += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::taskList_MouseDown);
@@ -903,7 +907,7 @@ private: System::Windows::Forms::Label^  label5;
 				static_cast<System::Byte>(0)));
 			this->groupBox12->Location = System::Drawing::Point(1385, 573);
 			this->groupBox12->Name = L"groupBox12";
-			this->groupBox12->Size = System::Drawing::Size(136, 397);
+			this->groupBox12->Size = System::Drawing::Size(136, 438);
 			this->groupBox12->TabIndex = 16;
 			this->groupBox12->TabStop = false;
 			this->groupBox12->Text = L"Step";
@@ -916,20 +920,10 @@ private: System::Windows::Forms::Label^  label5;
 			this->stepList->ItemHeight = 15;
 			this->stepList->Location = System::Drawing::Point(4, 25);
 			this->stepList->Name = L"stepList";
-			this->stepList->Size = System::Drawing::Size(128, 364);
+			this->stepList->Size = System::Drawing::Size(128, 409);
 			this->stepList->TabIndex = 3;
 			this->stepList->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::stepList_SelectedIndexChanged);
 			this->stepList->MouseDown += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::stepList_MouseDown);
-			// 
-			// fullStep
-			// 
-			this->fullStep->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->fullStep->Location = System::Drawing::Point(1106, 977);
-			this->fullStep->Multiline = true;
-			this->fullStep->Name = L"fullStep";
-			this->fullStep->Size = System::Drawing::Size(411, 32);
-			this->fullStep->TabIndex = 17;
 			// 
 			// groupBox13
 			// 
@@ -1112,8 +1106,7 @@ private: System::Windows::Forms::Label^  label5;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1532, 1016);
-			this->Controls->Add(this->fullStep);
+			this->ClientSize = System::Drawing::Size(1532, 1021);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
 			this->Controls->Add(this->groupBox10);
@@ -1236,8 +1229,13 @@ private: System::Void taskList_SelectedIndexChanged(System::Object^  sender, Sys
 			GoToSpecifiedTask( task );
 		 }
 private: System::Void stepList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			// Script crawler is no longer live.
-			scriptLiveCheckbox->Checked = false;
+			if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {	
+				fullStepForm->Show();
+			}
+			else {
+				// Script crawler is no longer live.
+				scriptLiveCheckbox->Checked = false;
+			}
 		 }
 private: System::Void stepList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 			// Update when a different subject is selected.
