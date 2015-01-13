@@ -162,39 +162,23 @@ namespace GripMMI {
 	private: System::Windows::Forms::Button^  fakeIgnore;
 
 	private: System::Windows::Forms::Button^  fakeOK;
-
 	private: System::Windows::Forms::Button^  fakeInterrupt;
 	private: System::Windows::Forms::Button^  fakeStatus;
-
-
 	private: System::Windows::Forms::Button^  fakeCancel;
 	private: System::Windows::Forms::Button^  fakeRetry;
-
 
 	private: System::Windows::Forms::GroupBox^  groupBox7;
 	private: System::Windows::Forms::TextBox^  messageTypeBox;
 	private: System::Windows::Forms::CheckBox^  scriptLiveCheckbox;
-
-
 	private: System::Windows::Forms::RadioButton^  scriptErrorCheckbox;
-
 
 	private: System::Windows::Forms::GroupBox^  groupBox8;
 	private: System::Windows::Forms::Button^  gotoButton;
-
 	private: System::Windows::Forms::Button^  nextButton;
-
 	private: System::Windows::Forms::TextBox^  stepIDBox;
-
 	private: System::Windows::Forms::TextBox^  taskIDBox;
-
-
 	private: System::Windows::Forms::TextBox^  protocolIDBox;
-
-
 	private: System::Windows::Forms::TextBox^  subjectIDBox;
-
-
 
 	private: System::Windows::Forms::GroupBox^  groupBox9;
 	private: System::Windows::Forms::ListBox^  subjectList;
@@ -205,38 +189,21 @@ namespace GripMMI {
 	private: System::Windows::Forms::GroupBox^  groupBox12;
 	private: System::Windows::Forms::ListBox^  stepList;
 
-private: System::Windows::Forms::GroupBox^  groupBox13;
-private: System::Windows::Forms::Label^  label1;
-private: System::Windows::Forms::TextBox^  markersTextBox;
-
-private: System::Windows::Forms::GroupBox^  groupBox14;
-private: System::Windows::Forms::Label^  label2;
-private: System::Windows::Forms::TextBox^  targetsTextBox;
-private: System::Windows::Forms::TextBox^  tonesTextBox;
-
-
-private: System::Windows::Forms::GroupBox^  groupBox15;
-private: System::Windows::Forms::Label^  label3;
-
-
-
-private: System::Windows::Forms::GroupBox^  groupBox16;
-private: System::Windows::Forms::TextBox^  cradlesTextBox;
-
-private: System::Windows::Forms::Label^  label4;
-private: System::Windows::Forms::GroupBox^  groupBox17;
-private: System::Windows::Forms::TextBox^  acquisitionTextBox;
-
-
-
-private: System::Windows::Forms::Label^  label5;
-
-
-
-
-
-
-
+	private: System::Windows::Forms::GroupBox^  groupBox13;
+	private: System::Windows::Forms::Label^  label1;
+	private: System::Windows::Forms::TextBox^  markersTextBox;
+	private: System::Windows::Forms::GroupBox^  groupBox14;
+	private: System::Windows::Forms::Label^  label2;
+	private: System::Windows::Forms::TextBox^  targetsTextBox;
+	private: System::Windows::Forms::TextBox^  tonesTextBox;
+	private: System::Windows::Forms::GroupBox^  groupBox15;
+	private: System::Windows::Forms::Label^  label3;
+	private: System::Windows::Forms::GroupBox^  groupBox16;
+	private: System::Windows::Forms::TextBox^  cradlesTextBox;
+	private: System::Windows::Forms::Label^  label4;
+	private: System::Windows::Forms::GroupBox^  groupBox17;
+	private: System::Windows::Forms::TextBox^  acquisitionTextBox;
+	private: System::Windows::Forms::Label^  label5;
 
 	private: 
 		static Timer^ timer;
@@ -277,8 +244,6 @@ private: System::Windows::Forms::Label^  label5;
 			forceUpdate = false;
 			StartRefreshTimer();
 		}
-
-	protected: 
 
 	private: 
 
@@ -1199,191 +1164,190 @@ private: System::Windows::Forms::Label^  label5;
 			dataLiveCheckbox->Checked = false;
 			RefreshGraphics();
 		 }
-private: System::Void textBox1_TextChanged(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void subjectList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			// Script crawler is no longer live.
-			scriptLiveCheckbox->Checked = false;
-		 }
-private: System::Void subjectList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-			// Update when a different subject is selected.
-			int subject = subjectList->SelectedIndex;
-			GoToSpecifiedSubject( subject );
-		}
-private: System::Void protocolList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			// Script crawler is no longer live.
-			scriptLiveCheckbox->Checked = false;
-		 }
-private: System::Void protocolList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-			// Update when a different subject is selected.
-			int protocol = protocolList->SelectedIndex;
-			GoToSpecifiedProtocol( protocol );
-		 }
-private: System::Void taskList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			// Script crawler is no longer live.
-			scriptLiveCheckbox->Checked = false;
-		 }
-private: System::Void taskList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-			// Update when a different subject is selected.
-			int task = taskList->SelectedIndex;
-			// Keep the selected task near the top of the box
-			//  so that we can see what is coming next.
-			int top_index = task - 10;
-			if ( top_index < 0 ) top_index = 0;
-			taskList->TopIndex = top_index;
-			// Now update to show the selected task.
-			GoToSpecifiedTask( task );
-		 }
-private: System::Void stepList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {	
-				fullStepForm->Show();
-			}
-			else {
+	private: System::Void textBox1_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void subjectList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 				// Script crawler is no longer live.
 				scriptLiveCheckbox->Checked = false;
+			 }
+	private: System::Void subjectList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+				// Update when a different subject is selected.
+				int subject = subjectList->SelectedIndex;
+				GoToSpecifiedSubject( subject );
 			}
-		 }
-private: System::Void stepList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-			// Update when a different subject is selected.
-			int step = stepList->SelectedIndex;
-			// Keep the selected step near the top of the box
-			//  so that we can see what is coming next.
-			int top_index = step - 10;
-			if ( top_index < 0 ) top_index = 0;
-			stepList->TopIndex = top_index;
-			// Now update the picture and text.
-			GoToSpecifiedStep( step );
-		 }
-private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void groupBox17_Enter(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void groupBox15_Enter(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void groupBox14_Enter(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void groupBox13_Enter(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void nextButton_Click(System::Object^  sender, System::EventArgs^  e) {
+	private: System::Void protocolList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				// Script crawler is no longer live.
+				scriptLiveCheckbox->Checked = false;
+			 }
+	private: System::Void protocolList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+				// Update when a different subject is selected.
+				int protocol = protocolList->SelectedIndex;
+				GoToSpecifiedProtocol( protocol );
+			 }
+	private: System::Void taskList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				// Script crawler is no longer live.
+				scriptLiveCheckbox->Checked = false;
+			 }
+	private: System::Void taskList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+				// Update when a different subject is selected.
+				int task = taskList->SelectedIndex;
+				// Keep the selected task near the top of the box
+				//  so that we can see what is coming next.
+				int top_index = task - 10;
+				if ( top_index < 0 ) top_index = 0;
+				taskList->TopIndex = top_index;
+				// Now update to show the selected task.
+				GoToSpecifiedTask( task );
+			 }
+	private: System::Void stepList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {	
+					fullStepForm->Show();
+				}
+				else {
+					// Script crawler is no longer live.
+					scriptLiveCheckbox->Checked = false;
+				}
+			 }
+	private: System::Void stepList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+				// Update when a different subject is selected.
+				int step = stepList->SelectedIndex;
+				// Keep the selected step near the top of the box
+				//  so that we can see what is coming next.
+				int top_index = step - 10;
+				if ( top_index < 0 ) top_index = 0;
+				stepList->TopIndex = top_index;
+				// Now update the picture and text.
+				GoToSpecifiedStep( step );
+			 }
+	private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void groupBox17_Enter(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void groupBox15_Enter(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void groupBox14_Enter(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void groupBox13_Enter(System::Object^  sender, System::EventArgs^  e) {
+			 }
+	private: System::Void nextButton_Click(System::Object^  sender, System::EventArgs^  e) {
 			 
-	// Script crawler is no longer live.
-	scriptLiveCheckbox->Checked = false;
+		// Script crawler is no longer live.
+		scriptLiveCheckbox->Checked = false;
 
-	// Find the next non-comment step.
-	// int selected_line = SendDlgItemMessage( IDC_STEPS, LB_GETCURSEL, 0, 0 );
-	int selected_line = stepList->SelectedIndex;
-	selected_line++;
-	while ( comment[selected_line] ) selected_line++;
-	// SendDlgItemMessage( IDC_STEPS, LB_SETCURSEL, selected_line, 0 );
-	stepList->SelectedIndex = selected_line;
-	//OnSelchangeSteps();
-	GoToSpecifiedStep( selected_line );
+		// Find the next non-comment step.
+		// int selected_line = SendDlgItemMessage( IDC_STEPS, LB_GETCURSEL, 0, 0 );
+		int selected_line = stepList->SelectedIndex;
+		selected_line++;
+		while ( comment[selected_line] ) selected_line++;
+		// SendDlgItemMessage( IDC_STEPS, LB_SETCURSEL, selected_line, 0 );
+		stepList->SelectedIndex = selected_line;
+		//OnSelchangeSteps();
+		GoToSpecifiedStep( selected_line );
 
-}
-
-private: System::Void gotoButton_Click(System::Object^  sender, System::EventArgs^  e) {
-	// Script crawler is no longer live.
-	scriptLiveCheckbox->Checked = false;
-
-	//int subject_id = GetDlgItemInt( IDC_SUBJECTID );
-	//int protocol_id = GetDlgItemInt( IDC_PROTOCOLID );
-	//int task_id = GetDlgItemInt( IDC_TASKID );
-	//int step_id = GetDlgItemInt( IDC_STEPID );
-	int subject_id;
-	int protocol_id;
-	int task_id;
-	int step_id;
-	try
-        {
-            subject_id = Convert::ToInt32( subjectIDBox->Text );
-        }
-        catch (System::FormatException^ e)
-        {
-            subject_id = 0;
-			e;
-		}
-	try
-        {
-            protocol_id = Convert::ToInt32( protocolIDBox->Text );
-        }
-        catch (System::FormatException^ e)
-        {
-            protocol_id = 0;
-			e;
-		}
-	try
-        {
-            task_id = Convert::ToInt32( taskIDBox->Text );
-        }
-        catch (System::FormatException^ e)
-        {
-            task_id = 0;
-			e;
-      }
-	try
-        {
-            step_id = Convert::ToInt32( stepIDBox->Text );
-        }
-        catch (System::FormatException^ e)
-        {
-            step_id = 0;
-			e;
-       }
-
-	GoToSpecifiedIDs( subject_id, protocol_id, task_id, step_id );
-		 
 	}
-private: System::Void scriptLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-			 if ( scriptLiveCheckbox->Checked ) forceUpdate = true;
-		 }
-private: System::Void dataLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-			 if ( dataLiveCheckbox->Checked ) forceUpdate = true;
-		 }
-private: System::Void FilterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-			 if ( dataLiveCheckbox->Checked ) dex.SetFilterConstant( 10.0 );
-			 else dex.SetFilterConstant( 0.0 );
-			 forceUpdate = true;
-		 }
-private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			// Show an about box on right click in the main window.
-			if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
-				GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
-				about->ShowDialog();
-			}
-		 }
 
+	private: System::Void gotoButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		// Script crawler is no longer live.
+		scriptLiveCheckbox->Checked = false;
 
-// Add an 'About ...' item to the system menu.
-		 
-#define SYSMENU_ABOUT_ID 0x01
-protected:  virtual void OnHandleCreated( System::EventArgs^ e) override {	
-
-			// Do what one would normally do when the handle is created.
-			Form::OnHandleCreated( e );
-
-			// Get a handle to a copy of this form's system (window) menu
-			HWND hWnd;
-			hWnd = static_cast<HWND>( Handle.ToPointer() );
-			HMENU hSysMenu = GetSystemMenu( hWnd, false );
-			// Add a separator
-			AppendMenu(hSysMenu, MF_SEPARATOR, 0, "" );
-			// Add the About menu item
-			AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About …");
-	
-		}
-
-protected:  virtual void WndProc(System::Windows::Forms::Message% m) override {	
-			// Test if the About item was selected from the system menu
-			if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
+		//int subject_id = GetDlgItemInt( IDC_SUBJECTID );
+		//int protocol_id = GetDlgItemInt( IDC_PROTOCOLID );
+		//int task_id = GetDlgItemInt( IDC_TASKID );
+		//int step_id = GetDlgItemInt( IDC_STEPID );
+		int subject_id;
+		int protocol_id;
+		int task_id;
+		int step_id;
+		try
 			{
-				GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
-				about->ShowDialog();
-				return;
+				subject_id = Convert::ToInt32( subjectIDBox->Text );
 			}
-			// Do what one would normally do.
-				Form::WndProc( m );
+			catch (System::FormatException^ e)
+			{
+				subject_id = 0;
+				e;
 			}
-};
+		try
+			{
+				protocol_id = Convert::ToInt32( protocolIDBox->Text );
+			}
+			catch (System::FormatException^ e)
+			{
+				protocol_id = 0;
+				e;
+			}
+		try
+			{
+				task_id = Convert::ToInt32( taskIDBox->Text );
+			}
+			catch (System::FormatException^ e)
+			{
+				task_id = 0;
+				e;
+		  }
+		try
+			{
+				step_id = Convert::ToInt32( stepIDBox->Text );
+			}
+			catch (System::FormatException^ e)
+			{
+				step_id = 0;
+				e;
+		   }
+
+		GoToSpecifiedIDs( subject_id, protocol_id, task_id, step_id );
+		 
+		}
+	private: System::Void scriptLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+				 if ( scriptLiveCheckbox->Checked ) forceUpdate = true;
+			 }
+	private: System::Void dataLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+				 if ( dataLiveCheckbox->Checked ) forceUpdate = true;
+			 }
+	private: System::Void FilterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+				 if ( dataLiveCheckbox->Checked ) dex.SetFilterConstant( 10.0 );
+				 else dex.SetFilterConstant( 0.0 );
+				 forceUpdate = true;
+			 }
+	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				// Show an about box on right click in the main window.
+				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
+					GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
+					about->ShowDialog();
+				}
+			 }
+
+// Add an 'About ...' item to the system menu. 
+#define SYSMENU_ABOUT_ID 0x01
+	
+	protected:  virtual void OnHandleCreated( System::EventArgs^ e) override {	
+
+				// Do what one would normally do when the handle is created.
+				Form::OnHandleCreated( e );
+
+				// Get a handle to a copy of this form's system (window) menu
+				HWND hWnd;
+				hWnd = static_cast<HWND>( Handle.ToPointer() );
+				HMENU hSysMenu = GetSystemMenu( hWnd, false );
+				// Add a separator
+				AppendMenu(hSysMenu, MF_SEPARATOR, 0, "" );
+				// Add the About menu item
+				AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About …");
+	
+			}
+
+	protected:  virtual void WndProc(System::Windows::Forms::Message% m) override {	
+				// Test if the About item was selected from the system menu
+				if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
+				{
+					GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
+					about->ShowDialog();
+					return;
+				}
+				// Do what one would normally do.
+					Form::WndProc( m );
+				}
+	};
 
 }
 
