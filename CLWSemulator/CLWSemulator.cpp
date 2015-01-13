@@ -413,7 +413,11 @@ int _tmain(int argc, char* argv[])
 			else if ( iResult == connectPacketLengthInBytes ) {
 				ExtractEPMTransferFrameHeaderInfo( &transferFrameInfo, &inputPacket );
 				if ( transferFrameInfo.packetType == TRANSFER_FRAME_CONNECT ) {
-					printf("start packet received.\n", iResult);
+					printf("start packet received from ", iResult);
+					if ( transferFrameInfo.softwareUnitID == GRIP_MMI_SOFTWARE_UNIT_ID ) printf( "PRIMARY" );
+					else if ( transferFrameInfo.softwareUnitID == GRIP_MMI_SOFTWARE_ALT_UNIT_ID ) printf( "ALTERNATE" );
+					else printf( "UNRECOGNIZED" );
+					printf( " (%d) software unit ID.\n", transferFrameInfo.softwareUnitID );
 					break;
 				}
 				else {

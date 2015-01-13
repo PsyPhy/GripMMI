@@ -24,6 +24,7 @@
 #define TRANSFER_FRAME_TELEMETRY		0x1153
 
 #define GRIP_MMI_SOFTWARE_UNIT_ID		43
+#define GRIP_MMI_SOFTWARE_ALT_UNIT_ID	42
 #define GRIP_SUBSYSTEM_ID				0x21
 
 // These constants help make it clear in initialization lists

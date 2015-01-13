@@ -28,6 +28,10 @@ copy ..\%CONFIG%\GripGroundMonitorClient.exe %DEST%
 echo copy ..\%CONFIG%\GripMMI.exe %DEST%
 copy ..\%CONFIG%\GripMMI.exe %DEST%
 
+REM Copy the batch file used to launch the executables.
+REM We keep the source copy of the file here so as to track changes.
+copy RunGripMMI.bat %DEST%
+
 REM Show the latest build info.
 set BUILDINFO=..\LatestBuildInfo.txt
 ..\%CONFIG%\GripMMIShowVersionInfo > %BUILDINFO%

@@ -4,5 +4,6 @@
     <None Include="readme.txt" />
     <None Include="BuildStandaloneGripMMI.bat" />
     <None Include="CleanStandaloneGripMMI.bat" />
+    <None Include="RunGripMMI.bat" />
   </ItemGroup>
 </Project>

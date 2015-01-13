@@ -15,10 +15,6 @@ PCSTR EPMport = EPM_DEFAULT_PORT;
 EPMTelemetryPacket epmPacket;
 EPMTelemetryHeaderInfo epmPacketHeaderInfo;
 
-// Default path for packet storage is the current directory.
-char *packetCacheFilenameRoot = ".\\";
-char *server_name = "localhost";
-
 // Buffers to hold the path to the packet caches.
 char rtPacketCacheFilePath[1024];
 char hkPacketCacheFilePath[1024];
@@ -79,6 +75,11 @@ int __cdecl main(int argc, char **argv)
 	long	previous_alive_time = 0;
 	bool	verbose = true;
 	bool	cache_all = true;
+	bool	use_alt_id = false;
+	int		software_unit_id = GRIP_MMI_SOFTWARE_UNIT_ID;
+
+	char *packetCacheFilenameRoot = NULL;
+	char *server_name = NULL;
 
 	fprintf( stderr, "GripGroundMonitorClient started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
 	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
@@ -86,22 +87,38 @@ int __cdecl main(int argc, char **argv)
 	fprintf( stderr, "\n" );
 
 	// Parse the command line.
-	if ( argc < 2 ) printf( "Using default output root: %s\n", packetCacheFilenameRoot );
-	else {
-		packetCacheFilenameRoot = argv[1];
-		printf( "Using command-line packet output root: %s\n", packetCacheFilenameRoot );
+	for ( int arg = 1; arg < argc; arg ++ ) {
+
+		if ( !strcmp( argv[arg], "-alt" )) use_alt_id = true;
+		else if ( !strcmp( argv[arg], "-only" )) cache_all = false;
+		else if ( packetCacheFilenameRoot == NULL ) {
+			packetCacheFilenameRoot = argv[arg];
+			printf( "Using command-line packet output root: %s\n", packetCacheFilenameRoot );
+		}
+		else if ( server_name == NULL ) {
+			server_name = argv[arg];
+			printf( "Using command-line server name: %s\n", server_name );
+		}
+		else printf( "Too many command line arguments (%s)\n", argv[arg] );
 	}
-	if ( argc < 3 ) printf( "Using default server name: %s\n", server_name );
-	else {
-		server_name = argv[2];
-		printf( "Using command-line server name: %s\n", server_name );
+	if (packetCacheFilenameRoot == NULL ) {
+		packetCacheFilenameRoot = ".\\";
+		printf( "Using default output root: %s\n", packetCacheFilenameRoot );
 	}
-	if ( argc > 3 ) {
-		if ( !strcmp( argv[3], "-only" )) cache_all = false;
+	if ( server_name == NULL ) {
+		server_name = "localhost";
+		printf( "Using default server name: %s\n", server_name );
 	}
 	if ( cache_all ) fprintf( stderr, "Saving all packets.\n" );
 	else fprintf( stderr, "Saving only GRIP packets.\n" );
-	
+	if ( use_alt_id ) {
+		software_unit_id = GRIP_MMI_SOFTWARE_ALT_UNIT_ID;
+		printf( "Using alternate Software Unit ID.\n" );
+	}
+	fprintf( stderr, "Software Unit ID: %d\n", software_unit_id );
+	connectPacket.softwareUnitID = software_unit_id;
+	alivePacket.softwareUnitID = software_unit_id;
+
 	fprintf( stderr, "\n" );
 
     // Initialize Winsock

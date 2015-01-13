@@ -16,6 +16,10 @@ del %DEST%\Timestamp.txt
 echo Dummy file. > %DEST%\LatestBuildInfo.txt
 del %DEST%\LatestBuildInfo.txt
 
+REM Remove the batch file used to launch the executables.
+echo Dummy file. > %DEST%\RunGripMMI.bat
+del %DEST%\RunGripMMI.bat
+
 REM Clean the packet cache directory as well.
 set CACHE=%DEST%\..\GripCache
 echo Dummy file. > %CACHE%\dummy.gpk
