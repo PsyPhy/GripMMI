@@ -22,6 +22,9 @@
 
 // Time in milliseconds between screen refreshes.
 #define REFRESH_TIMEOUT	1000
+// Recursive filter constant. 
+// The bigger it is, the lower the cutoff frequency.
+#define FILTER_CONSTANT 2.0
 
 namespace GripMMI {
 
@@ -68,6 +71,10 @@ namespace GripMMI {
 			// Set up graphs.
 			InitializeGraphics();
 			AdjustGraphSpan();
+			// Set the filter constant according to the initial state of the filter checkbox.
+			if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
+			else dex.SetFilterConstant( 0.0 );
+
 			// Initialize periodic check for data and refresh.
 			CreateRefreshTimer( REFRESH_TIMEOUT );
 			StartRefreshTimer();
@@ -104,8 +111,9 @@ namespace GripMMI {
 	private: System::Windows::Forms::PictureBox^  CoPPlot;
 	private: System::Windows::Forms::PictureBox^  ZYPlot;
 	private: System::Windows::Forms::PictureBox^  StripCharts;
+	private: System::Windows::Forms::CheckBox^  filterCheckbox;
 
-	private: System::Windows::Forms::CheckBox^  FilterCheckbox;
+
 	private: System::Windows::Forms::CheckBox^  dataLiveCheckbox;
 
 	private: System::Windows::Forms::HScrollBar^  scrollBar;
@@ -284,7 +292,7 @@ namespace GripMMI {
 			this->groupBox5 = (gcnew System::Windows::Forms::GroupBox());
 			this->scrollBar = (gcnew System::Windows::Forms::HScrollBar());
 			this->spanSelector = (gcnew System::Windows::Forms::TrackBar());
-			this->FilterCheckbox = (gcnew System::Windows::Forms::CheckBox());
+			this->filterCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->dataLiveCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBox6 = (gcnew System::Windows::Forms::GroupBox());
 			this->fakeOK = (gcnew System::Windows::Forms::Button());
@@ -456,7 +464,7 @@ namespace GripMMI {
 			this->groupBox5->BackColor = System::Drawing::Color::Transparent;
 			this->groupBox5->Controls->Add(this->scrollBar);
 			this->groupBox5->Controls->Add(this->spanSelector);
-			this->groupBox5->Controls->Add(this->FilterCheckbox);
+			this->groupBox5->Controls->Add(this->filterCheckbox);
 			this->groupBox5->Controls->Add(this->dataLiveCheckbox);
 			this->groupBox5->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
@@ -492,18 +500,18 @@ namespace GripMMI {
 			this->spanSelector->TickStyle = System::Windows::Forms::TickStyle::TopLeft;
 			this->spanSelector->ValueChanged += gcnew System::EventHandler(this, &GripMMIDesktop::spanSelector_ValueChanged);
 			// 
-			// FilterCheckbox
+			// filterCheckbox
 			// 
-			this->FilterCheckbox->AutoSize = true;
-			this->FilterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+			this->filterCheckbox->AutoSize = true;
+			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->FilterCheckbox->Location = System::Drawing::Point(1017, 35);
-			this->FilterCheckbox->Name = L"FilterCheckbox";
-			this->FilterCheckbox->Size = System::Drawing::Size(63, 24);
-			this->FilterCheckbox->TabIndex = 9;
-			this->FilterCheckbox->Text = L"Filter";
-			this->FilterCheckbox->UseVisualStyleBackColor = true;
-			this->FilterCheckbox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::FilterCheckbox_CheckedChanged);
+			this->filterCheckbox->Location = System::Drawing::Point(1017, 35);
+			this->filterCheckbox->Name = L"filterCheckbox";
+			this->filterCheckbox->Size = System::Drawing::Size(63, 24);
+			this->filterCheckbox->TabIndex = 9;
+			this->filterCheckbox->Text = L"Filter";
+			this->filterCheckbox->UseVisualStyleBackColor = true;
+			this->filterCheckbox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::filterCheckbox_CheckedChanged);
 			// 
 			// dataLiveCheckbox
 			// 
@@ -1261,8 +1269,8 @@ namespace GripMMI {
 	private: System::Void dataLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 				 if ( dataLiveCheckbox->Checked ) forceUpdate = true;
 			 }
-	private: System::Void FilterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 if ( dataLiveCheckbox->Checked ) dex.SetFilterConstant( 10.0 );
+	private: System::Void filterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+				 if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
 				 else dex.SetFilterConstant( 0.0 );
 				 forceUpdate = true;
 			 }

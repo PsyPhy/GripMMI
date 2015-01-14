@@ -173,3 +173,13 @@ double DexAnalogMixin::FilterNormalForce( double normal_force, int ati ) {
 	filteredNormalForce[ati] = (normal_force + filterConstant * filteredNormalForce[ati]) / (1.0 + filterConstant );
 	return( filteredNormalForce[ati] );
 }
+
+double DexAnalogMixin::FilterAcceleration( Vector3 acceleration ) {
+	// Combine the new position sample with previous filtered value (recursive filtering).
+	ScaleVector( filteredAcceleration, filteredAcceleration, filterConstant );
+	AddVectors( filteredAcceleration, filteredAcceleration, acceleration );
+	ScaleVector( filteredAcceleration, filteredAcceleration, 1.0 / (1.0 + filterConstant ));
+	// Return the filtered value in place.
+	CopyVector( acceleration, filteredAcceleration );
+	return( VectorNorm( acceleration ) );
+}

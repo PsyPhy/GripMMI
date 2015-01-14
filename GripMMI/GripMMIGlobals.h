@@ -12,7 +12,7 @@
 #define MANIPULANDUM_LAST_MARKER  7
 extern Vector3 ManipulandumRotations[MAX_FRAMES];
 extern Vector3 ManipulandumPosition[MAX_FRAMES];
-extern float Acceleration[MAX_FRAMES][3];
+extern Vector3 Acceleration[MAX_FRAMES];
 extern float GripForce[MAX_FRAMES];
 extern Vector3 LoadForce[MAX_FRAMES];
 extern float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];

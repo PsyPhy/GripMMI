@@ -146,6 +146,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			Acceleration[nFrames][X] = (float) rt.dataSlice[slice].acceleration[X];
 			Acceleration[nFrames][Y] = (float) rt.dataSlice[slice].acceleration[Y];
 			Acceleration[nFrames][Z] = (float) rt.dataSlice[slice].acceleration[Z];
+			dex.FilterAcceleration( Acceleration[nFrames] );
 
 			// Fill some data arrays to show when each marker is visible.
 			// We consider a marker visible if it is seen by either coda.

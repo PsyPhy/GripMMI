@@ -43,7 +43,7 @@ char *massDecoder[4] = {".", "M", "S", "L" };
 // Data buffers
 Vector3 ManipulandumRotations[MAX_FRAMES];
 Vector3 ManipulandumPosition[MAX_FRAMES];
-float Acceleration[MAX_FRAMES][3];
+Vector3 Acceleration[MAX_FRAMES];
 float GripForce[MAX_FRAMES];
 Vector3 LoadForce[MAX_FRAMES];
 float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];

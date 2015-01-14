@@ -70,5 +70,6 @@ public:
 	double FilterManipulandumRotations( Vector3 rotations );
 	double FilterGripForce( double grip_force );
 	double FilterNormalForce( double normal_force, int ati );
+	double FilterAcceleration( Vector3 acceleration );
 
 };

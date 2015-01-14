@@ -323,7 +323,7 @@ void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, doubl
 	// Plot all 3 components of the acceleration in a single view;
 	for ( int i = 0; i < 3; i++ ) {
 		ViewSelectColor( view, i );
-		if ( stop_frame > start_frame ) ViewPlotAvailableFloats( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_FLOAT );
+		if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
 	}
 }
 
