@@ -31,12 +31,13 @@ using namespace GripMMI;
 // Error code to return if the cache file cannot be opened.
 #define ERROR_CACHE_NOT_FOUND	-1000
 
-
-
 void GripMMIDesktop::ResetBuffers( void ){
 	nFrames = 0;
 }
 
+/// <summary>
+/// Read in the cached realtime data packets.
+/// </summary>
 int GripMMIDesktop::GetGripRT( void ) {
 
 	static int count = 0;
@@ -99,33 +100,32 @@ int GripMMIDesktop::GetGripRT( void ) {
 		// Transfer the data to the buffers for plotting.
 		ExtractGripRealtimeDataInfo( &rt, &packet );
 		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
-
 			// Approximate the time, assuming 20 samples per second.
 			// I know that this is not true. A future version will do
 			//  something more clever to compute the real time of each data point.
-			RealMarkerTime[nFrames] = nFrames * .05f;
+			RealMarkerTime[nFrames] = nFrames * 0.05f;
+			RealAnalogTime[nFrames] = nFrames * 0.05f;
 			if ( rt.dataSlice[slice].manipulandumVisibility ) {
-
+				// Retrieve the position and convert to mm.
 				ManipulandumPosition[nFrames][X] = rt.dataSlice[slice].position[X] / 10.0;
 				ManipulandumPosition[nFrames][Y] = rt.dataSlice[slice].position[Y] / 10.0;
 				ManipulandumPosition[nFrames][Z] = rt.dataSlice[slice].position[Z] / 10.0;
-
+				// Convert quaternion to a form that is easier to understand in graphs.
 				dex.QuaternionToCannonicalRotations( ManipulandumRotations[nFrames], rt.dataSlice[slice].quaternion );
-
+				// Apply recursive filter to position data for this slice.
 				dex.FilterManipulandumPosition( ManipulandumPosition[nFrames] );
+				// If the orientation is available, filter it as well.
 				if ( _finite( ManipulandumRotations[nFrames][X] ) ) dex.FilterManipulandumRotations( ManipulandumRotations[nFrames] );
 			}
 			else {
+				// Manipulandum was not visible, so record as missing data.
 				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
-
 				ManipulandumRotations[nFrames][X] = MISSING_DOUBLE;
 				ManipulandumRotations[nFrames][Y] = MISSING_DOUBLE;
 				ManipulandumRotations[nFrames][Z] = MISSING_DOUBLE;
 			}
-			RealAnalogTime[nFrames] = nFrames * 0.05f;
-			
 			// The ICD does not say what is the reference frame for the force data.
 			// I'm pretty sure that this is right.
 			GripForce[nFrames] = (float) dex.ComputeGripForce( rt.dataSlice[slice].ft[LEFT_ATI].force, rt.dataSlice[slice].ft[RIGHT_ATI].force );
@@ -136,34 +136,30 @@ int GripMMIDesktop::GetGripRT( void ) {
 			NormalForce[LEFT_ATI][nFrames] = (float) dex.FilterNormalForce( NormalForce[LEFT_ATI][nFrames], LEFT_ATI );
 			NormalForce[RIGHT_ATI][nFrames] = (float) rt.dataSlice[slice].ft[RIGHT_ATI].force[X];
 			NormalForce[RIGHT_ATI][nFrames] = (float) dex.FilterNormalForce( NormalForce[RIGHT_ATI][nFrames], RIGHT_ATI );
-
+			// Compute the acceleration, load force, load force magnitude and center-of-pressures, and filter appropriately.
 			dex.ComputeLoadForce( LoadForce[nFrames], rt.dataSlice[slice].ft[0].force, rt.dataSlice[slice].ft[1].force );
 			LoadForceMagnitude[nFrames] = dex.FilterLoadForce( LoadForce[nFrames] );
-
 			for ( int ati = 0; ati < N_FORCE_TRANSDUCERS; ati++ ) {
 				double cop_distance = dex.ComputeCoP( CenterOfPressure[ati][nFrames], rt.dataSlice[slice].ft[ati].force, rt.dataSlice[slice].ft[ati].torque );
 				if ( cop_distance >= 0.0 ) dex.FilterCoP( ati, CenterOfPressure[ati][nFrames] );
 			}
-
-			for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
-
-				// Fill some data arrays to show when each marker is visible.
-				// We consider a marker visible if it is seen by either coda.
-				// Set a non-zero value if it is visible, MISSING_CHAR if it is obscured.
-				// The non-zero values that are set when the marker is visible are a convenient
-				//  trick to make it easy to plot the traces for all markers in one graph.
-				grp = ( mrk >= 8 ? ( mrk >= 12 ? mrk + 20 : mrk + 10 ) : mrk ) + 35;
-				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = grp;
-				else MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
-
-			}
-			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
-			else ManipulandumVisibility[nFrames] = 0;
-
 			Acceleration[nFrames][X] = (float) rt.dataSlice[slice].acceleration[X];
 			Acceleration[nFrames][Y] = (float) rt.dataSlice[slice].acceleration[Y];
 			Acceleration[nFrames][Z] = (float) rt.dataSlice[slice].acceleration[Z];
 
+			// Fill some data arrays to show when each marker is visible.
+			// We consider a marker visible if it is seen by either coda.
+			// Set a non-zero value if it is visible, MISSING_CHAR if it is obscured.
+			// The non-zero values that are set when the marker is visible are a convenient
+			//  trick to make it easy to plot the traces for all markers in one graph.
+			for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
+				grp = ( mrk >= 8 ? ( mrk >= 12 ? mrk + 20 : mrk + 10 ) : mrk ) + 35;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = grp;
+				else MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
+			}
+			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
+			else ManipulandumVisibility[nFrames] = 0;
+			// Count the number of frames.
 			nFrames++;
 		}
 
@@ -174,7 +170,6 @@ int GripMMIDesktop::GetGripRT( void ) {
 		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
 		exit( return_code );
 	}
-
 	// Compute the visibility strings for the markers from the last frame.
 	for (coda = 0; coda < CODA_UNITS; coda++ ) {
 		strcpy( markerVisibilityString[coda], "" );
@@ -184,7 +179,6 @@ int GripMMIDesktop::GetGripRT( void ) {
 			else strcat( markerVisibilityString[coda], "m" );
 		}
 	}
-
 	fOutputDebugString( "Acquired Frames (max %d): %d\n", MAX_FRAMES, nFrames );
 	if ( nFrames >= MAX_FRAMES ) {
 		char filename2[MAX_PATHLENGTH];
@@ -203,7 +197,9 @@ int GripMMIDesktop::GetGripRT( void ) {
 	}
 	else return ( FALSE );
 }
-
+/// <summary>
+/// Simulate a set of realtime data packets.
+/// </summary>
 void GripMMIDesktop::SimulateGripRT ( void ) {
 
 	// Simulate some data to test memory limites and graphics functions.
@@ -256,7 +252,9 @@ void GripMMIDesktop::SimulateGripRT ( void ) {
 	fOutputDebugString( "End SimulateGripRT().\n" );
 	fOutputDebugString( "nFrames: %d %d\n", nFrames, MAX_FRAMES );
 }
-
+/// <summary>
+/// Read housekeeping cache, taking just the most recent value.
+/// </summary>
 int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 
 	static int count = 0;
@@ -331,7 +329,10 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 	}
 	else return ( FALSE );
 }
-
+/// <summary>
+/// Update the script crawler windows and state indicators (markers, targets, etc.
+/// based on realtime HK data packet info.
+/// </summary>
 void GripMMIDesktop::UpdateStatus( bool force ) {
 
 	int i;
@@ -355,12 +356,6 @@ void GripMMIDesktop::UpdateStatus( bool force ) {
 		// Show the state of the script engine.
 		if ( hk_info.task != 0 && hk_info.scriptEngineStatusEnum == 0x1000 ) scriptErrorCheckbox->Checked = true;
 		else scriptErrorCheckbox->Checked = false;
-
-		// Show the selected subject and protocol in the menus.
-		//SetDlgItemInt( IDC_SUBJECTID, hk_info.user );
-		//SetDlgItemInt( IDC_PROTOCOLID, hk_info.protocol );
-		//SetDlgItemInt( IDC_TASKID, hk_info.task );
-		//SetDlgItemInt( IDC_STEPID, hk_info.step );
 
 		// Update everything as if the subject, protocol, task and step had been entered by
 		//  hand and then someone pushes the GoTo button.
@@ -394,13 +389,14 @@ void GripMMIDesktop::UpdateStatus( bool force ) {
 		cradlesTextBox->Clear();
 		cradlesTextBox->AppendText( gcnew String( mass_state_string ));
 
+		// Marker visibility.
 		markersTextBox->Clear();
 		strcpy( coda_state_string, markerVisibilityString[0] );
-		//markersTextBox->AppendText( gcnew String( coda_state_string ));
 		strcat( coda_state_string, "\r\n" );
 		strcat( coda_state_string, markerVisibilityString[1] );
 		markersTextBox->AppendText( gcnew String( coda_state_string ));
 
+		// Acquisition mode (markers and video).
 		strcpy( acquisition_state_string, "");
 		if ( hk_info.motionTrackerStatusEnum == 2 ) strcat( acquisition_state_string, "A" );
 		else strcat( acquisition_state_string, " " );
