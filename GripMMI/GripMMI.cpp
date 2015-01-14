@@ -1,6 +1,10 @@
 // GripMMI.cpp : main project file.
 
 #include "stdafx.h"
+
+#include "GripMMIAbout.h"
+#include "GripMMIStartup.h"
+#include "GripMMIFullStep.h"
 #include "GripMMIDesktop.h"
 
 using namespace GripMMI;
@@ -20,7 +24,37 @@ int main(array<System::String ^> ^args)
 	if ( args->Length > 0 ) packetRoot = args[0];
 	if ( args->Length > 1 ) scriptRoot = args[1];
 
-	// Create the main window and run it
-	Application::Run(gcnew GripMMIDesktop( packetRoot, scriptRoot ));
+	// First, a lot of code to convert a String to the (char *)
+	//  values that the script crawler code needs.
+	pin_ptr<const wchar_t> pinchars = PtrToStringChars( scriptRoot );
+	size_t converted_chars;
+	size_t  size_in_bytes;
+	errno_t err = 0;
+	// Create scriptDirectory
+	converted_chars = 0;
+	size_in_bytes = ((scriptRoot->Length + 1) * 2);
+	err = wcstombs_s(&converted_chars, 
+			scriptDirectory, sizeof( scriptDirectory ),
+			pinchars, size_in_bytes);
+	// Create pictureFilenamePrefix
+	strcpy( pictureFilenamePrefix, scriptDirectory );
+	strcat( pictureFilenamePrefix, "pictures\\" );
+	// Create packetBufferPathRoot
+	pinchars = PtrToStringChars( packetRoot );
+	converted_chars = 0;
+	size_in_bytes = ((packetRoot->Length + 1) * 2);
+	err = wcstombs_s(&converted_chars, 
+			packetBufferPathRoot, sizeof( packetBufferPathRoot ),
+			pinchars, size_in_bytes);
+
+	// Before we do anything else, check if packets are available in the
+	//  cache directory. If not, there is nothing to display.
+	// Here we show a dialog while we are waiting for some packets to appear.
+	GripMMIStartup^ startupForm = gcnew GripMMIStartup( GripMMIVersion );
+	System::Windows::Forms::DialogResult result = startupForm->ShowDialog();
+	if ( result != System::Windows::Forms::DialogResult::Cancel ) {
+		// Create the main window and run it
+		Application::Run(gcnew GripMMIDesktop());
+	}
 	return 0;
 }

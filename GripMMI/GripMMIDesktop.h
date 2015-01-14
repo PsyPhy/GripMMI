@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GripMMIAbout.h"
+#include "GripMMIStartup.h"
 #include "GripMMIFullStep.h"
 #include "..\GripMMIVersionControl\GripMMIVersionControl.h"
 
@@ -17,53 +18,10 @@
 #include "..\Grip\DexAnalogMixin.h"
 #include "..\Grip\GripPackets.h"
 
-// Array dimensions for the GRIP script elements.
-#define MAX_STEPS				4096
-#define MAX_MENU_ITEMS			256
-#define MAX_MENU_ITEM_LENGTH	1024
+#include "GripMMIGlobals.h"
 
-// Max number of frames (data slices)
-#define MAX_FRAMES (12*60*60*20)
-#define CODA_MARKERS 20
-#define	CODA_UNITS	2
-#define MANIPULANDUM_FIRST_MARKER 0
-#define MANIPULANDUM_LAST_MARKER  7
-#define MAX_PATHLENGTH	1024
+// Time in milliseconds between screen refreshes.
 #define REFRESH_TIMEOUT	1000
-#define MAX_TOKENS	32
-
-#define PHASEPLOTS 3
-#define STRIPCHARTS	6
-#define SPAN_VALUES	6
-
-extern Vector3 ManipulandumRotations[MAX_FRAMES];
-extern Vector3 ManipulandumPosition[MAX_FRAMES];
-extern float Acceleration[MAX_FRAMES][3];
-extern float GripForce[MAX_FRAMES];
-extern Vector3 LoadForce[MAX_FRAMES];
-extern float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
-extern double LoadForceMagnitude[MAX_FRAMES];
-extern Vector3 CenterOfPressure[N_FORCE_TRANSDUCERS][MAX_FRAMES];
-extern float RealMarkerTime[MAX_FRAMES];
-extern float CompressedMarkerTime[MAX_FRAMES];
-extern float RealAnalogTime[MAX_FRAMES];
-extern float CompressedAnalogTime[MAX_FRAMES];
-extern char  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
-extern char  ManipulandumVisibility[MAX_FRAMES];
-extern char markerVisibilityString[CODA_UNITS][32];
-extern unsigned int nFrames;
-extern int windowSpan[SPAN_VALUES];
-
-extern char packetBufferPathRoot[MAX_PATHLENGTH];
-extern char scriptDirectory[MAX_PATHLENGTH];
-extern char pictureFilenamePrefix[MAX_PATHLENGTH];
-
-extern char picture[MAX_STEPS][256];
-extern char message[MAX_STEPS][132];
-extern char *type[MAX_STEPS];
-extern bool comment[MAX_STEPS];
-
-extern DexAnalogMixin	dex;
 
 namespace GripMMI {
 
@@ -80,44 +38,41 @@ namespace GripMMI {
 	public ref class GripMMIDesktop : public System::Windows::Forms::Form
 	{
 	public:
-		GripMMIDesktop( String^ packet_buffer_root, String^ script_directory )
+		GripMMIDesktop( void )
 		{
-			InitializeComponent();
 
-			fullStepForm = gcnew GripMMIFullStep();
+			// Now initialize the actual GripMMI Desktop.
+			InitializeComponent();
 
 			// Show the version number in the window title.
 			this->Text = gcnew String( GripMMIVersion );
+			// Create other dialog windows.
+			fullStepForm = gcnew GripMMIFullStep();
+			aboutForm = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
 
-			// A lot of code to convert a String to char *.
-			char filename[MAX_PATHLENGTH];
-			pin_ptr<const wchar_t> pinchars = PtrToStringChars( script_directory );
-			size_t convertedChars = 0;
-			size_t  sizeInBytes = ((script_directory->Length + 1) * 2);
-			errno_t err = 0;
-			err = wcstombs_s(&convertedChars, 
-					scriptDirectory, sizeof( scriptDirectory ),
-					pinchars, sizeInBytes);
-			strcpy( pictureFilenamePrefix, scriptDirectory );
-			strcat( pictureFilenamePrefix, "pictures\\" );
 
-			pinchars = PtrToStringChars( packet_buffer_root );
-			convertedChars = 0;
-			sizeInBytes = ((packet_buffer_root->Length + 1) * 2);
-			err = wcstombs_s(&convertedChars, 
-					packetBufferPathRoot, sizeof( packetBufferPathRoot ),
-					pinchars, sizeInBytes);
-
+			//
 			// Initialize the script crawler menus.
+			//
+
+			// Construct the path to the root script and intialize the crawler menus.
+			char filename[MAX_PATHLENGTH];
 			strcpy( filename, scriptDirectory );
 			strcat( filename, "users.dex" );
 			ParseSubjectFile( filename );
 
+			// 
+			// Initialize the data display.
+			//
+
+			// Set up graphs.
 			InitializeGraphics();
 			AdjustGraphSpan();
-			CreateRefreshTimer();
+			// Initialize periodic check for data and refresh.
+			CreateRefreshTimer( REFRESH_TIMEOUT );
 			StartRefreshTimer();
-
+			// In the next cycle, plot the data regardless of whether there
+			//  is new data or not. This draws the data plots, even if empty.
 			forceUpdate = true;
 		}
 
@@ -134,7 +89,9 @@ namespace GripMMI {
 		}
 
 
-	private: GripMMIFullStep^ fullStepForm;
+	private: GripMMIFullStep^	fullStepForm;
+	private: GripMMIAbout^		aboutForm;
+	private: GripMMIStartup^	startupForm;
 
 	private: System::Windows::Forms::GroupBox^  groupBox1;
 	private: System::Windows::Forms::GroupBox^  groupBox2;
@@ -155,12 +112,9 @@ namespace GripMMI {
 	private: System::Windows::Forms::TrackBar^  spanSelector;
 	private: System::Windows::Forms::GroupBox^  groupBox6;
 	private: System::Windows::Forms::TextBox^  dexText;
-
 	private: System::Windows::Forms::PictureBox^  dexPicture;
 
-
 	private: System::Windows::Forms::Button^  fakeIgnore;
-
 	private: System::Windows::Forms::Button^  fakeOK;
 	private: System::Windows::Forms::Button^  fakeInterrupt;
 	private: System::Windows::Forms::Button^  fakeStatus;
@@ -206,10 +160,13 @@ namespace GripMMI {
 	private: System::Windows::Forms::Label^  label5;
 
 	private: 
+		/// <summary>
+		/// Periodically check for new data packets.
+		/// </summary>
 		static Timer^ timer;
-		void CreateRefreshTimer( void ) {
+		void CreateRefreshTimer( int interval ) {
 			timer = gcnew Timer;
-			timer->Interval = REFRESH_TIMEOUT;
+			timer->Interval = interval;
 			timer->Tick += gcnew EventHandler( this, &GripMMI::GripMMIDesktop::OnTimerElapsed );
 		}
 		void StartRefreshTimer( void ) {
@@ -1340,8 +1297,7 @@ namespace GripMMI {
 				// Test if the About item was selected from the system menu
 				if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
 				{
-					GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
-					about->ShowDialog();
+					aboutForm->ShowDialog();
 					return;
 				}
 				// Do what one would normally do.
