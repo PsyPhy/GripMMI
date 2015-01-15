@@ -1,8 +1,16 @@
-// GripMMIlite.cpp : Defines the entry point for the console application.
+///
+/// Module:	GripMMIlite (GripMMI)
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+
 //
 // This program provides a simplified monitoring of Grip realtime data downlink.
 // A subset of the data is written to stdout, to be displayed on the console.
-// The program uses the same mechanism as the GripMMI GUI to retieve data from
+// The program uses the same mechanism as the main GripMMI GUI to retieve data from
 //  the EPM server. It can therefore be used to debug the connection to the EPM.
 
 // The program takes as input packets stored in two cache files: XXX.rt.gpk and XXX.hk.gpk.
