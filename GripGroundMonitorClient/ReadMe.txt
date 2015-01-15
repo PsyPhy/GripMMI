@@ -2,11 +2,7 @@
     CONSOLE APPLICATION : GripGroundMonitorClient Project Overview
 ========================================================================
 
-AppWizard has created this GripGroundMonitorClient application for you.
-
-This file contains a summary of what you will find in each of the files that
-make up your GripGroundMonitorClient application.
-
+Creates a library to process Grip packets and data.
 
 GripGroundMonitorClient.vcxproj
     This is the main project file for VC++ projects generated using an Application Wizard.

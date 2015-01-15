@@ -2,11 +2,9 @@
     CONSOLE APPLICATION : GripMMIlite Project Overview
 ========================================================================
 
-AppWizard has created this GripMMIlite application for you.
-
-This file contains a summary of what you will find in each of the files that
-make up your GripMMIlite application.
-
+A text version of the GripMMI. It was generated to test 
+GripGroundMonitorClient (the GripMMI TCP/IP module). 
+It is provided 'as is' with minimal documentation and support.
 
 GripMMIlite.vcxproj
     This is the main project file for VC++ projects generated using an Application Wizard.

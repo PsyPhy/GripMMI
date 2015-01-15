@@ -2,10 +2,9 @@
     CONSOLE APPLICATION : CLWSemulator Project Overview
 ========================================================================
 
-AppWizard has created this CLWSemulator application for you.
-
-This file contains a summary of what you will find in each of the files that
-make up your CLWSemulator application.
+This program provides the means to test the Grip MMI by emulating the CLWS data server.
+It provides an TCP/IP server that outputs packets similar to those sent by EPM during
+ execution of experiments on the Grip experiment module.
 
 
 CLWSemulator.vcxproj

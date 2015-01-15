@@ -2,10 +2,10 @@
     APPLICATION : GripMMI Project Overview
 ========================================================================
 
-AppWizard has created this GripMMI Application for you.  
+This is the main application for the GripMMI. 
 
-This file contains a summary of what you will find in each of the files that
-make up your GripMMI application.
+It reads packets that have been retrieved from the EPM CLWS server and
+stored in packet caches and displays them on the screen.
 
 GripMMI.vcxproj
     This is the main project file for VC++ projects generated using an Application Wizard. 

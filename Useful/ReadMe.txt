@@ -2,9 +2,7 @@
     STATIC LIBRARY : Useful Project Overview
 ========================================================================
 
-AppWizard has created this Useful library project for you.
-
-No source files were created as part of your project.
+Creates a library with some useful routines for general programming in C.
 
 
 Useful.vcxproj

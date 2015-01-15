@@ -2,10 +2,8 @@
     CONSOLE APPLICATION : GripMMIShowVersionInfo Project Overview
 ========================================================================
 
-AppWizard has created this GripMMIShowVersionInfo application for you.
-
-This file contains a summary of what you will find in each of the files that
-make up your GripMMIShowVersionInfo application.
+A console app that outputs the current version and build info to stdout. 
+It is used by CreateStandaloneGripMMI to maintain version info in human readable form.
 
 
 GripMMIShowVersionInfo.vcxproj

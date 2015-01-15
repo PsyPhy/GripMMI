@@ -2,10 +2,8 @@
     STATIC LIBRARY : Grip Project Overview
 ========================================================================
 
-AppWizard has created this Grip library project for you.
-
-No source files were created as part of your project.
-
+Creates a library of routines that are useful for handling Grip (Dex)
+ packets and data.
 
 Grip.vcxproj
     This is the main project file for VC++ projects generated using an Application Wizard.

@@ -2,9 +2,8 @@
     STATIC LIBRARY : GripMMIVersionControl Project Overview
 ========================================================================
 
-AppWizard has created this GripMMIVersionControl library project for you.
-
-No source files were created as part of your project.
+Creates common version and build info strings to be used by multiple
+ projects within the GripMMI solution.
 
 
 GripMMIVersionControl.vcxproj
