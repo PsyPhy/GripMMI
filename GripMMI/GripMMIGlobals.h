@@ -1,6 +1,16 @@
 #pragma once
 
-// Definition of preprocessor constants and global variables for GripMMI.
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Definition of preprocessor constants and global variables for GripMMI.
 
 /// <summary>
 /// Buffers to hold the GRIP data.

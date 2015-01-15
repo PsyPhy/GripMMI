@@ -1,3 +1,14 @@
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// GripMMI global static variables.
 
 // My original code in VC 6 used static arrays with known dimensions, and an number of (char *) objects.
 // VC 2010 doesn't allow 'mixed' types in Forms objects. So here I define a number of global variables to 

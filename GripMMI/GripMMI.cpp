@@ -1,4 +1,19 @@
-// GripMMI.cpp : main project file.
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// GripMMI graphical application.
+/// Packets from Grip are placed at that location by the GripGroundMonitorClient module, which is 
+///  a separate process that talks to the EPM CLWS via tcp/ip to retrieve the packets.
+/// This module monitors the defined data directory for the presence of GRIP realtime data packets
+///  and graphs the data on the screen. It also shows the current step and screens seen by the 
+///  subject, based on a local copy of the scripts and step info from the GRIP housekeeping packets.
 
 #include "stdafx.h"
 

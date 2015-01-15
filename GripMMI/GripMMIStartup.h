@@ -1,4 +1,15 @@
 #pragma once
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Creates a dialog to show when the GripMMI is waiting for the first packets to arrive.
 
 // Number of milliseconds to wait be attempts to access packet cache files.
 #define RETRY_TIMEOUT	1000

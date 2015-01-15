@@ -1,5 +1,17 @@
 #pragma once
 
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Defines Windows Form to display complete text of step in the Grip script.
+
 namespace GripMMI {
 
 	using namespace System;

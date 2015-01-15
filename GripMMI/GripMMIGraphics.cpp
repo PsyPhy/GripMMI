@@ -1,4 +1,14 @@
-// GripMMIGraphics.cpp : methods for drawing the various graphs on the screen.
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Methods for drawing the various graphs on the screen.
 
 #include "stdafx.h"
 #include <Windows.h>

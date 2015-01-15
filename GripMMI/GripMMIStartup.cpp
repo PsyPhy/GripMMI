@@ -1,3 +1,15 @@
+///
+/// Module:	GripMMI
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Methods to wait for the intial packets to arrive before proceeding.
+
 #include "StdAfx.h"
 
 #include "..\Grip\GripPackets.h"
@@ -31,7 +43,9 @@ namespace GripMMI {
 		CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
 		int housekeeping_missing = _access( filename, 00 );
 
-		// If both are there, we exit this dialog and allow the program to continue.
+		// If both are there, we exit this dialog with OK status, which will allow the program to continue.
+		// If the user closes the window by the cancel button or close button, exit status will be Cancel 
+		//  and the application will exit.
 		if ( science_missing == 0 && housekeeping_missing == 0 ) {
 			this->DialogResult = System::Windows::Forms::DialogResult::OK;
 			this->Close();
