@@ -4,7 +4,8 @@
 /*                                                                               */
 /*********************************************************************************/
 
-// Methods to process the analog data, notably the ATI data.
+// Methods to process Dex (Grip) analog data, notably the ATI data.
+// Copyright (c) 2012-2013 PsyPhy Consulting. All rights reserved.
 
 #include <windows.h>
 #include <mmsystem.h>
