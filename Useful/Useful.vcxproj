@@ -80,7 +80,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fMessageBox.h" />
+    <ClInclude Include="fOutputDebugString.h" />
+    <ClInclude Include="ParseCommaDelimitedLine.h" />
     <ClInclude Include="Useful.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

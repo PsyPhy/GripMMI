@@ -28,5 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\PsyPhy2dGraphicsTest\2dGraphicsTest.dsp" />
+    <None Include="ReadMe.txt" />
   </ItemGroup>
 </Project>

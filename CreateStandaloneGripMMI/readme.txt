@@ -5,6 +5,7 @@
 Copyright (c) 2014, 2015 PsyPhy Consulting
 
 BuildStandaloneGripMMI.bat
+	
 	A DOS batch file that copies the latest version of the executables 
 	generated here. One can then execute the system outside of the VC++ 
 	environment to verify standalone functionality.
