@@ -1,10 +1,18 @@
-/****************************************************************************/
-/*                                                                          */
-/*                                Views.h                                   */
-/*                                                                          */
-/****************************************************************************/
+/*****************************************************************************/
+/*                                                                           */
+/*                                 Views.h                                   */
+/*                                                                           */
+/*****************************************************************************/
 
-/*    (c) Copyright 1994, 1995 - PsyPhy Consulting. All Rights Reserved.    */
+/* (c) Copyright 1994-1995, 2014-2015 PsyPhy Consulting. All Rights Reserved. */
+
+/*
+
+	A graphics library that faciliates transformations from user to screen
+	coordinates. It is 'object oriented' before object-oriented C and C++
+	were available.
+	
+*/
 
 /*
 	Transformation from user coordinates to device coordinates.
