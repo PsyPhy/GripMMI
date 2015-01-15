@@ -21,7 +21,7 @@
 #include "GripMMIGlobals.h"
 
 // Time in milliseconds between screen refreshes.
-#define REFRESH_TIMEOUT	1000
+#define REFRESH_TIMEOUT	500
 // Recursive filter constant. 
 // The bigger it is, the lower the cutoff frequency.
 #define FILTER_CONSTANT 2.0
@@ -166,6 +166,8 @@ namespace GripMMI {
 	private: System::Windows::Forms::GroupBox^  groupBox17;
 	private: System::Windows::Forms::TextBox^  acquisitionTextBox;
 	private: System::Windows::Forms::Label^  label5;
+private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
+
 
 	private: 
 		/// <summary>
@@ -337,6 +339,7 @@ namespace GripMMI {
 			this->groupBox17 = (gcnew System::Windows::Forms::GroupBox());
 			this->acquisitionTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->autoscaleCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->BeginInit();
 			this->groupBox1->SuspendLayout();
@@ -441,7 +444,9 @@ namespace GripMMI {
 			// 
 			// groupBox4
 			// 
+			this->groupBox4->Controls->Add(this->autoscaleCheckBox);
 			this->groupBox4->Controls->Add(this->StripCharts);
+			this->groupBox4->Controls->Add(this->filterCheckbox);
 			this->groupBox4->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
 			this->groupBox4->Location = System::Drawing::Point(4, 325);
@@ -453,9 +458,9 @@ namespace GripMMI {
 			// 
 			// StripCharts
 			// 
-			this->StripCharts->Location = System::Drawing::Point(6, 23);
+			this->StripCharts->Location = System::Drawing::Point(6, 25);
 			this->StripCharts->Name = L"StripCharts";
-			this->StripCharts->Size = System::Drawing::Size(1075, 615);
+			this->StripCharts->Size = System::Drawing::Size(1075, 613);
 			this->StripCharts->TabIndex = 0;
 			this->StripCharts->TabStop = false;
 			// 
@@ -464,7 +469,6 @@ namespace GripMMI {
 			this->groupBox5->BackColor = System::Drawing::Color::Transparent;
 			this->groupBox5->Controls->Add(this->scrollBar);
 			this->groupBox5->Controls->Add(this->spanSelector);
-			this->groupBox5->Controls->Add(this->filterCheckbox);
 			this->groupBox5->Controls->Add(this->dataLiveCheckbox);
 			this->groupBox5->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
@@ -478,7 +482,7 @@ namespace GripMMI {
 			// scrollBar
 			// 
 			this->scrollBar->LargeChange = 100000;
-			this->scrollBar->Location = System::Drawing::Point(238, 24);
+			this->scrollBar->Location = System::Drawing::Point(242, 28);
 			this->scrollBar->Maximum = 864000;
 			this->scrollBar->Name = L"scrollBar";
 			this->scrollBar->Size = System::Drawing::Size(767, 25);
@@ -491,7 +495,7 @@ namespace GripMMI {
 			// 
 			this->spanSelector->BackColor = System::Drawing::Color::White;
 			this->spanSelector->LargeChange = 1;
-			this->spanSelector->Location = System::Drawing::Point(13, 19);
+			this->spanSelector->Location = System::Drawing::Point(13, 18);
 			this->spanSelector->Margin = System::Windows::Forms::Padding(1);
 			this->spanSelector->Maximum = 5;
 			this->spanSelector->Name = L"spanSelector";
@@ -503,11 +507,12 @@ namespace GripMMI {
 			// filterCheckbox
 			// 
 			this->filterCheckbox->AutoSize = true;
-			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->filterCheckbox->Location = System::Drawing::Point(1017, 35);
+			this->filterCheckbox->Location = System::Drawing::Point(914, 0);
 			this->filterCheckbox->Name = L"filterCheckbox";
-			this->filterCheckbox->Size = System::Drawing::Size(63, 24);
+			this->filterCheckbox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
+			this->filterCheckbox->Size = System::Drawing::Size(58, 21);
 			this->filterCheckbox->TabIndex = 9;
 			this->filterCheckbox->Text = L"Filter";
 			this->filterCheckbox->UseVisualStyleBackColor = true;
@@ -520,7 +525,7 @@ namespace GripMMI {
 			this->dataLiveCheckbox->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->dataLiveCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->dataLiveCheckbox->Location = System::Drawing::Point(1017, 14);
+			this->dataLiveCheckbox->Location = System::Drawing::Point(1019, 28);
 			this->dataLiveCheckbox->Name = L"dataLiveCheckbox";
 			this->dataLiveCheckbox->Size = System::Drawing::Size(56, 24);
 			this->dataLiveCheckbox->TabIndex = 0;
@@ -1031,6 +1036,20 @@ namespace GripMMI {
 			this->label5->TabIndex = 20;
 			this->label5->Text = L"Acquire";
 			// 
+			// autoscaleCheckBox
+			// 
+			this->autoscaleCheckBox->AutoSize = true;
+			this->autoscaleCheckBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->autoscaleCheckBox->Location = System::Drawing::Point(983, 0);
+			this->autoscaleCheckBox->Name = L"autoscaleCheckBox";
+			this->autoscaleCheckBox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
+			this->autoscaleCheckBox->Size = System::Drawing::Size(89, 21);
+			this->autoscaleCheckBox->TabIndex = 12;
+			this->autoscaleCheckBox->Text = L"Autoscale";
+			this->autoscaleCheckBox->UseVisualStyleBackColor = true;
+			this->autoscaleCheckBox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::autoscaleCheckBox_CheckedChanged);
+			// 
 			// GripMMIDesktop
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -1074,6 +1093,7 @@ namespace GripMMI {
 			this->groupBox3->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->CoPPlot))->EndInit();
 			this->groupBox4->ResumeLayout(false);
+			this->groupBox4->PerformLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->StripCharts))->EndInit();
 			this->groupBox5->ResumeLayout(false);
 			this->groupBox5->PerformLayout();
@@ -1274,6 +1294,9 @@ namespace GripMMI {
 				 else dex.SetFilterConstant( 0.0 );
 				 forceUpdate = true;
 			 }
+	private: System::Void autoscaleCheckBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
+				 forceUpdate = true;
+			 }
 	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 				// Show an about box on right click in the main window.
 				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
@@ -1311,7 +1334,7 @@ namespace GripMMI {
 				// Do what one would normally do.
 					Form::WndProc( m );
 				}
-	};
+};
 
 }
 

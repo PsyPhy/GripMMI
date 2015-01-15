@@ -140,9 +140,9 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 
 	// Create an array of Views that will be used to plot data in stripchart form.
 	stripchart_layout = CreateLayout( stripchart_display, STRIPCHARTS, 1 );
-	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.01, 0.055, 0.99, 0.99 );
+	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.055, 1.0, 0.99 );
 	visibility_view = CreateView( stripchart_display );
-	ViewSetDisplayEdgesRelative( visibility_view, 0.015, 0.01, 0.985, 0.05 );
+	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.01, 0.995, 0.05 );
 
 
 }
@@ -214,22 +214,40 @@ void GripMMIDesktop::KillGraphics( void ) {
 
 void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
 			
+	double range;
+
 	ViewColor( view, GREY6 );
 	ViewBox( view );
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Manipulandum Position ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	ViewSetXLimits( view, start_instant, stop_instant );
-	ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
-	ViewAxes( view );
-
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
 	// Plot all 3 components of the manipulandum position in the same view;
+	// The autoscaling is a bit complicated. I want each trace centered on its own mean
+	//  but I want the range of values to be common to all three so that magnitudes of movement
+	//  can be compared between X, Y and Z.
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		range = 0.0;
+		for ( int i = X; i <= Z; i++ ) {
+			ViewAutoScaleInit( view );
+			ViewAutoScaleAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+			if ( ViewYRange( view ) > range ) range = ViewYRange( view );
+		}
+	}
+	ViewAxes( view );
 	for ( int i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+		if ( autoscaleCheckBox->Checked ) {
+			ViewAutoScaleInit( view );
+			ViewAutoScaleAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+			ViewSetYRange( view, range );
+		}
+		else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
+		ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 	}
 
 }
@@ -241,17 +259,22 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Manipulandum Rotation ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	ViewSetXLimits( view, start_instant, stop_instant );
-	ViewSetYLimits( view, lowerRotationLimit, upperRotationLimit );
-	ViewAxes( view );
-
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
 	// Plot all 3 components of the manipulandum position in the same view;
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		for ( int i = X; i <= Z; i++ ) ViewAutoScaleAvailableDoubles( view, &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
+		ViewAutoScaleExpand( view, 0.01 );
+	}
+	else ViewSetYLimits( view, lowerRotationLimit, upperRotationLimit );
+	ViewAxes( view );
 	for ( int i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
+		ViewPlotAvailableDoubles( view, &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
 	}
 }
 
@@ -289,21 +312,27 @@ void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double s
 
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-
-	ViewSetXLimits( view, start_instant, stop_instant );
-	ViewSetYLimits( view, lowerForceLimit, upperForceLimit );
-	ViewAxes( view );
-	ViewHorizontalLine( view, 0.0 );
-	ViewHorizontalLine( view, 4.0 );
-	ViewHorizontalLine( view, -4.0 );
+	if ( stop_frame <= start_frame ) return;
 
 	// Plot all 3 components of the load force in the same view;
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		for ( int i = X; i <= Z; i++ ) ViewAutoScaleAvailableDoubles( view, &LoadForce[0][i], start_frame, stop_frame, sizeof( *LoadForce ), MISSING_DOUBLE );
+		ViewAutoScaleAvailableDoubles( view, &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
+		ViewAutoScaleExpand( view, 0.01 );
+	}
+	else ViewSetYLimits( view, lowerForceLimit, upperForceLimit );
+	ViewAxes( view );
+	ViewHorizontalLine( view, 0.0 );
+	if ( view->user_top > 4.0 ) ViewHorizontalLine( view, 4.0 );
+	if ( view->user_bottom < -4.0 ) ViewHorizontalLine( view, -4.0 );
 	for ( i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &LoadForce[0][i], start_frame, stop_frame, sizeof( *LoadForce ), MISSING_DOUBLE );
+		ViewPlotAvailableDoubles( view, &LoadForce[0][i], start_frame, stop_frame, sizeof( *LoadForce ), MISSING_DOUBLE );
 	}
 	ViewSelectColor( view, i );
-	if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
+	ViewPlotAvailableDoubles( view, &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
 
 }
 void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
@@ -315,15 +344,20 @@ void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, doubl
 
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
-	ViewSetXLimits( view, start_instant, stop_instant );
-	ViewSetYLimits( view, lowerAccelerationLimit, upperAccelerationLimit );
-	ViewAxes( view );
-		
 	// Plot all 3 components of the acceleration in a single view;
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		for ( int i = X; i <= Z; i++ ) ViewAutoScaleAvailableDoubles( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
+		ViewAutoScaleExpand( view, 0.01 );
+	}
+	else ViewSetYLimits( view, lowerAccelerationLimit, upperAccelerationLimit );
+	ViewAxes( view );	
 	for ( int i = 0; i < 3; i++ ) {
 		ViewSelectColor( view, i );
-		if ( stop_frame > start_frame ) ViewPlotAvailableDoubles( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
+		ViewPlotAvailableDoubles( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
 	}
 }
 
@@ -336,20 +370,26 @@ void GripMMIDesktop::GraphGripForce( ::View view, double start_instant, double s
 
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerGripLimit, upperGripLimit );
 	ViewAxes( view );
-		
-	if ( stop_frame > start_frame ) {
-//		ViewAutoScaleAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
-		ViewColor( view, atiColorMap[LEFT_ATI] );
-		ViewPlotAvailableFloats( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
-		ViewColor( view, atiColorMap[RIGHT_ATI] );
-		ViewPlotAvailableFloats( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
-		ViewColor( view, GREEN );
-		ViewPlotAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
+
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		ViewAutoScaleAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
+		ViewAutoScaleAvailableFloats( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
+		ViewAutoScaleAvailableFloats( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[RIGHT_ATI] ), MISSING_FLOAT );
+		ViewAutoScaleExpand( view, 0.01 );
 	}
+
+	ViewColor( view, atiColorMap[LEFT_ATI] );
+	ViewPlotAvailableFloats( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
+	ViewColor( view, atiColorMap[RIGHT_ATI] );
+	ViewPlotAvailableFloats( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
+	ViewColor( view, GREEN );
+	ViewPlotAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
 
 }
 
@@ -362,6 +402,7 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerGripLimit, upperGripLimit );
@@ -373,11 +414,11 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	//  such that the traces are spread out and grouped in the view.
 	for ( int mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
 		ViewColor( view, mrk % 3 );
-		if ( stop_frame > start_frame ) ViewPlotAvailableChars( view, &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *MarkerVisibility ), MISSING_CHAR );
+		ViewPlotAvailableChars( view, &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *MarkerVisibility ), MISSING_CHAR );
 	}
 
 	ViewColor( view, BLACK );
-	if ( stop_frame > start_frame ) ViewBoxPlotChars( view, &ManipulandumVisibility[0],  start_frame, stop_frame, sizeof( *ManipulandumVisibility ) );
+	ViewBoxPlotChars( view, &ManipulandumVisibility[0],  start_frame, stop_frame, sizeof( *ManipulandumVisibility ) );
 	ViewColor( view, RED );
 //	ViewHorizontalLine( view, 3 );
 
@@ -392,6 +433,7 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 
 	if ( start_frame < start_instant ) start_frame = start_instant;
 	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
 
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerCopLimit, upperCopLimit );
@@ -402,7 +444,7 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	for ( int ati = 0; ati < 2; ati++ ) {
 		for ( int i = X; i <= Z; i++ ) {
 			ViewSelectColor( view, 3 * ati + i );
-			if ( stop_frame > start_frame ) ViewPlotClippedDoubles( view, &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *CenterOfPressure[ati] ) );
+			ViewPlotClippedDoubles( view, &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *CenterOfPressure[ati] ) );
 		}
 	}
 }
