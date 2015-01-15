@@ -70,20 +70,23 @@ void ViewPlotDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewPlotClippedDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned size ) {
+		       unsigned start, unsigned end, unsigned size, double NA ) {
   register unsigned i;
   register double	*pt;
+  double y;
+  int penon = NO;
 
-  pt = (double *)(((char *) array) + start * size);
-  ViewMoveTo(view, (double) start,  *pt);
-
-  for (i = start + 1; i <= end; i += view_array_skip ) {
-
-    pt = (double *)(((char *) array) + i * size);
-    if ( *pt > view->user_top ) ViewLineTo(view, (double) i, view->user_top );
-    else if ( *pt < view->user_bottom ) ViewLineTo(view, (double) i, view->user_bottom );
-    else ViewLineTo(view, (double) i, *pt);
-	
+  for (i = start; i <= end; i += view_array_skip ) {
+	  pt = (double *)(((char *) array) + i * size);
+	  if ( *pt == NA ) penon = NO;
+	  else {
+		if ( *pt > view->user_top ) y = view->user_top;
+		else if ( *pt < view->user_bottom ) y = view->user_bottom;
+		else y = *pt;
+		if ( penon == YES ) ViewLineTo( view, (double) i, y );
+		else ViewMoveTo( view, (double) i, y );
+		penon = YES;
+	 }
   }
 }
 

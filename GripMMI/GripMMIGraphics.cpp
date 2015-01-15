@@ -444,7 +444,7 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	for ( int ati = 0; ati < 2; ati++ ) {
 		for ( int i = X; i <= Z; i++ ) {
 			ViewSelectColor( view, 3 * ati + i );
-			ViewPlotClippedDoubles( view, &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *CenterOfPressure[ati] ) );
+			ViewPlotClippedDoubles( view, &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *CenterOfPressure[ati] ), MISSING_DOUBLE );
 		}
 	}
 }

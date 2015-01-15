@@ -30,6 +30,8 @@ using namespace GripMMI;
 #define RETRY_PAUSE	20		
 // Error code to return if the cache file cannot be opened.
 #define ERROR_CACHE_NOT_FOUND	-1000
+// Grip force threshold for a valid CoP.
+#define COP_MIN_GRIP	0.5
 
 void GripMMIDesktop::ResetBuffers( void ){
 	nFrames = 0;
@@ -140,7 +142,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			dex.ComputeLoadForce( LoadForce[nFrames], rt.dataSlice[slice].ft[0].force, rt.dataSlice[slice].ft[1].force );
 			LoadForceMagnitude[nFrames] = dex.FilterLoadForce( LoadForce[nFrames] );
 			for ( int ati = 0; ati < N_FORCE_TRANSDUCERS; ati++ ) {
-				double cop_distance = dex.ComputeCoP( CenterOfPressure[ati][nFrames], rt.dataSlice[slice].ft[ati].force, rt.dataSlice[slice].ft[ati].torque );
+				double cop_distance = dex.ComputeCoP( CenterOfPressure[ati][nFrames], rt.dataSlice[slice].ft[ati].force, rt.dataSlice[slice].ft[ati].torque, COP_MIN_GRIP );
 				if ( cop_distance >= 0.0 ) dex.FilterCoP( ati, CenterOfPressure[ati][nFrames] );
 			}
 			Acceleration[nFrames][X] = (float) rt.dataSlice[slice].acceleration[X];

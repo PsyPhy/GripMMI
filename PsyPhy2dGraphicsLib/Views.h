@@ -236,7 +236,7 @@ void ViewPlotFloatsDashed (View view, float *array,
 void ViewPlotDoubles ( View view, double *array, 
 		       unsigned start, unsigned end, unsigned skip, unsigned size );
 void ViewPlotClippedDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned size );
+		       unsigned start, unsigned end, unsigned size, double NA );
 
 void ViewPlotAvailableDoubles ( View view, double *array, 
 				unsigned start, unsigned end, 
