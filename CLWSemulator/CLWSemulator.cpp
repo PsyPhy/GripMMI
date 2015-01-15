@@ -1,5 +1,12 @@
-// CLWSemulator.cpp : Defines the entry point for the console application.
-//
+///
+/// Module:	CLWSemulator (GripMMI)
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
 
 // This program provides the means to test the Grip MMI by emulating the CLWS data server.
 // It provides an TCP/IP server that outputs packets similar to those sent by EPM during
