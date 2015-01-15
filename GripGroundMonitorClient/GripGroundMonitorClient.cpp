@@ -1,5 +1,18 @@
-// GripGroundMonitorClient.cpp : Defines the entry point for the console application.
-//
+///
+/// Module:	GripGroundMonitorClient (GripMMI)
+/// 
+///	Author:					J. McIntyre, PsyPhy Consulting
+/// Initial release:		18 December 2014
+/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+///
+/// Copyright (c) 2014, 2015 PsyPhy Consulting
+///
+
+/// Connection to EPM for the GripMMI.
+/// This file creates a console application that connects to the EPM CLWS server.
+/// It accepts GRIP housekeeping and realtime data packets and stores them in
+///  cache files. Those cache files are then be read by the GripMMI executable
+///  for graphical display. 
 
 #include "stdafx.h"
 #include "..\Grip\GripPackets.h"
@@ -47,7 +60,6 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 		fMessageBox( MB_OK, "GripGroundMonitorClient", "Error closing %s after binary write.\nError code: %d", filename, return_code );
 		exit( return_code );
 	}
-//	printf( "    Appended to %s.\n", filename );
 
 }
 
@@ -249,7 +261,7 @@ int __cdecl main(int argc, char **argv)
 						
 						iResult,													// Actual # bytes received.
 						epmPacketHeaderInfo.transferFrameInfo.numberOfWords * 2,	// Bytes supposedly received according to transfer frame header.
-						epmPacketHeaderInfo.numberOfWords * 2,					// Bytes supposedly recieved according to the EPM Telemetry packet, excluding transfer frame info.  
+						epmPacketHeaderInfo.numberOfWords * 2,						// Bytes supposedly recieved according to the EPM Telemetry packet, excluding transfer frame info.  
 						
 						epmPacketHeaderInfo.transferFrameInfo.softwareUnitID,
 						epmPacketHeaderInfo.subsystemID, 
