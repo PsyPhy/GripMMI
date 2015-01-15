@@ -74,6 +74,8 @@ namespace GripMMI {
 			// Set the filter constant according to the initial state of the filter checkbox.
 			if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
 			else dex.SetFilterConstant( 0.0 );
+			// Select the summary graph collection by default.
+			graphCollectionComboBox->SelectedIndex = 0;
 
 			// Initialize periodic check for data and refresh.
 			CreateRefreshTimer( REFRESH_TIMEOUT );
@@ -166,7 +168,8 @@ namespace GripMMI {
 	private: System::Windows::Forms::GroupBox^  groupBox17;
 	private: System::Windows::Forms::TextBox^  acquisitionTextBox;
 	private: System::Windows::Forms::Label^  label5;
-private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
+	private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
+private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 
 
 	private: 
@@ -244,6 +247,9 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 		void GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
 		void PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame );
 
+		void GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
+		void GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
+
 		// GripMMIData.cpp
 
 		bool forceUpdate;
@@ -290,11 +296,13 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
 			this->CoPPlot = (gcnew System::Windows::Forms::PictureBox());
 			this->groupBox4 = (gcnew System::Windows::Forms::GroupBox());
+			this->graphCollectionComboBox = (gcnew System::Windows::Forms::ComboBox());
+			this->autoscaleCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->StripCharts = (gcnew System::Windows::Forms::PictureBox());
+			this->filterCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBox5 = (gcnew System::Windows::Forms::GroupBox());
 			this->scrollBar = (gcnew System::Windows::Forms::HScrollBar());
 			this->spanSelector = (gcnew System::Windows::Forms::TrackBar());
-			this->filterCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->dataLiveCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBox6 = (gcnew System::Windows::Forms::GroupBox());
 			this->fakeOK = (gcnew System::Windows::Forms::Button());
@@ -339,7 +347,6 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 			this->groupBox17 = (gcnew System::Windows::Forms::GroupBox());
 			this->acquisitionTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->label5 = (gcnew System::Windows::Forms::Label());
-			this->autoscaleCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->BeginInit();
 			this->groupBox1->SuspendLayout();
@@ -444,25 +451,67 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 			// 
 			// groupBox4
 			// 
+			this->groupBox4->Controls->Add(this->graphCollectionComboBox);
 			this->groupBox4->Controls->Add(this->autoscaleCheckBox);
 			this->groupBox4->Controls->Add(this->StripCharts);
 			this->groupBox4->Controls->Add(this->filterCheckbox);
 			this->groupBox4->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox4->Location = System::Drawing::Point(4, 325);
+			this->groupBox4->Location = System::Drawing::Point(4, 322);
 			this->groupBox4->Name = L"groupBox4";
-			this->groupBox4->Size = System::Drawing::Size(1087, 646);
+			this->groupBox4->Size = System::Drawing::Size(1087, 648);
 			this->groupBox4->TabIndex = 7;
 			this->groupBox4->TabStop = false;
-			this->groupBox4->Text = L"Strip Charts";
+			this->groupBox4->Text = L"Time Series";
+			// 
+			// graphCollectionComboBox
+			// 
+			this->graphCollectionComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
+			this->graphCollectionComboBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9, System::Drawing::FontStyle::Regular, 
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->graphCollectionComboBox->FormattingEnabled = true;
+			this->graphCollectionComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(2) {L"Summary", L"Kinematics"});
+			this->graphCollectionComboBox->Location = System::Drawing::Point(747, 0);
+			this->graphCollectionComboBox->Name = L"graphCollectionComboBox";
+			this->graphCollectionComboBox->Size = System::Drawing::Size(142, 23);
+			this->graphCollectionComboBox->TabIndex = 25;
+			this->graphCollectionComboBox->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::graphCollectionComboBox_SelectedIndexChanged);
+			// 
+			// autoscaleCheckBox
+			// 
+			this->autoscaleCheckBox->AutoSize = true;
+			this->autoscaleCheckBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->autoscaleCheckBox->Location = System::Drawing::Point(989, 1);
+			this->autoscaleCheckBox->Name = L"autoscaleCheckBox";
+			this->autoscaleCheckBox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
+			this->autoscaleCheckBox->Size = System::Drawing::Size(89, 21);
+			this->autoscaleCheckBox->TabIndex = 12;
+			this->autoscaleCheckBox->Text = L"Autoscale";
+			this->autoscaleCheckBox->UseVisualStyleBackColor = true;
+			this->autoscaleCheckBox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::autoscaleCheckBox_CheckedChanged);
 			// 
 			// StripCharts
 			// 
-			this->StripCharts->Location = System::Drawing::Point(6, 25);
+			this->StripCharts->Location = System::Drawing::Point(6, 27);
 			this->StripCharts->Name = L"StripCharts";
 			this->StripCharts->Size = System::Drawing::Size(1075, 613);
 			this->StripCharts->TabIndex = 0;
 			this->StripCharts->TabStop = false;
+			// 
+			// filterCheckbox
+			// 
+			this->filterCheckbox->AutoSize = true;
+			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->filterCheckbox->Location = System::Drawing::Point(910, 1);
+			this->filterCheckbox->Name = L"filterCheckbox";
+			this->filterCheckbox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
+			this->filterCheckbox->Size = System::Drawing::Size(58, 21);
+			this->filterCheckbox->TabIndex = 9;
+			this->filterCheckbox->Text = L"Filter";
+			this->filterCheckbox->UseVisualStyleBackColor = true;
+			this->filterCheckbox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::filterCheckbox_CheckedChanged);
 			// 
 			// groupBox5
 			// 
@@ -474,7 +523,7 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 				static_cast<System::Byte>(0)));
 			this->groupBox5->Location = System::Drawing::Point(4, 250);
 			this->groupBox5->Name = L"groupBox5";
-			this->groupBox5->Size = System::Drawing::Size(1087, 69);
+			this->groupBox5->Size = System::Drawing::Size(1087, 64);
 			this->groupBox5->TabIndex = 8;
 			this->groupBox5->TabStop = false;
 			this->groupBox5->Text = L"Data Display";
@@ -503,20 +552,6 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 			this->spanSelector->TabIndex = 11;
 			this->spanSelector->TickStyle = System::Windows::Forms::TickStyle::TopLeft;
 			this->spanSelector->ValueChanged += gcnew System::EventHandler(this, &GripMMIDesktop::spanSelector_ValueChanged);
-			// 
-			// filterCheckbox
-			// 
-			this->filterCheckbox->AutoSize = true;
-			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->filterCheckbox->Location = System::Drawing::Point(914, 0);
-			this->filterCheckbox->Name = L"filterCheckbox";
-			this->filterCheckbox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
-			this->filterCheckbox->Size = System::Drawing::Size(58, 21);
-			this->filterCheckbox->TabIndex = 9;
-			this->filterCheckbox->Text = L"Filter";
-			this->filterCheckbox->UseVisualStyleBackColor = true;
-			this->filterCheckbox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::filterCheckbox_CheckedChanged);
 			// 
 			// dataLiveCheckbox
 			// 
@@ -1036,20 +1071,6 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 			this->label5->TabIndex = 20;
 			this->label5->Text = L"Acquire";
 			// 
-			// autoscaleCheckBox
-			// 
-			this->autoscaleCheckBox->AutoSize = true;
-			this->autoscaleCheckBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->autoscaleCheckBox->Location = System::Drawing::Point(983, 0);
-			this->autoscaleCheckBox->Name = L"autoscaleCheckBox";
-			this->autoscaleCheckBox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
-			this->autoscaleCheckBox->Size = System::Drawing::Size(89, 21);
-			this->autoscaleCheckBox->TabIndex = 12;
-			this->autoscaleCheckBox->Text = L"Autoscale";
-			this->autoscaleCheckBox->UseVisualStyleBackColor = true;
-			this->autoscaleCheckBox->CheckedChanged += gcnew System::EventHandler(this, &GripMMIDesktop::autoscaleCheckBox_CheckedChanged);
-			// 
 			// GripMMIDesktop
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -1297,6 +1318,10 @@ private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
 	private: System::Void autoscaleCheckBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 				 forceUpdate = true;
 			 }
+	private: System::Void graphCollectionComboBox_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
+				 forceUpdate = true;
+			}
+
 	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 				// Show an about box on right click in the main window.
 				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {

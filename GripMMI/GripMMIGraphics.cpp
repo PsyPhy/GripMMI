@@ -173,12 +173,27 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 	DisplayActivate( stripchart_display );
 	Erase( stripchart_display );
 
-	GraphManipulandumPosition( LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
-	GraphManipulandumRotations( LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
-	GraphAcceleration( LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
-	GraphGripForce( LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
-	GraphLoadForce( LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
-	GraphCoP( LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
+	switch ( graphCollectionComboBox->SelectedIndex ) {
+	// Kinematics
+	case 1:
+		GraphManipulandumPositionComponent( X, LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( Y, LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( Z, LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
+		GraphAccelerationComponent( X, LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
+		GraphAccelerationComponent( Y, LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
+		GraphAccelerationComponent( Z, LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
+		break;
+	// Summary
+	case 0:
+	default:
+		GraphManipulandumPosition( LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumRotations( LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
+		GraphAcceleration( LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
+		GraphGripForce( LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
+		GraphLoadForce( LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
+		GraphCoP( LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
+		break;
+	}
 	GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
 	OglSwap( stripchart_display );
 
@@ -250,6 +265,65 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 		ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 	}
 
+}
+
+void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+			
+	char *title;
+
+	ViewColor( view, GREY6 );
+	ViewBox( view );
+	ViewColor( view, BLACK );
+	switch ( component ) {
+	case X: title = "Manipulandum Position X "; break;
+	case Y: title = "Manipulandum Position Y "; break;
+	case Z: title = "Manipulandum Position Z "; break;
+	default: title = "error";
+	}
+	ViewTitle( view, title, INSIDE_RIGHT, INSIDE_TOP, 0.0 );
+
+	if ( start_frame < start_instant ) start_frame = start_instant;
+	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
+
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		ViewAutoScaleAvailableDoubles( view, &ManipulandumPosition[0][component], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+	}
+	else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
+	ViewAxes( view );
+	ViewSelectColor( view, component );
+	ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][component], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+}
+void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+			
+	char *title;
+
+	ViewColor( view, GREY6 );
+	ViewBox( view );
+	ViewColor( view, BLACK );
+	switch ( component ) {
+	case X: title = "Manipulandum Acceleration X "; break;
+	case Y: title = "Manipulandum Acceleration Y "; break;
+	case Z: title = "Manipulandum Acceleration Z "; break;
+	default: title = "error";
+	}
+	ViewTitle( view, title, INSIDE_RIGHT, INSIDE_TOP, 0.0 );
+
+	if ( start_frame < start_instant ) start_frame = start_instant;
+	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
+	if ( stop_frame <= start_frame ) return;
+
+	ViewSetXLimits( view, start_instant, stop_instant );
+	if ( autoscaleCheckBox->Checked ) {
+		ViewAutoScaleInit( view );
+		ViewAutoScaleAvailableDoubles( view, &Acceleration[0][component], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
+	}
+	else ViewSetYLimits( view, lowerAccelerationLimit, upperAccelerationLimit );
+	ViewAxes( view );
+	ViewSelectColor( view, component );
+	ViewPlotAvailableDoubles( view, &Acceleration[0][component], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
 }
 
 void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
