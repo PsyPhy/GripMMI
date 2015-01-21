@@ -366,7 +366,7 @@ void SetOglWindow( OglWindow *params ) {
 	wglMakeCurrent( s_hDC, s_hRC );	
 	SetForegroundWindow( s_hWnd );		// Slightly Higher Priority
 	SetFocus( s_hWnd );			     	// Sets Keyboard Focus To The Window
-	ShowWindow( s_hWnd, SW_SHOW );
+	//ShowWindow( s_hWnd, SW_SHOW );
 }
 
 /*********************************************************************************/
@@ -503,7 +503,7 @@ void RunOglWindow( void ) {
 }
 
 void ActivateOglWindow( void ) {
-	ShowWindow( s_hWnd, SW_SHOW);
+	// ShowWindow( s_hWnd, SW_SHOW);
 	wglMakeCurrent( s_hDC, s_hRC );
 }
 

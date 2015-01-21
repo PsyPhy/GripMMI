@@ -214,19 +214,6 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 
 }
 
-void GripMMIDesktop::ChangeGraphics( void ) {
-	static int color = 0;
-	static int y = 100;
-	static int x = 100;
-	OglActivate( zy_display );
-	Erase( zy_display );
-	Color( zy_display, color );
-	color = (color + 1)%6;
-	Line( zy_display, 10, 10, x, y );
-	x -= 10;
-	glprintf( x, y, 12.0, "TESTAGAIN" );
-	Swap();
-}
 
 void GripMMIDesktop::KillGraphics( void ) {
 

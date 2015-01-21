@@ -80,21 +80,23 @@ namespace GripMMI {
 			// Initialize the data display.
 			//
 
+			// Create a timer to periodically check for data and refresh.
+			CreateRefreshTimer( REFRESH_TIMEOUT );
+
 			// Set up graphs.
 			InitializeGraphics();
 			AdjustGraphSpan();
+
 			// Set the filter constant according to the initial state of the filter checkbox.
 			if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
 			else dex.SetFilterConstant( 0.0 );
+
 			// Select the summary graph collection by default.
 			graphCollectionComboBox->SelectedIndex = 0;
 
-			// Initialize periodic check for data and refresh.
-			CreateRefreshTimer( REFRESH_TIMEOUT );
-			StartRefreshTimer();
 			// In the next cycle, plot the data regardless of whether there
 			//  is new data or not. This draws the data plots, even if empty.
-			forceUpdate = true;
+			ForceUpdate();
 		}
 
 	protected:
@@ -226,6 +228,14 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			forceUpdate = false;
 			StartRefreshTimer();
 		}
+		bool forceUpdate;
+		void ForceUpdate( void ) {
+			StartRefreshTimer();
+			forceUpdate = true;
+		}
+		void ImpedeUpdate( void ) {
+			StopRefreshTimer();
+		}
 
 	private: 
 
@@ -244,7 +254,6 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 		void InitializeGraphics( void );
 		void RefreshGraphics( void );
 		void KillGraphics( void );
-		void ChangeGraphics( void );
 		void AdjustGraphSpan( void );
 		void MoveToLatest( void );
 
@@ -263,8 +272,6 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 		void GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
 
 		// GripMMIData.cpp
-
-		bool forceUpdate;
 		void SimulateGripRT ( void );
 		int  GetGripRT( void );
 		int	 GetLatestGripHK( GripHealthAndStatusInfo *hk );
@@ -488,6 +495,9 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->graphCollectionComboBox->Size = System::Drawing::Size(142, 23);
 			this->graphCollectionComboBox->TabIndex = 25;
 			this->graphCollectionComboBox->SelectedIndexChanged += gcnew System::EventHandler(this, &GripMMIDesktop::graphCollectionComboBox_SelectedIndexChanged);
+			this->graphCollectionComboBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::graphCollectionComboBox_KeyPress);
+			this->graphCollectionComboBox->MouseCaptureChanged += gcnew System::EventHandler(this, &GripMMIDesktop::graphCollectionComboBox_MouseCaptureChanged);
+			this->graphCollectionComboBox->MouseDown += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::graphCollectionComboBox_MouseDown);
 			// 
 			// autoscaleCheckBox
 			// 
@@ -1088,7 +1098,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1532, 1021);
+			this->ClientSize = System::Drawing::Size(1444, 878);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
 			this->Controls->Add(this->groupBox10);
@@ -1317,21 +1327,21 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 		 
 		}
 	private: System::Void scriptLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 if ( scriptLiveCheckbox->Checked ) forceUpdate = true;
+				 if ( scriptLiveCheckbox->Checked ) ForceUpdate();
 			 }
 	private: System::Void dataLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 if ( dataLiveCheckbox->Checked ) forceUpdate = true;
+				 if ( dataLiveCheckbox->Checked ) ForceUpdate();
 			 }
 	private: System::Void filterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 				 if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
 				 else dex.SetFilterConstant( 0.0 );
-				 forceUpdate = true;
+				 ForceUpdate();
 			 }
 	private: System::Void autoscaleCheckBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 forceUpdate = true;
+				 ForceUpdate();
 			 }
 	private: System::Void graphCollectionComboBox_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-				 forceUpdate = true;
+				 ForceUpdate();
 			}
 
 	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
@@ -1371,6 +1381,22 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 				// Do what one would normally do.
 					Form::WndProc( m );
 				}
+
+private: System::Void graphCollectionComboBox_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+			 // Don't do an update of the data screens while the user
+			 //  is making a selection.
+			 ImpedeUpdate();
+		 }
+private: System::Void graphCollectionComboBox_MouseCaptureChanged(System::Object^  sender, System::EventArgs^  e) {
+			 // If the combo box loses focus, restart periodic updates.
+			if ( !(this->graphCollectionComboBox->Focused) ) ForceUpdate();
+		 }
+private: System::Void graphCollectionComboBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+			 // If the user leaves the combo box by pressing ESC or RETURN
+			 //  we need to restart the periodic refresh.
+			 if ( e->KeyChar == 0x1b || e->KeyChar == 0x0d ) ForceUpdate();
+		 }
+
 };
 
 }
