@@ -39,7 +39,7 @@ char rtPacketCacheFilePath[1024];
 char hkPacketCacheFilePath[1024];
 
 // Max times to try to open the cache file before asking user to continue or not.
-#define MAX_OPEN_CACHE_RETRIES	50
+#define MAX_OPEN_CACHE_RETRIES	5
 // Pause time in milliseconds between file open retries.
 #define RETRY_PAUSE	2000		
 // Error code to return if the cache file cannot be opened.
@@ -227,8 +227,7 @@ int main(int argc, char *argv[])
 			// Show the pertinent information from the last frame read.
 			ExtractGripHealthAndStatusInfo( &hkInfo, &hkPacket );
 			// Where are we in the script.
-			fprintf( stdout, "  User: %3d Protocol: %3d Task: %3d Step: %3d", 
-				hkInfo.user, hkInfo.protocol, hkInfo.task, hkInfo.step );
+//			fprintf( stdout, "  User: %3d Protocol: %3d Task: %3d Step: %3d", hkInfo.user, hkInfo.protocol, hkInfo.task, hkInfo.step );
 #if 0
 			// State of the horizontal and vertical target LEDs.
 			fprintf( stdout, " H: " );
@@ -257,14 +256,25 @@ int main(int argc, char *argv[])
 			ExtractGripRealtimeDataInfo( &rtInfo, &rtPacket );
 			// Show the acquisition count and the GRIP realtime packet count.
 			fprintf( stdout, "%4d %8d", rtInfo.acquisitionID, rtInfo.rtPacketCount );
+			fprintf( stdout, " %lf", rtInfo.packetUTC );
 			// Show for each slice in the packet the tick for the coda data
 			//  and whether or not the manipulandum is visible.
 			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
-//				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].poseTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+				fprintf( stdout, " %6d%", rtInfo.dataSlice[i].poseTick );
+//				fprintf( stdout, " %8.3f", rtInfo.dataSlice[i].bestGuessPoseUTC );
 //				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].analogTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
-				fprintf( stdout, " %6.2f", rtInfo.dataSlice[i].acceleration[Z] );
+//				fprintf( stdout, " %6.2f", rtInfo.dataSlice[i].acceleration[Z] );
 			}
 			fprintf( stdout, "\n" );
+			fprintf( stdout, "%4d %8d", rtInfo.acquisitionID, rtInfo.rtPacketCount );
+			fprintf( stdout, " %lf", rtInfo.packetUTC );
+			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
+				fprintf( stdout, " %6d", rtInfo.dataSlice[i].analogTick );
+//				fprintf( stdout, " %8.3f", rtInfo.dataSlice[i].bestGuessPoseUTC );
+//				fprintf( stdout, " %6d%c", rtInfo.dataSlice[i].analogTick, ( rtInfo.dataSlice[i].manipulandumVisibility ? '+' : '-' ) );
+//				fprintf( stdout, " %6.2f", rtInfo.dataSlice[i].acceleration[Z] );
+			}
+			fprintf( stdout, "\n\n" );
 
 		}
 
