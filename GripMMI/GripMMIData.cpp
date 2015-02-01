@@ -112,11 +112,9 @@ int GripMMIDesktop::GetGripRT( void ) {
 		// Transfer the data to the buffers for plotting.
 		ExtractGripRealtimeDataInfo( &rt, &packet );
 		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
-			// Approximate the time, assuming 20 samples per second.
-			// I know that this is not true. A future version will do
-			//  something more clever to compute the real time of each data point.
-			RealMarkerTime[nFrames] = nFrames * 0.05f;
-			RealAnalogTime[nFrames] = nFrames * 0.05f;
+			// Get the time of the slice.
+			RealMarkerTime[nFrames] = rt.dataSlice[slice].bestGuessPoseUTC;
+			RealAnalogTime[nFrames] = rt.dataSlice[slice].bestGuessAnalogUTC;
 			if ( rt.dataSlice[slice].manipulandumVisibility ) {
 				// Retrieve the position and convert to mm.
 				ManipulandumPosition[nFrames][X] = rt.dataSlice[slice].position[X] / 10.0;

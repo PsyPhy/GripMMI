@@ -40,8 +40,9 @@
 #define GRIP_RT_ID	0x1001
 
 // Compute the time in seconds.
-#define EPMtoSeconds( header ) ((long double)header.coarseTime + ((long double) header.fineTime / 10000.0))
 #define RT_SLICES_PER_PACKET 10
+#define RT_DEFAULT_SECONDS_PER_SLICE 0.050
+#define RT_SECONDS_PER_TICK	0.001
 
 typedef struct {
 	unsigned long	epmLanSyncMarker;
@@ -91,9 +92,13 @@ typedef struct {
 		Vector3	torque;
 	} ft[2];
 	Vector3			acceleration;
+	// Add a timestamp as best we can.
+	long double bestGuessPoseUTC;
+	long double bestGuessAnalogUTC;
 } ManipulandumPacket;
  
 typedef struct {
+	long double packetUTC;
 	unsigned long acquisitionID;
 	unsigned long rtPacketCount;
 	ManipulandumPacket dataSlice[RT_SLICES_PER_PACKET];
@@ -215,6 +220,7 @@ typedef enum { GRIP_RT_SCIENCE_PACKET, GRIP_HK_BULK_PACKET, GRIP_UNKNOWN_PACKET 
 extern "C" {
 #endif
 
+long double EPMtoSeconds( EPMTelemetryHeaderInfo *header );
 int  InsertEPMTransferFrameHeaderInfo ( EPMTelemetryPacket *epm_packet, const EPMTransferFrameHeaderInfo *header  );
 void ExtractEPMTransferFrameHeaderInfo ( EPMTransferFrameHeaderInfo *header, const EPMTelemetryPacket *epm_packet );
 void ExtractEPMTelemetryHeaderInfo ( EPMTelemetryHeaderInfo *header, const EPMTelemetryPacket *epm_packet  );

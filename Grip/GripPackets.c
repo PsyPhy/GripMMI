@@ -108,6 +108,14 @@ float extract_reversed_float( const unsigned char bytes[4] ) {
 
 /***********************************************************************************/
 
+// Compute a floating point version of the EPM coarse and fine time stamps.
+
+long double EPMtoSeconds( EPMTelemetryHeaderInfo *header ) {
+	return( (long double) header->coarseTime + ((long double) header->fineTime / 10000.0));
+}
+
+/***********************************************************************************/
+
 // Fill a structure with the header values from an EPM Transfer Frame packet.
 // The bytes are in ESA/EPM order in the packet, and need to be reversed for Windows.
 // Returns the number of bytes inserted into the buffer.
@@ -205,6 +213,8 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	int i;
 	short value;
 	long lvalue;
+	EPMTelemetryHeaderInfo telemetry_header;
+	long double utc;
 
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;
@@ -234,6 +244,59 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 			lvalue = ExtractReversedLong( ptr );
 			realtime_packet->dataSlice[slice].acceleration[i] = ((double) lvalue) / 1000.0 / 9.8;
 		}
+	}
+	// Now timestamp the individual slices as best we can.
+	// First, get the UTC time stamp from the EPM telemetry packet header.
+	ExtractEPMTelemetryHeaderInfo( &telemetry_header, epm_packet );
+	utc = EPMtoSeconds( (&telemetry_header) );
+	// EPM-OHB-SP-0005_iss4 says about EPM Coarse time:
+	//   "This double word gives the command execution time (UTC) in elapsed seconds from a defined epoch. 
+	//     The defined epoch is GPS time, i.e. midnight 5-6 January 1980."
+	//  and:
+	//   "The time shall be set once all data for a telemetry packet are available by the originator."
+	// Therefore, the last slice is presumed to have been taken just before the time of the packet UTC timestamp.
+	realtime_packet->dataSlice[RT_SLICES_PER_PACKET - 1].bestGuessPoseUTC = utc;
+	realtime_packet->dataSlice[RT_SLICES_PER_PACKET - 1].bestGuessAnalogUTC = utc;
+	// Earlier slices are offset from there. 
+	for ( slice = RT_SLICES_PER_PACKET - 2; slice >= 0; slice-- ) {
+
+#if 0
+		// Theoretically, we could get a better estimate of the precise time of the slice.
+		// But how the ticks are determined for each slice is not very clear. This code was
+		//  intended to use the tick info, but I have commented it out because I cannot figure
+		//  out from the documetation that has been provided if this will be better than the
+		//  approximate solution that is in the #else below.
+
+		// If we have a tick for the slice, we use it to compute the offset from the slice 
+		//  that comes just after it. Otherwise, we assume RT_DEFAULT_SECONDS_PER_SLICE between slices. 
+		if ( realtime_packet->dataSlice[slice].poseTick != realtime_packet->dataSlice[slice+1].poseTick ) {
+			realtime_packet->dataSlice[slice].bestGuessPoseUTC = 
+				realtime_packet->dataSlice[slice+1].bestGuessPoseUTC -
+				RT_SECONDS_PER_TICK * ( realtime_packet->dataSlice[slice+1].poseTick - realtime_packet->dataSlice[slice].poseTick );
+		}
+		else {
+			realtime_packet->dataSlice[slice].bestGuessPoseUTC =
+				realtime_packet->dataSlice[slice+1].bestGuessPoseUTC - RT_DEFAULT_SECONDS_PER_SLICE;
+		}
+		if ( realtime_packet->dataSlice[slice].analogTick != realtime_packet->dataSlice[slice+1].analogTick ) {
+			realtime_packet->dataSlice[slice].bestGuessAnalogUTC = 
+				realtime_packet->dataSlice[slice+1].bestGuessAnalogUTC -
+				RT_SECONDS_PER_TICK * ( realtime_packet->dataSlice[slice+1].analogTick - realtime_packet->dataSlice[slice].analogTick );
+		}
+		else {
+			realtime_packet->dataSlice[slice].bestGuessAnalogUTC =
+				realtime_packet->dataSlice[slice+1].bestGuessAnalogUTC - RT_DEFAULT_SECONDS_PER_SLICE;
+		}
+#else
+		// Here we assume that slices are spaced equally in time and that the marker and analog
+		//  data are aligned such that the last slice occurred at the same time as the packet timestamp.
+		//  This is not completely true, but I am not able to do better by reverse engineering the packets
+		//   that we have. We don't need millisecond precision anyway for these purposes.
+		realtime_packet->dataSlice[slice].bestGuessPoseUTC =
+			realtime_packet->dataSlice[slice+1].bestGuessPoseUTC - RT_DEFAULT_SECONDS_PER_SLICE;
+		realtime_packet->dataSlice[slice].bestGuessAnalogUTC =
+			realtime_packet->dataSlice[slice+1].bestGuessAnalogUTC - RT_DEFAULT_SECONDS_PER_SLICE;
+#endif
 	}
 }
 

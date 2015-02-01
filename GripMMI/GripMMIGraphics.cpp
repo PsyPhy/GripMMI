@@ -164,7 +164,7 @@ void GripMMIDesktop::AdjustGraphSpan( void ) {
 	scrollBar->SmallChange = span / 10;
 }
 void GripMMIDesktop::MoveToLatest( void ) {
-	scrollBar->Value = nFrames;
+	scrollBar->Value = nFrames - 1;
 }
 
 
