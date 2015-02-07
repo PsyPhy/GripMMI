@@ -85,7 +85,7 @@ namespace GripMMI {
 
 			// Set up graphs.
 			InitializeGraphics();
-			AdjustGraphSpan();
+			AdjustScrollSpan();
 
 			// Set the filter constant according to the initial state of the filter checkbox.
 			if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
@@ -207,17 +207,10 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			StopRefreshTimer();
 			fOutputDebugString( "\n" );
 			fOutputDebugString( "Timer triggered.\n" );
-			if ( dataLiveCheckbox->Checked || forceUpdate ) {
-				new_data = GetGripRT();
-				if ( new_data || forceUpdate ) {
-					AdjustGraphSpan();
-					MoveToLatest();
-					RefreshGraphics();
-				}
-				else {
-					fOutputDebugString( "No new data.\n" );
-				}
-			}
+			new_data = GetGripRT();
+			if ( new_data ) AdjustScrollSpan();
+			if ( dataLiveCheckbox->Checked ) MoveToLatest();
+			if ( dataLiveCheckbox->Checked || forceUpdate ) RefreshGraphics();
 
 			// Handle HK packets and the script crawler.
 			if ( scriptLiveCheckbox->Checked ) {
@@ -254,7 +247,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 		void InitializeGraphics( void );
 		void RefreshGraphics( void );
 		void KillGraphics( void );
-		void AdjustGraphSpan( void );
+		void AdjustScrollSpan( void );
 		void MoveToLatest( void );
 
 		void ResetBuffers( void );
@@ -1098,7 +1091,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1444, 878);
+			this->ClientSize = System::Drawing::Size(1524, 1016);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
 			this->Controls->Add(this->groupBox10);
@@ -1185,7 +1178,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 	private: System::Void GripMMIDesktop_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 			 }
 	private: System::Void spanSelector_ValueChanged(System::Object^  sender, System::EventArgs^  e) {
-				AdjustGraphSpan();
+				AdjustScrollSpan();
 				RefreshGraphics();
 			 }
 	private: System::Void scrollBar_Scroll(System::Object^  sender, System::Windows::Forms::ScrollEventArgs^  e) {

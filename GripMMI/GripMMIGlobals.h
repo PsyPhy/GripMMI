@@ -14,26 +14,38 @@
 
 /// <summary>
 /// Buffers to hold the GRIP data.
+/// The reason that all of these are doubles (or vectors of doubles) is because
+///  we want to plot vs. time and time is an array of doubles.
+/// The XY plot functions do not, as of now, allow one to have different types
+///  for the X and Y axes.
 /// </summary>
 #define MAX_FRAMES (12*60*60*20) // Max number of frames (data slices)
 #define CODA_MARKERS 20
 #define	CODA_UNITS	2
-#define MANIPULANDUM_FIRST_MARKER 0
-#define MANIPULANDUM_LAST_MARKER  7
+// Buffers to hold the data.
 extern Vector3 ManipulandumRotations[MAX_FRAMES];
 extern Vector3 ManipulandumPosition[MAX_FRAMES];
 extern Vector3 Acceleration[MAX_FRAMES];
-extern float GripForce[MAX_FRAMES];
+extern double GripForce[MAX_FRAMES];
 extern Vector3 LoadForce[MAX_FRAMES];
-extern float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
+extern double NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
 extern double LoadForceMagnitude[MAX_FRAMES];
 extern Vector3 CenterOfPressure[N_FORCE_TRANSDUCERS][MAX_FRAMES];
 extern double RealMarkerTime[MAX_FRAMES];
 extern double CompressedMarkerTime[MAX_FRAMES];
 extern double RealAnalogTime[MAX_FRAMES];
 extern double CompressedAnalogTime[MAX_FRAMES];
-extern char  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
-extern char  ManipulandumVisibility[MAX_FRAMES];
+extern double  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
+#define MANIPULANDUM_FIRST_MARKER 0
+#define MANIPULANDUM_LAST_MARKER  7
+#define FRAME_FIRST_MARKER 8
+#define FRAME_LAST_MARKER 11
+#define WRIST_FIRST_MARKER 12
+#define WRIST_LAST_MARKER 19
+extern double  ManipulandumVisibility[MAX_FRAMES];
+extern double  FrameVisibility[MAX_FRAMES];
+extern double  WristVisibility[MAX_FRAMES];
+extern double  PacketReceived[MAX_FRAMES];
 extern char markerVisibilityString[CODA_UNITS][32];
 extern unsigned int nFrames;
 /// <summary>
@@ -43,6 +55,7 @@ extern unsigned int nFrames;
 #define STRIPCHARTS	6
 #define SPAN_VALUES	6
 extern int windowSpan[SPAN_VALUES]; // Number of samples to plot for each position of the span selector.
+extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for each position of the span selector.
 /// <summary>
 /// Strings used to construct the path to various files.
 /// </summary>

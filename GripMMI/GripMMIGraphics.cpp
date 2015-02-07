@@ -46,6 +46,9 @@ double upperAccelerationLimit;
 double lowerCopLimit;
 double upperCopLimit;
 
+double lowerVisibilityLimit;
+double upperVisibilityLimit;
+
 // Define the pairs for each phase plot.
 static struct {
 	int abscissa;
@@ -82,6 +85,8 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 	lowerAccelerationLimit = -2.0;
 	upperAccelerationLimit =  2.0;
 
+	lowerVisibilityLimit = -20.0;
+	upperVisibilityLimit =  100.0;
 
 	lowerForceLimit = -10.0;
 	upperForceLimit =  10.0;
@@ -150,38 +155,72 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 
 	// Create an array of Views that will be used to plot data in stripchart form.
 	stripchart_layout = CreateLayout( stripchart_display, STRIPCHARTS, 1 );
-	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.055, 1.0, 0.99 );
+	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.075, 1.0, 0.99 );
 	visibility_view = CreateView( stripchart_display );
-	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.01, 0.995, 0.05 );
+	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.01, 0.995, 0.07 );
 
 
 }
 
-void GripMMIDesktop::AdjustGraphSpan( void ) {
-	int span = windowSpan[spanSelector->Value];
-	scrollBar->Maximum = nFrames;
+void GripMMIDesktop::AdjustScrollSpan( void ) {
+	double span = windowSpanSeconds[spanSelector->Value];
+	double min, max;
+	unsigned long	i;
+	for ( i = 0; i < nFrames; i++ ) {
+		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
+			min = RealMarkerTime[i];
+			break;
+		}
+	}
+	for ( i = nFrames - 1; i >= 0; i-- ) {
+		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
+			max = RealMarkerTime[i];
+			break;
+		}
+	}
+	scrollBar->Minimum = floor( min ) + span / 10.0;
+	scrollBar->Maximum = ceil( max );
 	scrollBar->LargeChange = span;
-	scrollBar->SmallChange = span / 10;
+	scrollBar->SmallChange = span / 10.0;
+
 }
 void GripMMIDesktop::MoveToLatest( void ) {
-	scrollBar->Value = nFrames - 1;
+	scrollBar->Value = scrollBar->Maximum;
 }
 
 
 void GripMMIDesktop::RefreshGraphics( void ) {
 		
-	int first_sample = 0;
-	int last_sample = nFrames - 1;
-	if ( last_sample <= first_sample ) return;
+	unsigned long first_sample;
+	unsigned long last_sample;
+	unsigned long index;
 
-	int last_instant = scrollBar->Value;
-	int span = windowSpan[spanSelector->Value];
-	int first_instant = last_instant - span;
 	fOutputDebugString( "Start RefreshGraphics().\n" );
-	fOutputDebugString( "Last Instant: %d Span: %d %d\n", last_instant, span, SPAN_VALUES );
-
 	DisplayActivate( stripchart_display );
 	Erase( stripchart_display );
+
+	// Determine the time window based on the scroll bar position and the span slider.
+	double last_instant = scrollBar->Value;
+	double span = windowSpanSeconds[spanSelector->Value];
+	double first_instant;
+
+	// Find the indices into the arrays that correspond to the time window.
+	for ( index = nFrames - 1; index > 0; index -- ) {
+		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] <= last_instant ) break;
+	}
+	last_sample = index;
+	last_instant = RealMarkerTime[last_sample];
+	first_instant = last_instant - span;
+	for ( index = index; index > 0; index -- ) {
+		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] < first_instant ) break;
+	}
+	first_sample = index + 1;
+	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %lu to %lu \n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample );
+
+	// If the first and last index are the same, there is nothing to display,
+	//  so just return to the caller.
+	if ( last_sample <= first_sample ) return;
+
 
 	switch ( graphCollectionComboBox->SelectedIndex ) {
 	// Kinematics
@@ -233,10 +272,6 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Manipulandum Position ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	// Plot all 3 components of the manipulandum position in the same view;
 	// The autoscaling is a bit complicated. I want each trace centered on its own mean
 	//  but I want the range of values to be common to all three so that magnitudes of movement
@@ -259,7 +294,7 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 			ViewSetYRange( view, range );
 		}
 		else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
-		ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 	}
 
 }
@@ -278,11 +313,6 @@ void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View v
 	default: title = "error";
 	}
 	ViewTitle( view, title, INSIDE_RIGHT, INSIDE_TOP, 0.0 );
-
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	ViewSetXLimits( view, start_instant, stop_instant );
 	if ( autoscaleCheckBox->Checked ) {
 		ViewAutoScaleInit( view );
@@ -291,7 +321,7 @@ void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View v
 	else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
 	ViewAxes( view );
 	ViewSelectColor( view, component );
-	ViewPlotAvailableDoubles( view, &ManipulandumPosition[0][component], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][component], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 }
 void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
 			
@@ -308,10 +338,6 @@ void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, dou
 	}
 	ViewTitle( view, title, INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	ViewSetXLimits( view, start_instant, stop_instant );
 	if ( autoscaleCheckBox->Checked ) {
 		ViewAutoScaleInit( view );
@@ -320,7 +346,7 @@ void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, dou
 	else ViewSetYLimits( view, lowerAccelerationLimit, upperAccelerationLimit );
 	ViewAxes( view );
 	ViewSelectColor( view, component );
-	ViewPlotAvailableDoubles( view, &Acceleration[0][component], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][component], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
 }
 
 void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
@@ -329,10 +355,6 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	ViewBox( view );
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Manipulandum Rotation ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
-
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
 
 	// Plot all 3 components of the manipulandum position in the same view;
 	ViewSetXLimits( view, start_instant, stop_instant );
@@ -345,16 +367,13 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	ViewAxes( view );
 	for ( int i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		ViewPlotAvailableDoubles( view, &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
 	}
 }
 
 void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame ){
 
 	::View view;
-
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
 
 	// Phase plots of Manipulandum position data.
 	for ( int i = 0; i < PHASEPLOTS - 1; i++ ) {
@@ -381,10 +400,6 @@ void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double s
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Load Force ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	// Plot all 3 components of the load force in the same view;
 	ViewSetXLimits( view, start_instant, stop_instant );
 	if ( autoscaleCheckBox->Checked ) {
@@ -400,10 +415,10 @@ void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double s
 	if ( view->user_bottom < -4.0 ) ViewHorizontalLine( view, -4.0 );
 	for ( i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		ViewPlotAvailableDoubles( view, &LoadForce[0][i], start_frame, stop_frame, sizeof( *LoadForce ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForce[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *LoadForce ), MISSING_DOUBLE );
 	}
 	ViewSelectColor( view, i );
-	ViewPlotAvailableDoubles( view, &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
 
 }
 void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
@@ -412,10 +427,6 @@ void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, doubl
 	ViewBox( view );
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Acceleration ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
-
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
 
 	// Plot all 3 components of the acceleration in a single view;
 	ViewSetXLimits( view, start_instant, stop_instant );
@@ -428,7 +439,7 @@ void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, doubl
 	ViewAxes( view );	
 	for ( int i = 0; i < 3; i++ ) {
 		ViewSelectColor( view, i );
-		ViewPlotAvailableDoubles( view, &Acceleration[0][i], start_frame, stop_frame, sizeof( *Acceleration ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
 	}
 }
 
@@ -439,28 +450,24 @@ void GripMMIDesktop::GraphGripForce( ::View view, double start_instant, double s
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Grip Force ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerGripLimit, upperGripLimit );
 	ViewAxes( view );
 
 	if ( autoscaleCheckBox->Checked ) {
 		ViewAutoScaleInit( view );
-		ViewAutoScaleAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
-		ViewAutoScaleAvailableFloats( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
-		ViewAutoScaleAvailableFloats( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[RIGHT_ATI] ), MISSING_FLOAT );
+		ViewAutoScaleAvailableDoubles( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_DOUBLE );
+		ViewAutoScaleAvailableDoubles( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
+		ViewAutoScaleAvailableDoubles( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[RIGHT_ATI] ), MISSING_DOUBLE );
 		ViewAutoScaleExpand( view, 0.01 );
 	}
 
 	ViewColor( view, atiColorMap[LEFT_ATI] );
-	ViewPlotAvailableFloats( view, &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
 	ViewColor( view, atiColorMap[RIGHT_ATI] );
-	ViewPlotAvailableFloats( view, &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *NormalForce[LEFT_ATI] ), MISSING_FLOAT );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
 	ViewColor( view, GREEN );
-	ViewPlotAvailableFloats( view, &GripForce[0], start_frame, stop_frame, sizeof( *GripForce ), MISSING_FLOAT );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &GripForce[0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *GripForce ), MISSING_DOUBLE );
 
 }
 
@@ -471,26 +478,24 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Visibility ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	ViewSetXLimits( view, start_instant, stop_instant );
-	ViewSetYLimits( view, lowerGripLimit, upperGripLimit );
-	ViewSetYLimits( view, 0, 100 );
-	ViewAxes( view );
+	ViewSetYLimits( view, lowerVisibilityLimit, upperVisibilityLimit );
 
 	// Plot all the visibility traces in the same view;
 	// Each marker is assigned a unique non-zero value when it is visible,
 	//  such that the traces are spread out and grouped in the view.
-	for ( int mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
-		ViewColor( view, mrk % 3 );
-		ViewPlotAvailableChars( view, &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *MarkerVisibility ), MISSING_CHAR );
-	}
-
+//	for ( int mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
+//		ViewSelectColor( view, mrk );
+//		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *MarkerVisibility ), MISSING_DOUBLE );
+//	}
 	ViewColor( view, BLACK );
-	ViewBoxPlotChars( view, &ManipulandumVisibility[0],  start_frame, stop_frame, sizeof( *ManipulandumVisibility ) );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &PacketReceived[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *PacketReceived ), MISSING_DOUBLE );
 	ViewColor( view, RED );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &ManipulandumVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumVisibility ), MISSING_DOUBLE );
+	ViewColor( view, GREEN );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &FrameVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *FrameVisibility ), MISSING_DOUBLE );
+	ViewColor( view, BLUE );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &WristVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *WristVisibility ), MISSING_DOUBLE );
 //	ViewHorizontalLine( view, 3 );
 
 }
@@ -502,10 +507,6 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Center of Pressure ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
-	if ( stop_frame <= start_frame ) return;
-
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerCopLimit, upperCopLimit );
 	ViewAxes( view );
@@ -515,7 +516,7 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	for ( int ati = 0; ati < 2; ati++ ) {
 		for ( int i = X; i <= Z; i++ ) {
 			ViewSelectColor( view, 3 * ati + i );
-			ViewPlotClippedDoubles( view, &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *CenterOfPressure[ati] ), MISSING_DOUBLE );
+			ViewXYPlotClippedDoubles( view, &RealMarkerTime[0], &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *CenterOfPressure[ati] ), MISSING_DOUBLE );
 		}
 	}
 }
@@ -523,9 +524,6 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 void GripMMIDesktop::PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame ){
 
 	::View view;
-
-	if ( start_frame < start_instant ) start_frame = start_instant;
-	if ( stop_frame >= stop_instant ) stop_frame = stop_instant - 1;
 
 	DisplayActivate( cop_display );
 	Erase( cop_display );

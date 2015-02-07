@@ -21,6 +21,8 @@
 
 // Number of samples to plot for each position of the span selector.
 int windowSpan[SPAN_VALUES]  = { 20 * 60 * 60, 20 * 60 * 30, 20 * 60 * 10, 20 * 60 * 5, 20 * 60, 20 * 30 };
+// Time span in seconds for each position of the span selector.
+double windowSpanSeconds[SPAN_VALUES] = { 3600.0, 1800.0, 600.0, 300.0, 60.0, 30.0 };
 
 // Character strings to indicate the state of the tone generator output.
 // Lowest bit on is a mute switch, so odd elements are empty while each
@@ -55,17 +57,20 @@ char *massDecoder[4] = {".", "M", "S", "L" };
 Vector3 ManipulandumRotations[MAX_FRAMES];
 Vector3 ManipulandumPosition[MAX_FRAMES];
 Vector3 Acceleration[MAX_FRAMES];
-float GripForce[MAX_FRAMES];
+double GripForce[MAX_FRAMES];
 Vector3 LoadForce[MAX_FRAMES];
-float NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
+double NormalForce[N_FORCE_TRANSDUCERS][MAX_FRAMES];
 double LoadForceMagnitude[MAX_FRAMES];
 Vector3 CenterOfPressure[N_FORCE_TRANSDUCERS][MAX_FRAMES];
 double RealMarkerTime[MAX_FRAMES];
 double CompressedMarkerTime[MAX_FRAMES];
 double RealAnalogTime[MAX_FRAMES];
 double CompressedAnalogTime[MAX_FRAMES];
-char  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
-char  ManipulandumVisibility[MAX_FRAMES];
+double  MarkerVisibility[MAX_FRAMES][CODA_MARKERS];
+double  ManipulandumVisibility[MAX_FRAMES];
+double  FrameVisibility[MAX_FRAMES];
+double  WristVisibility[MAX_FRAMES];
+double  PacketReceived[MAX_FRAMES];
 char markerVisibilityString[CODA_UNITS][32];
 unsigned int nFrames = 0;
 

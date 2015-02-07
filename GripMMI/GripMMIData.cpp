@@ -42,6 +42,9 @@ using namespace GripMMI;
 #define ERROR_CACHE_NOT_FOUND	-1000
 // Grip force threshold for a valid CoP.
 #define COP_MIN_GRIP	0.5
+// If the time between two realtime data packets exceeds the following threshold
+//  then we insert a blank record into the data buffer to show the break.
+#define PACKET_STREAM_BREAK_THRESHOLD	1.0
 
 void GripMMIDesktop::ResetBuffers( void ){
 	nFrames = 0;
@@ -56,6 +59,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 
 	int  fid;
 	int packets_read = 0;
+	double previous_packet_timestamp = 0.0;
 	int bytes_read;
 	int return_code;
 	static unsigned short previousTMCounter = 0;
@@ -66,7 +70,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	EPMTelemetryHeaderInfo	epmHeader;
 	GripRealtimeDataInfo	rt;
 
-	int mrk, grp, coda;
+	int mrk, coda;
 
 	char filename[MAX_PATHLENGTH];
 
@@ -95,8 +99,18 @@ int GripMMIDesktop::GetGripRT( void ) {
 	}
 
 	// Read in all of the data packets in the file.
+	// Be careful not to overrun the data buffers.
+	// The -2 is to take into account when a break in the data is inserted.
 	packets_read = 0;
-	while ( nFrames < MAX_FRAMES && rtPacketLengthInBytes == (bytes_read = _read( fid, &packet, rtPacketLengthInBytes )) ) {
+	while ( nFrames < MAX_FRAMES - 2 ) {
+
+		// Attempt to read next packet.
+		bytes_read = _read( fid, &packet, rtPacketLengthInBytes );
+		// If the number of bytes read is less than the expected number
+		//  we are at the end of the file and should break out of the loop.
+		if ( rtPacketLengthInBytes != bytes_read ) break;
+
+		// We have a valid packet.
 		packets_read++;
 		if ( bytes_read < 0 ) {
 			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
@@ -111,6 +125,37 @@ int GripMMIDesktop::GetGripRT( void ) {
 			
 		// Transfer the data to the buffers for plotting.
 		ExtractGripRealtimeDataInfo( &rt, &packet );
+
+		// If there has been a break in the arrival of the packets, insert
+		//  a blank frame into the data buffer. This will cause breaks in
+		//  the traces in the data graphs.
+		if ( (rt.packetUTC - previous_packet_timestamp) > PACKET_STREAM_BREAK_THRESHOLD ) {
+				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
+				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
+				ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
+				ManipulandumRotations[nFrames][X] = MISSING_DOUBLE;
+				ManipulandumRotations[nFrames][Y] = MISSING_DOUBLE;
+				ManipulandumRotations[nFrames][Z] = MISSING_DOUBLE;
+				GripForce[nFrames] = MISSING_DOUBLE;
+				GripForce[nFrames] = MISSING_DOUBLE;
+				NormalForce[LEFT_ATI][nFrames] = MISSING_DOUBLE;
+				NormalForce[LEFT_ATI][nFrames] = MISSING_DOUBLE;
+				NormalForce[RIGHT_ATI][nFrames] = MISSING_DOUBLE;
+				NormalForce[RIGHT_ATI][nFrames] = MISSING_DOUBLE;
+				Acceleration[nFrames][X] = MISSING_DOUBLE;
+				Acceleration[nFrames][Y] = MISSING_DOUBLE;
+				Acceleration[nFrames][Z] = MISSING_DOUBLE;
+				for ( mrk = 0; mrk < CODA_MARKERS; mrk++ ) MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
+				ManipulandumVisibility[nFrames] = MISSING_DOUBLE;
+				FrameVisibility[nFrames] = MISSING_DOUBLE;
+				WristVisibility[nFrames] = MISSING_DOUBLE;
+				PacketReceived[nFrames] = MISSING_DOUBLE;
+				RealMarkerTime[nFrames] = MISSING_DOUBLE;
+				nFrames++;
+		}
+		previous_packet_timestamp = rt.packetUTC;
+
+
 		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
 			// Get the time of the slice.
 			RealMarkerTime[nFrames] = rt.dataSlice[slice].bestGuessPoseUTC;
@@ -160,16 +205,40 @@ int GripMMIDesktop::GetGripRT( void ) {
 
 			// Fill some data arrays to show when each marker is visible.
 			// We consider a marker visible if it is seen by either coda.
-			// Set a non-zero value if it is visible, MISSING_CHAR if it is obscured.
+			// Set a non-zero value if it is visible, MISSING if it is obscured.
 			// The non-zero values that are set when the marker is visible are a convenient
 			//  trick to make it easy to plot the traces for all markers in one graph.
-			for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
-				grp = ( mrk >= 8 ? ( mrk >= 12 ? mrk + 20 : mrk + 10 ) : mrk ) + 35;
-				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = grp;
-				else MarkerVisibility[nFrames][mrk] = MISSING_CHAR;
+			for ( mrk = MANIPULANDUM_FIRST_MARKER; mrk <= MANIPULANDUM_LAST_MARKER; mrk++ ) {
+				bit = 0x01 << mrk;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = mrk;
+				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
 			}
 			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
-			else ManipulandumVisibility[nFrames] = 0;
+			else ManipulandumVisibility[nFrames] = MISSING_DOUBLE;
+			for ( mrk = FRAME_FIRST_MARKER, count = 0; mrk <= FRAME_LAST_MARKER; mrk++ ) {
+				bit = 0x01 << mrk;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
+					MarkerVisibility[nFrames][mrk] = mrk + 20 - FRAME_FIRST_MARKER;
+					count++;
+				}
+				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
+			}
+			if ( count == 4 ) FrameVisibility[nFrames] = 30;
+			else FrameVisibility[nFrames] = MISSING_DOUBLE;
+
+			for ( mrk = WRIST_FIRST_MARKER, count = 0; mrk <= WRIST_LAST_MARKER; mrk++ ) {
+				bit = 0x01 << mrk;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
+					MarkerVisibility[nFrames][mrk] = mrk + 40 - WRIST_FIRST_MARKER;
+					count++;
+				}
+				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
+			}
+			if ( count >= 3 ) WristVisibility[nFrames] = 50;
+			else WristVisibility[nFrames] = MISSING_DOUBLE;
+			// Indicate that for this instant in time we received a data packet.
+			PacketReceived[nFrames] = -10.0;
+
 			// Count the number of frames.
 			nFrames++;
 		}
