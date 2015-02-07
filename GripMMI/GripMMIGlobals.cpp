@@ -19,8 +19,6 @@
 #include "..\Grip\GripPackets.h"
 #include "GripMMIGlobals.h"
 
-// Number of samples to plot for each position of the span selector.
-int windowSpan[SPAN_VALUES]  = { 20 * 60 * 60, 20 * 60 * 30, 20 * 60 * 10, 20 * 60 * 5, 20 * 60, 20 * 30 };
 // Time span in seconds for each position of the span selector.
 double windowSpanSeconds[SPAN_VALUES] = { 3600.0, 1800.0, 600.0, 300.0, 60.0, 30.0 };
 

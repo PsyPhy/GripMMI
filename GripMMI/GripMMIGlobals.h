@@ -54,7 +54,6 @@ extern unsigned int nFrames;
 #define PHASEPLOTS 3
 #define STRIPCHARTS	6
 #define SPAN_VALUES	6
-extern int windowSpan[SPAN_VALUES]; // Number of samples to plot for each position of the span selector.
 extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for each position of the span selector.
 /// <summary>
 /// Strings used to construct the path to various files.
