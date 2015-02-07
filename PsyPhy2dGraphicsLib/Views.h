@@ -281,6 +281,10 @@ void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray,
 				 unsigned start, unsigned end, 
 				 unsigned xsize, unsigned ysize, 
 				 double na);
+void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
+				 unsigned start, unsigned end, 
+				 unsigned xsize, unsigned ysize, 
+				 double na);
 						   
 void ViewScatterPlotFloats (View view, int symbol, 
 			    float *xarray, float *yarray, 
