@@ -461,8 +461,8 @@ void ViewAutoScaleShorts ( View view, short *array,
 	
   short min, max;
 
-  if ( start < view->user_left ) start = view->user_left;
-  if ( end > view->user_right ) end = view->user_right;
+//  if ( start < view->user_left ) start = view->user_left;
+//  if ( end > view->user_right ) end = view->user_right;
 
   pt = (short *)(((char *) array) + start * size);
   if ( view->user_bottom > 32000 ) min = 32000; 
@@ -492,8 +492,8 @@ void ViewAutoScaleFloats ( View view, float *array,
 	
   float min, max;
 
-  if ( start < view->user_left ) start = view->user_left;
-  if ( end > view->user_right ) end = view->user_right;
+//  if ( start < view->user_left ) start = view->user_left;
+//  if ( end > view->user_right ) end = view->user_right;
 
   pt = (float *)(((char *) array) + start * size);
   min = view->user_bottom;
@@ -524,8 +524,8 @@ void ViewAutoScaleAvailableFloats ( View view, float *array,
 
   double min, max;
 
-  if ( start < view->user_left ) start = view->user_left;
-  if ( end > view->user_right ) end = view->user_right;
+//  if ( start < view->user_left ) start = view->user_left;
+//  if ( end > view->user_right ) end = view->user_right;
 
   pt = (float *)(((char *) array) + start * size);
   min = view->user_bottom;
@@ -557,8 +557,8 @@ void ViewAutoScaleDoubles ( View view, double *array,
 	
   double min, max;
 
-  if ( start < view->user_left ) start = view->user_left;
-  if ( end > view->user_right ) end = view->user_right;
+//  if ( start < view->user_left ) start = view->user_left;
+//  if ( end > view->user_right ) end = view->user_right;
 
   pt = (double *)(((char *) array) + start * size);
   min = view->user_bottom;
@@ -588,8 +588,8 @@ void ViewAutoScaleAvailableDoubles ( View view, double *array,
 	
   double min, max;
 
-  if ( start < view->user_left ) start = view->user_left;
-  if ( end > view->user_right ) end = view->user_right;
+//  if ( start < view->user_left ) start = view->user_left;
+//  if ( end > view->user_right ) end = view->user_right;
 
   pt = (double *)(((char *) array) + start * size);
   min = view->user_bottom;
@@ -830,6 +830,31 @@ void ViewXYPlotDoubles (View view, double *xarray, double *yarray,
 
 /***************************************************************************/
 
+void ViewXYPlotAvailableChars (View view, char *xarray, char *yarray, 
+				unsigned start, unsigned end, 
+				unsigned xsize, unsigned ysize, 
+				float na)
+{
+	
+  register unsigned i;
+  register float	*xpt1, *ypt1, *xpt2, *ypt2;
+
+  i = start;
+  while (i < end) {
+
+    xpt1 = (float *)(((char *) xarray) + i * xsize);
+    ypt1 = (float *)(((char *) yarray) + i * ysize);
+    xpt2 = (float *)(((char *) xarray) + (++i) * xsize);
+    ypt2 = (float *)(((char *) yarray) + i * ysize);
+    if (*xpt1 != na && *ypt1 != na && *xpt2 != na && *ypt2 != na)
+      ViewLine(view, 
+	       (double) *xpt1, (double) *ypt1,
+	       (double) *xpt2, (double) *ypt2 );
+
+  }
+}
+/***************************************************************************/
+
 void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray, 
 				unsigned start, unsigned end, 
 				unsigned xsize, unsigned ysize, 
@@ -872,11 +897,37 @@ void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray,
     ypt1 = (double *)(((char *) yarray) + i * ysize);
     xpt2 = (double *)(((char *) xarray) + (++i) * xsize);
     ypt2 = (double *)(((char *) yarray) + i * ysize);
-    if (*xpt1 != na && *ypt1 != na && *xpt2 != na && *ypt2 != na)
+    if (*xpt1 != na && *ypt1 != na && *xpt2 != na && *ypt2 != na) {
       ViewLine(view, 
 	       (double) *xpt1, (double) *ypt1,
 	       (double) *xpt2, (double) *ypt2 );
+	}
+  }
+}
+void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
+				 unsigned start, unsigned end, 
+				 unsigned xsize, unsigned ysize, 
+				 double na)
+{
+	
+  register          unsigned i;
+  register double   *xpt1, *ypt1, *xpt2, *ypt2;
 
+  i = start;
+  while (i < end) {
+
+    xpt1 = (double *)(((char *) xarray) + i * xsize);
+    ypt1 = (double *)(((char *) yarray) + i * ysize);
+    xpt2 = (double *)(((char *) xarray) + (++i) * xsize);
+    ypt2 = (double *)(((char *) yarray) + i * ysize);
+    if (*xpt1 != na && *xpt1 >= view->user_left && *xpt1 <= view->user_right &&
+		*xpt2 != na && *xpt2 >= view->user_left && *xpt2 <= view->user_right &&
+		*ypt1 != na && *ypt1 >= view->user_bottom && *ypt1 <= view->user_top &&
+		*ypt2 != na && *ypt2 >= view->user_bottom && *ypt2 <= view->user_top ) {
+      ViewLine(view, 
+	       (double) *xpt1, (double) *ypt1,
+	       (double) *xpt2, (double) *ypt2 );
+	}
   }
 }
 
