@@ -127,8 +127,13 @@ void sendRecordedPackets ( SOCKET socket ) {
 						return;
 					}
 					// What we should do here is sleep based on the difference in time between the previous
-					//  recorded packet and this one. For now we just sleep and let it run fast.
-					Sleep( 400 );
+					//  recorded packet and this one.
+					// What we do instead is simply sleep 500 ms after sending a realtime data packet, so that
+					//  the RT packets are sent a approximately 2 Hz. This is not exact, but the real GRIP
+					//  data packets do not appear to respect a strict 2 Hz rhythm either.
+					// If it is not an RT packet, sleep just a little so that packets do not overlap.
+					if ( epmPacketHeaderInfo.TMIdentifier == GRIP_RT_ID ) Sleep( 500 );
+					else Sleep( 20 );
 				}
 			}
 		}
