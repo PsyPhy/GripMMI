@@ -118,7 +118,7 @@ void sendRecordedPackets ( SOCKET socket ) {
 					// Set the packet counter based on a local count.
 					epmPacketHeaderInfo.TMCounter = packetCount++;
 					// Put the new header info back into the packet.
-					InsertEPMTelemetryHeaderInfo( &rtPacket, &epmPacketHeaderInfo );
+					InsertEPMTelemetryHeaderInfo( &recordedPacket, &epmPacketHeaderInfo );
 					iSendResult = send( socket, recordedPacket.buffer, EPM_BUFFER_LENGTH - 1, 0 );
 					// If we get a socket error it is probably because the client has closed the connection.
 					// So we break out of the loop.
