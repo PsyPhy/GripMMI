@@ -249,6 +249,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	// First, get the UTC time stamp from the EPM telemetry packet header.
 	ExtractEPMTelemetryHeaderInfo( &telemetry_header, epm_packet );
 	utc = EPMtoSeconds( (&telemetry_header) );
+	realtime_packet->packetUTC = utc;
 	// EPM-OHB-SP-0005_iss4 says about EPM Coarse time:
 	//   "This double word gives the command execution time (UTC) in elapsed seconds from a defined epoch. 
 	//     The defined epoch is GPS time, i.e. midnight 5-6 January 1980."
