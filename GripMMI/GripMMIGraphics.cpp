@@ -155,17 +155,18 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 
 	// Create an array of Views that will be used to plot data in stripchart form.
 	stripchart_layout = CreateLayout( stripchart_display, STRIPCHARTS, 1 );
-	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.075, 1.0, 0.99 );
+	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.065, 1.0, 1.0 );
 	visibility_view = CreateView( stripchart_display );
-	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.01, 0.995, 0.07 );
-
-
+	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.0, 0.995, 0.06 );
 }
 
 void GripMMIDesktop::AdjustScrollSpan( void ) {
 	double span = windowSpanSeconds[spanSelector->Value];
 	double min, max;
+	int since_midnight, hour, minute, second;
+	char label[32];
 	unsigned long	i;
+
 	for ( i = 0; i < nFrames; i++ ) {
 		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
 			min = RealMarkerTime[i];
@@ -183,6 +184,21 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	scrollBar->LargeChange = span;
 	scrollBar->SmallChange = span / 10.0;
 
+	since_midnight = ((int) floor( min ) + TimebaseOffset ) % (24 * 60 * 60);
+	hour = since_midnight / (60 * 60);
+	minute = (since_midnight % (60 * 60)) / 60;
+	second = (since_midnight % 60);
+	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
+	earliestTextBox->Text = gcnew String( label );
+
+	since_midnight = ((int) floor( max ) + TimebaseOffset ) % (24 * 60 * 60);
+	hour = since_midnight / (60 * 60);
+	minute = (since_midnight % (60 * 60)) / 60;
+	second = (since_midnight % 60);
+	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
+	latestTextBox->Text = gcnew String( label );
+
+
 }
 void GripMMIDesktop::MoveToLatest( void ) {
 	scrollBar->Value = scrollBar->Maximum;
@@ -191,6 +207,9 @@ void GripMMIDesktop::MoveToLatest( void ) {
 
 void GripMMIDesktop::RefreshGraphics( void ) {
 		
+	int since_midnight, hour, minute, second;
+	char label[32];
+
 	unsigned long first_sample;
 	unsigned long last_sample;
 	unsigned long index;
@@ -202,15 +221,27 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 	// Determine the time window based on the scroll bar position and the span slider.
 	double last_instant = scrollBar->Value;
 	double span = windowSpanSeconds[spanSelector->Value];
-	double first_instant;
+	double first_instant = last_instant - span;
+
+	since_midnight = ((int) floor( last_instant ) + TimebaseOffset ) % (24 * 60 * 60);
+	hour = since_midnight / (60 * 60);
+	minute = (since_midnight % (60 * 60)) / 60;
+	second = (since_midnight % 60);
+	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
+	rightLimitTextBox->Text = gcnew String( label );
+
+	since_midnight = ((int) floor( first_instant ) + TimebaseOffset ) % (24 * 60 * 60);
+	hour = since_midnight / (60 * 60);
+	minute = (since_midnight % (60 * 60)) / 60;
+	second = (since_midnight % 60);
+	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
+	leftLimitTextBox->Text = gcnew String( label );
 
 	// Find the indices into the arrays that correspond to the time window.
 	for ( index = nFrames - 1; index > 0; index -- ) {
 		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] <= last_instant ) break;
 	}
 	last_sample = index;
-	last_instant = RealMarkerTime[last_sample];
-	first_instant = last_instant - span;
 	for ( index = index; index > 0; index -- ) {
 		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] < first_instant ) break;
 	}

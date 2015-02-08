@@ -183,7 +183,16 @@ namespace GripMMI {
 	private: System::Windows::Forms::TextBox^  acquisitionTextBox;
 	private: System::Windows::Forms::Label^  label5;
 	private: System::Windows::Forms::CheckBox^  autoscaleCheckBox;
-private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
+	private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
+	private: System::Windows::Forms::Label^  Spans;
+	private: System::Windows::Forms::TextBox^  earliestTextBox;
+private: System::Windows::Forms::TextBox^  latestTextBox;
+private: System::Windows::Forms::TextBox^  rightLimitTextBox;
+private: System::Windows::Forms::TextBox^  leftLimitTextBox;
+
+
+
+
 
 
 	private: 
@@ -313,6 +322,9 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->StripCharts = (gcnew System::Windows::Forms::PictureBox());
 			this->filterCheckbox = (gcnew System::Windows::Forms::CheckBox());
 			this->groupBox5 = (gcnew System::Windows::Forms::GroupBox());
+			this->latestTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->earliestTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->Spans = (gcnew System::Windows::Forms::Label());
 			this->scrollBar = (gcnew System::Windows::Forms::HScrollBar());
 			this->spanSelector = (gcnew System::Windows::Forms::TrackBar());
 			this->dataLiveCheckbox = (gcnew System::Windows::Forms::CheckBox());
@@ -359,6 +371,8 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->groupBox17 = (gcnew System::Windows::Forms::GroupBox());
 			this->acquisitionTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->leftLimitTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->rightLimitTextBox = (gcnew System::Windows::Forms::TextBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->BeginInit();
 			this->groupBox1->SuspendLayout();
@@ -394,6 +408,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->LogoPictureBox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->LogoPictureBox->TabIndex = 0;
 			this->LogoPictureBox->TabStop = false;
+			this->LogoPictureBox->Click += gcnew System::EventHandler(this, &GripMMIDesktop::LogoPictureBox_Click);
 			// 
 			// XYPlot
 			// 
@@ -401,9 +416,10 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->XYPlot->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
 			this->XYPlot->Location = System::Drawing::Point(18, 25);
 			this->XYPlot->Name = L"XYPlot";
-			this->XYPlot->Size = System::Drawing::Size(246, 198);
+			this->XYPlot->Size = System::Drawing::Size(246, 196);
 			this->XYPlot->TabIndex = 2;
 			this->XYPlot->TabStop = false;
+			this->XYPlot->Click += gcnew System::EventHandler(this, &GripMMIDesktop::XYPlot_Click);
 			// 
 			// groupBox1
 			// 
@@ -412,7 +428,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 				static_cast<System::Byte>(0)));
 			this->groupBox1->Location = System::Drawing::Point(240, 9);
 			this->groupBox1->Name = L"groupBox1";
-			this->groupBox1->Size = System::Drawing::Size(279, 235);
+			this->groupBox1->Size = System::Drawing::Size(279, 227);
 			this->groupBox1->TabIndex = 4;
 			this->groupBox1->TabStop = false;
 			this->groupBox1->Text = L"Frontal (XY)";
@@ -424,7 +440,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 				static_cast<System::Byte>(0)));
 			this->groupBox2->Location = System::Drawing::Point(525, 9);
 			this->groupBox2->Name = L"groupBox2";
-			this->groupBox2->Size = System::Drawing::Size(279, 235);
+			this->groupBox2->Size = System::Drawing::Size(279, 227);
 			this->groupBox2->TabIndex = 5;
 			this->groupBox2->TabStop = false;
 			this->groupBox2->Text = L"Sagittal (ZY)";
@@ -435,7 +451,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->ZYPlot->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
 			this->ZYPlot->Location = System::Drawing::Point(17, 25);
 			this->ZYPlot->Name = L"ZYPlot";
-			this->ZYPlot->Size = System::Drawing::Size(246, 198);
+			this->ZYPlot->Size = System::Drawing::Size(246, 196);
 			this->ZYPlot->TabIndex = 2;
 			this->ZYPlot->TabStop = false;
 			// 
@@ -446,7 +462,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 				static_cast<System::Byte>(0)));
 			this->groupBox3->Location = System::Drawing::Point(810, 9);
 			this->groupBox3->Name = L"groupBox3";
-			this->groupBox3->Size = System::Drawing::Size(279, 235);
+			this->groupBox3->Size = System::Drawing::Size(279, 227);
 			this->groupBox3->TabIndex = 6;
 			this->groupBox3->TabStop = false;
 			this->groupBox3->Text = L"CoP";
@@ -457,12 +473,14 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->CoPPlot->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
 			this->CoPPlot->Location = System::Drawing::Point(18, 25);
 			this->CoPPlot->Name = L"CoPPlot";
-			this->CoPPlot->Size = System::Drawing::Size(246, 198);
+			this->CoPPlot->Size = System::Drawing::Size(246, 196);
 			this->CoPPlot->TabIndex = 2;
 			this->CoPPlot->TabStop = false;
 			// 
 			// groupBox4
 			// 
+			this->groupBox4->Controls->Add(this->rightLimitTextBox);
+			this->groupBox4->Controls->Add(this->leftLimitTextBox);
 			this->groupBox4->Controls->Add(this->graphCollectionComboBox);
 			this->groupBox4->Controls->Add(this->autoscaleCheckBox);
 			this->groupBox4->Controls->Add(this->StripCharts);
@@ -508,9 +526,9 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			// 
 			// StripCharts
 			// 
-			this->StripCharts->Location = System::Drawing::Point(6, 27);
+			this->StripCharts->Location = System::Drawing::Point(6, 21);
 			this->StripCharts->Name = L"StripCharts";
-			this->StripCharts->Size = System::Drawing::Size(1075, 613);
+			this->StripCharts->Size = System::Drawing::Size(1075, 609);
 			this->StripCharts->TabIndex = 0;
 			this->StripCharts->TabStop = false;
 			// 
@@ -531,22 +549,60 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			// groupBox5
 			// 
 			this->groupBox5->BackColor = System::Drawing::Color::Transparent;
+			this->groupBox5->Controls->Add(this->latestTextBox);
+			this->groupBox5->Controls->Add(this->earliestTextBox);
+			this->groupBox5->Controls->Add(this->Spans);
 			this->groupBox5->Controls->Add(this->scrollBar);
 			this->groupBox5->Controls->Add(this->spanSelector);
 			this->groupBox5->Controls->Add(this->dataLiveCheckbox);
 			this->groupBox5->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->groupBox5->Location = System::Drawing::Point(4, 250);
+			this->groupBox5->Location = System::Drawing::Point(4, 242);
 			this->groupBox5->Name = L"groupBox5";
-			this->groupBox5->Size = System::Drawing::Size(1087, 64);
+			this->groupBox5->Size = System::Drawing::Size(1087, 74);
 			this->groupBox5->TabIndex = 8;
 			this->groupBox5->TabStop = false;
 			this->groupBox5->Text = L"Data Display";
 			// 
+			// latestTextBox
+			// 
+			this->latestTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->latestTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->latestTextBox->Location = System::Drawing::Point(948, 52);
+			this->latestTextBox->Name = L"latestTextBox";
+			this->latestTextBox->RightToLeft = System::Windows::Forms::RightToLeft::No;
+			this->latestTextBox->Size = System::Drawing::Size(61, 16);
+			this->latestTextBox->TabIndex = 14;
+			this->latestTextBox->Text = L"00:00:00";
+			this->latestTextBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Right;
+			// 
+			// earliestTextBox
+			// 
+			this->earliestTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->earliestTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->earliestTextBox->Location = System::Drawing::Point(242, 52);
+			this->earliestTextBox->Name = L"earliestTextBox";
+			this->earliestTextBox->Size = System::Drawing::Size(61, 16);
+			this->earliestTextBox->TabIndex = 13;
+			this->earliestTextBox->Text = L"00:00:00";
+			// 
+			// Spans
+			// 
+			this->Spans->AutoSize = true;
+			this->Spans->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->Spans->Location = System::Drawing::Point(12, 51);
+			this->Spans->Name = L"Spans";
+			this->Spans->Size = System::Drawing::Size(223, 17);
+			this->Spans->TabIndex = 12;
+			this->Spans->Text = L"12h  4h  1h  30m 10m 5m 60s 30s";
+			// 
 			// scrollBar
 			// 
 			this->scrollBar->LargeChange = 100000;
-			this->scrollBar->Location = System::Drawing::Point(242, 28);
+			this->scrollBar->Location = System::Drawing::Point(242, 22);
 			this->scrollBar->Maximum = 864000;
 			this->scrollBar->Name = L"scrollBar";
 			this->scrollBar->Size = System::Drawing::Size(767, 25);
@@ -557,15 +613,15 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			// 
 			// spanSelector
 			// 
+			this->spanSelector->AutoSize = false;
 			this->spanSelector->BackColor = System::Drawing::Color::White;
 			this->spanSelector->LargeChange = 1;
 			this->spanSelector->Location = System::Drawing::Point(13, 18);
 			this->spanSelector->Margin = System::Windows::Forms::Padding(1);
-			this->spanSelector->Maximum = 5;
+			this->spanSelector->Maximum = 7;
 			this->spanSelector->Name = L"spanSelector";
-			this->spanSelector->Size = System::Drawing::Size(219, 45);
+			this->spanSelector->Size = System::Drawing::Size(219, 32);
 			this->spanSelector->TabIndex = 11;
-			this->spanSelector->TickStyle = System::Windows::Forms::TickStyle::TopLeft;
 			this->spanSelector->ValueChanged += gcnew System::EventHandler(this, &GripMMIDesktop::spanSelector_ValueChanged);
 			// 
 			// dataLiveCheckbox
@@ -575,7 +631,7 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->dataLiveCheckbox->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->dataLiveCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->dataLiveCheckbox->Location = System::Drawing::Point(1019, 28);
+			this->dataLiveCheckbox->Location = System::Drawing::Point(1019, 24);
 			this->dataLiveCheckbox->Name = L"dataLiveCheckbox";
 			this->dataLiveCheckbox->Size = System::Drawing::Size(56, 24);
 			this->dataLiveCheckbox->TabIndex = 0;
@@ -1086,12 +1142,37 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->label5->TabIndex = 20;
 			this->label5->Text = L"Acquire";
 			// 
+			// leftLimitTextBox
+			// 
+			this->leftLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->leftLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->leftLimitTextBox->Location = System::Drawing::Point(11, 630);
+			this->leftLimitTextBox->Name = L"leftLimitTextBox";
+			this->leftLimitTextBox->Size = System::Drawing::Size(61, 16);
+			this->leftLimitTextBox->TabIndex = 15;
+			this->leftLimitTextBox->Text = L"00:00:00";
+			// 
+			// rightLimitTextBox
+			// 
+			this->rightLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->rightLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->rightLimitTextBox->Location = System::Drawing::Point(1019, 630);
+			this->rightLimitTextBox->Name = L"rightLimitTextBox";
+			this->rightLimitTextBox->RightToLeft = System::Windows::Forms::RightToLeft::No;
+			this->rightLimitTextBox->Size = System::Drawing::Size(61, 16);
+			this->rightLimitTextBox->TabIndex = 15;
+			this->rightLimitTextBox->Text = L"00:00:00";
+			this->rightLimitTextBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Right;
+			// 
 			// GripMMIDesktop
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
 			this->ClientSize = System::Drawing::Size(1524, 1016);
+			this->Controls->Add(this->groupBox4);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
 			this->Controls->Add(this->groupBox10);
@@ -1102,7 +1183,6 @@ private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 			this->Controls->Add(this->scriptLiveCheckbox);
 			this->Controls->Add(this->groupBox6);
 			this->Controls->Add(this->groupBox5);
-			this->Controls->Add(this->groupBox4);
 			this->Controls->Add(this->groupBox3);
 			this->Controls->Add(this->groupBox2);
 			this->Controls->Add(this->groupBox1);
@@ -1390,6 +1470,10 @@ private: System::Void graphCollectionComboBox_KeyPress(System::Object^  sender, 
 			 if ( e->KeyChar == 0x1b || e->KeyChar == 0x0d ) ForceUpdate();
 		 }
 
+private: System::Void LogoPictureBox_Click(System::Object^  sender, System::EventArgs^  e) {
+		 }
+private: System::Void XYPlot_Click(System::Object^  sender, System::EventArgs^  e) {
+		 }
 };
 
 }
