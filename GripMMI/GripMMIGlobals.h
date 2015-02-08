@@ -53,7 +53,7 @@ extern unsigned int nFrames;
 /// </summary>
 #define PHASEPLOTS 3
 #define STRIPCHARTS	6
-#define SPAN_VALUES	6
+#define SPAN_VALUES	8
 extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for each position of the span selector.
 /// <summary>
 /// Strings used to construct the path to various files.
@@ -82,3 +82,4 @@ extern char *massDecoder[4];
 /// A helper object for performing vector ops and DEX data ops.
 /// </summary>
 extern DexAnalogMixin	dex;
+extern int TimebaseOffset;

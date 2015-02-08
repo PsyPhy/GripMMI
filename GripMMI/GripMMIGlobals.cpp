@@ -20,7 +20,7 @@
 #include "GripMMIGlobals.h"
 
 // Time span in seconds for each position of the span selector.
-double windowSpanSeconds[SPAN_VALUES] = { 3600.0, 1800.0, 600.0, 300.0, 60.0, 30.0 };
+double windowSpanSeconds[SPAN_VALUES] = { 43200.0, 14400.0, 3600.0, 1800.0, 600.0, 300.0, 60.0, 30.0 };
 
 // Character strings to indicate the state of the tone generator output.
 // Lowest bit on is a mute switch, so odd elements are empty while each
@@ -71,6 +71,12 @@ double  WristVisibility[MAX_FRAMES];
 double  PacketReceived[MAX_FRAMES];
 char markerVisibilityString[CODA_UNITS][32];
 unsigned int nFrames = 0;
+
+// This value is used to adjust timestamps to align packet times
+//  to a specific timebase. For instance, EPM uses GPS time, which 
+//  ignores leap seconds. To get true UTC, this should be set to the
+//  number of leap seconds since midnight, Jan. 6, 1980. 
+int TimebaseOffset = -16;
 
 // A helper object
 DexAnalogMixin	dex;
