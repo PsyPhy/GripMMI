@@ -59,17 +59,13 @@ void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 
 	// NB EPM uses GPS time (second since midnight Jan 5-6 1980), while 
 	// _ftime_s() uses seconds since midnight Jan. 1 1970 UTC.
-	// I am just using UTC time, since it doesn't really matter for 
-	// my purposes here. The idea is just to keep the packets in the right order.
+	// UTC takes into account leap seconds, GPS does not.
+	header->coarseTime = epmtime.time 
+		- 315964800 // Offset in seconds between Unix 0 and GPS 0
+		+ 16;		// Offset taking into account leap seconds, as of 1 Jan 2015.
+
 	// Also, EPM somehow gets time in 10ths of milliseconds and puts that in the header. 
 	// We don't expect to get two packet in a span of less than a millisecond, so I don't worry about it.
-
-	// One could probably treat coarseTime as an unsigned long in the
-	// header and just copy the 32-bit value, but I'm not sure about word order. 
-	// So to be sure to match the EPM spec as it is written, I transfer each
-	//  two-bye word separately.
-	header->coarseTime = epmtime.time;
-	// Compute the fine time in 10ths of milliseconds.
 	header->fineTime = epmtime.millitm * 10;
 
 }

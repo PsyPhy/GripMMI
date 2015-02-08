@@ -129,7 +129,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 		// If there has been a break in the arrival of the packets, insert
 		//  a blank frame into the data buffer. This will cause breaks in
 		//  the traces in the data graphs.
-		if ( (rt.packetUTC - previous_packet_timestamp) > PACKET_STREAM_BREAK_THRESHOLD ) {
+		if ( (rt.packetTimestamp - previous_packet_timestamp) > PACKET_STREAM_BREAK_THRESHOLD ) {
 				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
@@ -153,13 +153,13 @@ int GripMMIDesktop::GetGripRT( void ) {
 				RealMarkerTime[nFrames] = MISSING_DOUBLE;
 				nFrames++;
 		}
-		previous_packet_timestamp = rt.packetUTC;
+		previous_packet_timestamp = rt.packetTimestamp;
 
 
 		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
 			// Get the time of the slice.
-			RealMarkerTime[nFrames] = rt.dataSlice[slice].bestGuessPoseUTC;
-			RealAnalogTime[nFrames] = rt.dataSlice[slice].bestGuessAnalogUTC;
+			RealMarkerTime[nFrames] = rt.dataSlice[slice].bestGuessPoseTimestamp;
+			RealAnalogTime[nFrames] = rt.dataSlice[slice].bestGuessAnalogTimestamp;
 			if ( rt.dataSlice[slice].manipulandumVisibility ) {
 				// Retrieve the position and convert to mm.
 				ManipulandumPosition[nFrames][X] = rt.dataSlice[slice].position[X] / 10.0;

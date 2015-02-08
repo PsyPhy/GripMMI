@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 			ExtractGripRealtimeDataInfo( &rtInfo, &rtPacket );
 			// Show the acquisition count and the GRIP realtime packet count.
 			fprintf( stdout, "%4d %8d", rtInfo.acquisitionID, rtInfo.rtPacketCount );
-			fprintf( stdout, " %lf", rtInfo.packetUTC );
+			fprintf( stdout, " %lf", rtInfo.packetTimestamp );
 			// Show for each slice in the packet the tick for the coda data
 			//  and whether or not the manipulandum is visible.
 			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 			}
 			fprintf( stdout, "\n" );
 			fprintf( stdout, "%4d %8d", rtInfo.acquisitionID, rtInfo.rtPacketCount );
-			fprintf( stdout, " %lf", rtInfo.packetUTC );
+			fprintf( stdout, " %lf", rtInfo.packetTimestamp );
 			for ( i = 0; i < RT_SLICES_PER_PACKET; i++ ) {
 				fprintf( stdout, " %6d", rtInfo.dataSlice[i].analogTick );
 //				fprintf( stdout, " %8.3f", rtInfo.dataSlice[i].bestGuessPoseUTC );

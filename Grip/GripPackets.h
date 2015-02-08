@@ -93,12 +93,12 @@ typedef struct {
 	} ft[2];
 	Vector3			acceleration;
 	// Add a timestamp as best we can.
-	long double bestGuessPoseUTC;
-	long double bestGuessAnalogUTC;
+	long double bestGuessPoseTimestamp;
+	long double bestGuessAnalogTimestamp;
 } ManipulandumPacket;
  
 typedef struct {
-	long double packetUTC;
+	long double packetTimestamp;
 	unsigned long acquisitionID;
 	unsigned long rtPacketCount;
 	ManipulandumPacket dataSlice[RT_SLICES_PER_PACKET];
