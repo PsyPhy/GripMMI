@@ -210,7 +210,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			//  trick to make it easy to plot the traces for all markers in one graph.
 			for ( mrk = MANIPULANDUM_FIRST_MARKER; mrk <= MANIPULANDUM_LAST_MARKER; mrk++ ) {
 				bit = 0x01 << mrk;
-				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = mrk;
+				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = mrk + 1;
 				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
 			}
 			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
@@ -218,7 +218,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			for ( mrk = FRAME_FIRST_MARKER, count = 0; mrk <= FRAME_LAST_MARKER; mrk++ ) {
 				bit = 0x01 << mrk;
 				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
-					MarkerVisibility[nFrames][mrk] = mrk + 20 - FRAME_FIRST_MARKER;
+					MarkerVisibility[nFrames][mrk] = mrk + 3;
 					count++;
 				}
 				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
@@ -229,7 +229,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			for ( mrk = WRIST_FIRST_MARKER, count = 0; mrk <= WRIST_LAST_MARKER; mrk++ ) {
 				bit = 0x01 << mrk;
 				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
-					MarkerVisibility[nFrames][mrk] = mrk + 40 - WRIST_FIRST_MARKER;
+					MarkerVisibility[nFrames][mrk] = mrk + 5;
 					count++;
 				}
 				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;

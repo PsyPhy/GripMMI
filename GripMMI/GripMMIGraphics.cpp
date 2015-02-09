@@ -53,7 +53,7 @@ double upperVisibilityLimit;
 static struct {
 	int abscissa;
 	int ordinate;
-} pair[PHASEPLOTS] = { {Z,Y}, {X,Y}, {X,Z} };
+} pair[PHASEPLOTS] = { {X,Y}, {Z,Y}, {X,Z} };
 
 static int  atiColorMap[N_FORCE_TRANSDUCERS] = { CYAN, MAGENTA };
 
@@ -158,6 +158,11 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.065, 1.0, 1.0 );
 	visibility_view = CreateView( stripchart_display );
 	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.0, 0.995, 0.06 );
+
+	// Create a view for displaying detailed visibility information.
+	detailed_visibility_layout = CreateLayout( stripchart_display, 4, 1 );
+	LayoutSetDisplayEdgesRelative( detailed_visibility_layout, 0.0, 0.065, 1.0, 1.0 );
+
 }
 
 void GripMMIDesktop::AdjustScrollSpan( void ) {
@@ -271,6 +276,14 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 
 
 	switch ( graphCollectionComboBox->SelectedIndex ) {
+	// Marker Visibility
+	case 2:
+		GraphManipulandumPositionComponent( X, LayoutViewN( detailed_visibility_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( Y, LayoutViewN( detailed_visibility_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( Z, LayoutViewN( detailed_visibility_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
+		GraphVisibilityDetails( LayoutViewN( detailed_visibility_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
+		break;
 	// Kinematics
 	case 1:
 		GraphManipulandumPositionComponent( X, LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
@@ -279,6 +292,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		GraphAccelerationComponent( X, LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
 		GraphAccelerationComponent( Y, LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
 		GraphAccelerationComponent( Z, LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
 		break;
 	// Summary
 	case 0:
@@ -289,9 +303,9 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		GraphGripForce( LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
 		GraphLoadForce( LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
 		GraphCoP( LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
 		break;
 	}
-	GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
 	OglSwap( stripchart_display );
 
 	PlotManipulandumPosition( first_instant, last_instant, first_sample, last_sample );
@@ -529,13 +543,6 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	ViewSetXLimits( view, start_instant, stop_instant );
 	ViewSetYLimits( view, lowerVisibilityLimit, upperVisibilityLimit );
 
-	// Plot all the visibility traces in the same view;
-	// Each marker is assigned a unique non-zero value when it is visible,
-	//  such that the traces are spread out and grouped in the view.
-//	for ( int mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
-//		ViewSelectColor( view, mrk );
-//		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *MarkerVisibility ), MISSING_DOUBLE );
-//	}
 	ViewColor( view, BLACK );
 	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &PacketReceived[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *PacketReceived ), MISSING_DOUBLE );
 	ViewColor( view, RED );
@@ -544,8 +551,32 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &FrameVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *FrameVisibility ), MISSING_DOUBLE );
 	ViewColor( view, BLUE );
 	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &WristVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *WristVisibility ), MISSING_DOUBLE );
-//	ViewHorizontalLine( view, 3 );
 
+}
+void GripMMIDesktop::GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+
+	int mrk;
+
+	ViewColor( view, GREY6 );
+	ViewBox( view );
+	ViewColor( view, BLACK );
+	ViewTitle( view, "Marker Visibility ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
+
+	ViewSetXLimits( view, start_instant, stop_instant );
+	ViewSetYLimits( view, 0, 28 );
+
+	ViewSetColor( view, GREY6 );
+	for ( mrk = 1; mrk <= 8; mrk++ ) ViewHorizontalLine( view, mrk );
+	for ( mrk = 11; mrk <= 14; mrk++ ) ViewHorizontalLine( view, mrk );
+	for ( mrk = 17; mrk <= 24; mrk++ ) ViewHorizontalLine( view, mrk );
+
+	// Plot all the visibility traces in the same view;
+	// Each marker is assigned a unique non-zero value when it is visible,
+	//  such that the traces are spread out and grouped in the view.
+	for ( mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
+		ViewSelectColor( view, mrk );
+		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *MarkerVisibility ), MISSING_DOUBLE );
+	}
 }
 
 void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){

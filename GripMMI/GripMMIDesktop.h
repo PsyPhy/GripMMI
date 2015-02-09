@@ -247,6 +247,7 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 		::Display stripchart_display;
 		::Layout  stripchart_layout;
 		::View	visibility_view;
+		::Layout	detailed_visibility_layout;
 		::View  xy_view;
 		::View  zy_view;
 		::View  cop_view;
@@ -267,6 +268,7 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 		void GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
 		void GraphGripForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
 		void GraphVisibility( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
+		void GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
 		void GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
 		void PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame );
 
@@ -317,6 +319,8 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
 			this->CoPPlot = (gcnew System::Windows::Forms::PictureBox());
 			this->groupBox4 = (gcnew System::Windows::Forms::GroupBox());
+			this->rightLimitTextBox = (gcnew System::Windows::Forms::TextBox());
+			this->leftLimitTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->graphCollectionComboBox = (gcnew System::Windows::Forms::ComboBox());
 			this->autoscaleCheckBox = (gcnew System::Windows::Forms::CheckBox());
 			this->StripCharts = (gcnew System::Windows::Forms::PictureBox());
@@ -371,8 +375,6 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 			this->groupBox17 = (gcnew System::Windows::Forms::GroupBox());
 			this->acquisitionTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->label5 = (gcnew System::Windows::Forms::Label());
-			this->leftLimitTextBox = (gcnew System::Windows::Forms::TextBox());
-			this->rightLimitTextBox = (gcnew System::Windows::Forms::TextBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->BeginInit();
 			this->groupBox1->SuspendLayout();
@@ -494,13 +496,37 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 			this->groupBox4->TabStop = false;
 			this->groupBox4->Text = L"Time Series";
 			// 
+			// rightLimitTextBox
+			// 
+			this->rightLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->rightLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->rightLimitTextBox->Location = System::Drawing::Point(1019, 630);
+			this->rightLimitTextBox->Name = L"rightLimitTextBox";
+			this->rightLimitTextBox->RightToLeft = System::Windows::Forms::RightToLeft::No;
+			this->rightLimitTextBox->Size = System::Drawing::Size(61, 16);
+			this->rightLimitTextBox->TabIndex = 15;
+			this->rightLimitTextBox->Text = L"00:00:00";
+			this->rightLimitTextBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Right;
+			// 
+			// leftLimitTextBox
+			// 
+			this->leftLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->leftLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->leftLimitTextBox->Location = System::Drawing::Point(11, 630);
+			this->leftLimitTextBox->Name = L"leftLimitTextBox";
+			this->leftLimitTextBox->Size = System::Drawing::Size(61, 16);
+			this->leftLimitTextBox->TabIndex = 15;
+			this->leftLimitTextBox->Text = L"00:00:00";
+			// 
 			// graphCollectionComboBox
 			// 
 			this->graphCollectionComboBox->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->graphCollectionComboBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9, System::Drawing::FontStyle::Regular, 
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->graphCollectionComboBox->FormattingEnabled = true;
-			this->graphCollectionComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(2) {L"Summary", L"Kinematics"});
+			this->graphCollectionComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(3) {L"Summary", L"Kinematics", L"Visibility"});
 			this->graphCollectionComboBox->Location = System::Drawing::Point(747, 0);
 			this->graphCollectionComboBox->Name = L"graphCollectionComboBox";
 			this->graphCollectionComboBox->Size = System::Drawing::Size(142, 23);
@@ -1141,30 +1167,6 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 			this->label5->Size = System::Drawing::Size(63, 20);
 			this->label5->TabIndex = 20;
 			this->label5->Text = L"Acquire";
-			// 
-			// leftLimitTextBox
-			// 
-			this->leftLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
-			this->leftLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->leftLimitTextBox->Location = System::Drawing::Point(11, 630);
-			this->leftLimitTextBox->Name = L"leftLimitTextBox";
-			this->leftLimitTextBox->Size = System::Drawing::Size(61, 16);
-			this->leftLimitTextBox->TabIndex = 15;
-			this->leftLimitTextBox->Text = L"00:00:00";
-			// 
-			// rightLimitTextBox
-			// 
-			this->rightLimitTextBox->BorderStyle = System::Windows::Forms::BorderStyle::None;
-			this->rightLimitTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->rightLimitTextBox->Location = System::Drawing::Point(1019, 630);
-			this->rightLimitTextBox->Name = L"rightLimitTextBox";
-			this->rightLimitTextBox->RightToLeft = System::Windows::Forms::RightToLeft::No;
-			this->rightLimitTextBox->Size = System::Drawing::Size(61, 16);
-			this->rightLimitTextBox->TabIndex = 15;
-			this->rightLimitTextBox->Text = L"00:00:00";
-			this->rightLimitTextBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Right;
 			// 
 			// GripMMIDesktop
 			// 
