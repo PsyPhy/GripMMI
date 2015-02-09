@@ -167,6 +167,7 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	char label[32];
 	unsigned long	i;
 
+	// Find the time window of the available data packets.
 	for ( i = 0; i < nFrames; i++ ) {
 		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
 			min = RealMarkerTime[i];
@@ -179,10 +180,19 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 			break;
 		}
 	}
-	scrollBar->Minimum = floor( min ) + span / 10.0;
-	scrollBar->Maximum = ceil( max );
+	// Adjust the behavior of the scroll bar depending on the selected 
+	// time span of the data window. A large step moves a full window
+	// width, a small step moves 1/10th of the window.
 	scrollBar->LargeChange = span;
 	scrollBar->SmallChange = span / 10.0;
+	// Set the scroll bar limits to match the limits of the available data.
+	// Note that you cannot not reach the max value of the scroll bar with the user
+	// controls. Best you can do is to get within LargeChange of the maximum. 
+	// We extend the range of the scroll bar by that value so that one can
+	//  reach the end of the data.
+	scrollBar->Maximum = ceil( max ) + scrollBar->LargeChange;
+	scrollBar->Minimum = floor( min );
+	if ( scrollBar->Minimum >= floor( max ) ) scrollBar->Minimum = floor( max );
 
 	since_midnight = ((int) floor( min ) + TimebaseOffset ) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
@@ -191,7 +201,7 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
 	earliestTextBox->Text = gcnew String( label );
 
-	since_midnight = ((int) floor( max ) + TimebaseOffset ) % (24 * 60 * 60);
+	since_midnight = ((int) ceil( max ) + TimebaseOffset ) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
 	minute = (since_midnight % (60 * 60)) / 60;
 	second = (since_midnight % 60);
@@ -201,7 +211,14 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 
 }
 void GripMMIDesktop::MoveToLatest( void ) {
-	scrollBar->Value = scrollBar->Maximum;
+	double latest;
+	for ( int i = nFrames - 1; i >= 0; i-- ) {
+		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
+			latest = RealMarkerTime[i];
+			break;
+		}
+	}
+	scrollBar->Value = ceil( latest );
 }
 
 
@@ -250,7 +267,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 
 	// If the first and last index are the same, there is nothing to display,
 	//  so just return to the caller.
-	if ( last_sample <= first_sample ) return;
+	// if ( last_sample <= first_sample ) return;
 
 
 	switch ( graphCollectionComboBox->SelectedIndex ) {
