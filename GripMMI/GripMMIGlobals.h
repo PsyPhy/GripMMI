@@ -55,6 +55,8 @@ extern unsigned int nFrames;
 #define STRIPCHARTS	6
 #define SPAN_VALUES	8
 extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for each position of the span selector.
+#define MAX_PLOT_STEP 8				// Maximum down sampling to display data.
+#define MAX_PLOT_SAMPLES (30 * 60 * 20)		// Max samples to plot.
 /// <summary>
 /// Strings used to construct the path to various files.
 /// </summary>

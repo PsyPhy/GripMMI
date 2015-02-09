@@ -39,12 +39,12 @@
  * Not all array plotting routines take it into account yet.
  */
 
-local int view_array_skip = 1;
+local int view_array_step = 1;
 
-void ViewsSetArraySkip( int N ) {
+void ViewsSetArrayStep( int N ) {
 
   if ( N < 1 ) N = 1;
-  view_array_skip = N;
+  view_array_step = N;
 
 }
 
@@ -52,14 +52,14 @@ void ViewsSetArraySkip( int N ) {
 /***************************************************************************/
 
 void ViewPlotDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned skip, unsigned size ) {
+		       unsigned start, unsigned end, unsigned step, unsigned size ) {
   register unsigned i;
   register double	*pt;
 
   pt = (double *)(((char *) array) + start * size);
   ViewMoveTo(view, (double) start,  *pt);
 
-  for (i = start + 1; i <= end; i += skip ) {
+  for (i = start + 1; i <= end; i += step ) {
 
     pt = (double *)(((char *) array) + i * size);
     ViewLineTo(view, (double) i, *pt);
@@ -76,7 +76,7 @@ void ViewPlotClippedDoubles ( View view, double *array,
   double y;
   int penon = NO;
 
-  for (i = start; i <= end; i += view_array_skip ) {
+  for (i = start; i <= end; i += view_array_step ) {
 	  pt = (double *)(((char *) array) + i * size);
 	  if ( *pt == NA ) penon = NO;
 	  else {
@@ -158,7 +158,7 @@ void ViewPlotClippedFloats ( View view, float *array,
   pt = (float *)(((char *) array) + start * size);
   ViewMoveTo(view, (double) start,  *pt);
 
-  for (i = start + 1; i <= end; i += view_array_skip ) {
+  for (i = start + 1; i <= end; i += view_array_step ) {
 
     pt = (float *)(((char *) array) + i * size);
     if ( *pt > view->user_top ) ViewLineTo(view, (double) i, view->user_top );
@@ -809,7 +809,7 @@ void ViewXYPlotFloats (View view, float *xarray, float *yarray,
 /***************************************************************************/
 
 void ViewXYPlotDoubles (View view, double *xarray, double *yarray, 
-			unsigned start, unsigned end, unsigned skip,
+			unsigned start, unsigned end, unsigned step,
 			unsigned xsize, unsigned ysize) {
 				   	
   register unsigned i;
@@ -882,7 +882,7 @@ void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray,
 /***************************************************************************/
 
 void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, 
+				 unsigned start, unsigned end, unsigned step,
 				 unsigned xsize, unsigned ysize, 
 				 double na)
 {
@@ -891,11 +891,12 @@ void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray,
   register double   *xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
-  while (i < end) {
+  while (i <= (end - step) ) {
 
     xpt1 = (double *)(((char *) xarray) + i * xsize);
     ypt1 = (double *)(((char *) yarray) + i * ysize);
-    xpt2 = (double *)(((char *) xarray) + (++i) * xsize);
+	i += step;
+    xpt2 = (double *)(((char *) xarray) + i * xsize);
     ypt2 = (double *)(((char *) yarray) + i * ysize);
     if (*xpt1 != na && *ypt1 != na && *xpt2 != na && *ypt2 != na) {
       ViewLine(view, 
@@ -905,7 +906,7 @@ void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray,
   }
 }
 void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, 
+				 unsigned start, unsigned end, unsigned step,
 				 unsigned xsize, unsigned ysize, 
 				 double na)
 {
@@ -914,11 +915,12 @@ void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray,
   register double   *xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
-  while (i < end) {
+  while (i <= (end - step) ) {
 
     xpt1 = (double *)(((char *) xarray) + i * xsize);
     ypt1 = (double *)(((char *) yarray) + i * ysize);
-    xpt2 = (double *)(((char *) xarray) + (++i) * xsize);
+	i += step;
+    xpt2 = (double *)(((char *) xarray) + i * xsize);
     ypt2 = (double *)(((char *) yarray) + i * ysize);
     if (*xpt1 != na && *xpt1 >= view->user_left && *xpt1 <= view->user_right &&
 		*xpt2 != na && *xpt2 >= view->user_left && *xpt2 <= view->user_right &&
@@ -1019,7 +1021,7 @@ void ViewScatterPlotDoubles (View view, int symbol,
 
 void ViewScatterPlotAvailableDoubles (View view, int symbol,
 				     double *xarray, double *yarray, 
-				     unsigned start, unsigned end, 
+				     unsigned start, unsigned end, unsigned step,
 				     unsigned xsize, unsigned ysize,
 				     double NA )
 {
@@ -1027,7 +1029,7 @@ void ViewScatterPlotAvailableDoubles (View view, int symbol,
   register unsigned i;
   register double	*xpt, *ypt;
 
-  for (i = start; i <= end; i++) {
+  for (i = start; i <= end; i += step ) {
 
     xpt = (double *)(((char *) xarray) + i * xsize);
     ypt = (double *)(((char *) yarray) + i * ysize);

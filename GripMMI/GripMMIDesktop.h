@@ -186,9 +186,9 @@ namespace GripMMI {
 	private: System::Windows::Forms::ComboBox^  graphCollectionComboBox;
 	private: System::Windows::Forms::Label^  Spans;
 	private: System::Windows::Forms::TextBox^  earliestTextBox;
-private: System::Windows::Forms::TextBox^  latestTextBox;
-private: System::Windows::Forms::TextBox^  rightLimitTextBox;
-private: System::Windows::Forms::TextBox^  leftLimitTextBox;
+	private: System::Windows::Forms::TextBox^  latestTextBox;
+	private: System::Windows::Forms::TextBox^  rightLimitTextBox;
+	private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 
 
 
@@ -261,19 +261,19 @@ private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 		void MoveToLatest( void );
 
 		void ResetBuffers( void );
-		void GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
-		void GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
-		void PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame );
-		void GraphLoadForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
-		void GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
-		void GraphGripForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
-		void GraphVisibility( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
-		void GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) ;
-		void GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
-		void PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame );
+		void GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
+		void GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
+		void PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
+		void GraphLoadForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip ) ;
+		void GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip ) ;
+		void GraphGripForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip ) ;
+		void GraphVisibility( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip ) ;
+		void GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip ) ;
+		void GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
+		void PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
 
-		void GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
-		void GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame );
+		void GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
+		void GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
 
 		// GripMMIData.cpp
 		void SimulateGripRT ( void );

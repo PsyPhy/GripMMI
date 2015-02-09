@@ -1,1 +1,1 @@
-GripMMI V1.1.0 (beta) Build Feb  9 2015 03:04:12
+GripMMI V1.1.0 (debug) Build Feb  7 2015 17:59:32

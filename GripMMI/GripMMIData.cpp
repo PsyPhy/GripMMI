@@ -102,7 +102,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	// Be careful not to overrun the data buffers.
 	// The -2 is to take into account when a break in the data is inserted.
 	packets_read = 0;
-	while ( nFrames < MAX_FRAMES - 2 ) {
+	while ( nFrames < MAX_FRAMES ) {
 
 		// Attempt to read next packet.
 		bytes_read = _read( fid, &packet, rtPacketLengthInBytes );
@@ -130,6 +130,8 @@ int GripMMIDesktop::GetGripRT( void ) {
 		//  a blank frame into the data buffer. This will cause breaks in
 		//  the traces in the data graphs.
 		if ( (rt.packetTimestamp - previous_packet_timestamp) > PACKET_STREAM_BREAK_THRESHOLD ) {
+			// Insert enough points so that we see the break even if we are sub-sampling in the graphs.
+			for ( int count = 0; count < MAX_PLOT_STEP && nFrames < MAX_FRAMES - 1; count++ ) {
 				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Z] = MISSING_DOUBLE;
@@ -152,6 +154,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 				PacketReceived[nFrames] = MISSING_DOUBLE;
 				RealMarkerTime[nFrames] = MISSING_DOUBLE;
 				nFrames++;
+			}
 		}
 		previous_packet_timestamp = rt.packetTimestamp;
 

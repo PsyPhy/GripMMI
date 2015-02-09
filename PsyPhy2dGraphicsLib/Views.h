@@ -242,7 +242,7 @@ void ViewPlotFloatsDashed (View view, float *array,
 			   unsigned size, double on_size, double off_size );
 
 void ViewPlotDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned skip, unsigned size );
+		       unsigned start, unsigned end, unsigned step, unsigned size );
 void ViewPlotClippedDoubles ( View view, double *array, 
 		       unsigned start, unsigned end, unsigned size, double NA );
 
@@ -271,22 +271,22 @@ void ViewXYPlotFloats (View view, float *xarray, float *yarray,
 		       unsigned start, unsigned end, 
 		       unsigned xsize, unsigned ysize);
 void ViewXYPlotDoubles (View view, double *xarray, double *yarray, 
-			unsigned start, unsigned end, unsigned skip,
+			unsigned start, unsigned end, unsigned step,
 			unsigned xsize, unsigned ysize);
 void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray, 
 				unsigned start, unsigned end, 
 				unsigned xsize, unsigned ysize, 
 				float na);
 void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, 
+				 unsigned start, unsigned end, unsigned step,
 				 unsigned xsize, unsigned ysize, 
 				 double na);
 void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, 
+				 unsigned start, unsigned end, unsigned step,
 				 unsigned xsize, unsigned ysize, 
 				 double na);
 						   
-void ViewScatterPlotFloats (View view, int symbol, 
+void ViewScatterPlotFloats (View view, int symbol,  
 			    float *xarray, float *yarray, 
 			    unsigned start, unsigned end, 
 			    unsigned xsize, unsigned ysize);
@@ -308,7 +308,7 @@ void ViewScatterPlotDoubles (View view, int symbol,
 			     unsigned xsize, unsigned ysize);
 void ViewScatterPlotAvailableDoubles (View view, int symbol,
 				     double *xarray, double *yarray, 
-				     unsigned start, unsigned end, 
+				     unsigned start, unsigned end, unsigned step,
 				     unsigned xsize, unsigned ysize,
 				     double NA );
 

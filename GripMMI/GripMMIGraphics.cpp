@@ -268,48 +268,48 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] < first_instant ) break;
 	}
 	first_sample = index + 1;
-	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %lu to %lu \n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample );
+	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %lu to %lu (%d)\n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample, (last_sample - first_sample) );
 
-	// If the first and last index are the same, there is nothing to display,
-	//  so just return to the caller.
-	// if ( last_sample <= first_sample ) return;
-
+	// Subsample the data if there is a lot to be plotted.
+	int step = 1;
+	while ( ((last_sample - first_sample) / step) > MAX_PLOT_SAMPLES && step < (MAX_PLOT_STEP - 1) ) step++;
+	fOutputDebugString( "Plot step: %d\n", step );
 
 	switch ( graphCollectionComboBox->SelectedIndex ) {
 	// Marker Visibility
 	case 2:
-		GraphManipulandumPositionComponent( X, LayoutViewN( detailed_visibility_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
-		GraphManipulandumPositionComponent( Y, LayoutViewN( detailed_visibility_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
-		GraphManipulandumPositionComponent( Z, LayoutViewN( detailed_visibility_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
-		GraphVisibilityDetails( LayoutViewN( detailed_visibility_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
-		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( X, LayoutViewN( detailed_visibility_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphManipulandumPositionComponent( Y, LayoutViewN( detailed_visibility_layout, 1 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphManipulandumPositionComponent( Z, LayoutViewN( detailed_visibility_layout, 2 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphVisibilityDetails( LayoutViewN( detailed_visibility_layout, 3 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
 	// Kinematics
 	case 1:
-		GraphManipulandumPositionComponent( X, LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
-		GraphManipulandumPositionComponent( Y, LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
-		GraphManipulandumPositionComponent( Z, LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
-		GraphAccelerationComponent( X, LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
-		GraphAccelerationComponent( Y, LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
-		GraphAccelerationComponent( Z, LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
-		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPositionComponent( X, LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphManipulandumPositionComponent( Y, LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphManipulandumPositionComponent( Z, LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphAccelerationComponent( X, LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphAccelerationComponent( Y, LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphAccelerationComponent( Z, LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
 	// Summary
 	case 0:
 	default:
-		GraphManipulandumPosition( LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample );
-		GraphManipulandumRotations( LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample );
-		GraphAcceleration( LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample );
-		GraphGripForce( LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample );
-		GraphLoadForce( LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample );
-		GraphCoP( LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample );
-		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample );
+		GraphManipulandumPosition( LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphManipulandumRotations( LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphAcceleration( LayoutViewN( stripchart_layout, 2 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphGripForce( LayoutViewN( stripchart_layout, 3 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphLoadForce( LayoutViewN( stripchart_layout, 4 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphCoP( LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample, step );
+		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
 	}
 	OglSwap( stripchart_display );
 
-	PlotManipulandumPosition( first_instant, last_instant, first_sample, last_sample );
-	PlotCoP( first_instant, last_instant, first_sample, last_sample );
+	PlotManipulandumPosition( first_instant, last_instant, first_sample, last_sample, step );
+	PlotCoP( first_instant, last_instant, first_sample, last_sample, step );
 
 	fOutputDebugString( "Finish RefreshGraphics().\n" );
 
@@ -325,7 +325,7 @@ void GripMMIDesktop::KillGraphics( void ) {
 
 }
 
-void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 			
 	double range;
 
@@ -356,12 +356,12 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 			ViewSetYRange( view, range );
 		}
 		else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
-		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 	}
 
 }
 
-void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 			
 	char *title;
 
@@ -383,9 +383,9 @@ void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View v
 	else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
 	ViewAxes( view );
 	ViewSelectColor( view, component );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][component], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][component], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 }
-void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 			
 	char *title;
 
@@ -408,10 +408,10 @@ void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, dou
 	else ViewSetYLimits( view, lowerAccelerationLimit, upperAccelerationLimit );
 	ViewAxes( view );
 	ViewSelectColor( view, component );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][component], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][component], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
 }
 
-void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 
 	ViewColor( view, GREY6 );
 	ViewBox( view );
@@ -429,11 +429,11 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	ViewAxes( view );
 	for ( int i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumRotations[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumRotations[0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumRotations ), MISSING_DOUBLE );
 	}
 }
 
-void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 
 	::View view;
 
@@ -448,12 +448,12 @@ void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop
 		ViewMakeSquare( view );
 		ViewSelectColor( view, i );
 		// ViewBox( view );
-		if ( stop_frame > start_frame ) ViewXYPlotAvailableDoubles( view, &ManipulandumPosition[0][pair[i].abscissa], &ManipulandumPosition[0][pair[i].ordinate], start_frame, stop_frame, sizeof( *ManipulandumPosition ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+		if ( stop_frame > start_frame ) ViewXYPlotAvailableDoubles( view, &ManipulandumPosition[0][pair[i].abscissa], &ManipulandumPosition[0][pair[i].ordinate], start_frame, stop_frame, step, sizeof( *ManipulandumPosition ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 		OglSwap( phase_display[i] );
 	}
 }
 
-void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 	
 	int i;
 	
@@ -477,13 +477,13 @@ void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double s
 	if ( view->user_bottom < -4.0 ) ViewHorizontalLine( view, -4.0 );
 	for ( i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
-		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForce[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *LoadForce ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForce[0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *LoadForce ), MISSING_DOUBLE );
 	}
 	ViewSelectColor( view, i );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForceMagnitude[0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &LoadForceMagnitude[0], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *LoadForceMagnitude ), MISSING_DOUBLE );
 
 }
-void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 
 	ViewColor( view, GREY6 );
 	ViewBox( view );
@@ -501,11 +501,11 @@ void GripMMIDesktop::GraphAcceleration( ::View view, double start_instant, doubl
 	ViewAxes( view );	
 	for ( int i = 0; i < 3; i++ ) {
 		ViewSelectColor( view, i );
-		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
+		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &Acceleration[0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *Acceleration ), MISSING_DOUBLE );
 	}
 }
 
-void GripMMIDesktop::GraphGripForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+void GripMMIDesktop::GraphGripForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 
 	ViewColor( view, GREY6 );
 	ViewBox( view );
@@ -525,15 +525,15 @@ void GripMMIDesktop::GraphGripForce( ::View view, double start_instant, double s
 	}
 
 	ViewColor( view, atiColorMap[LEFT_ATI] );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[LEFT_ATI][0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[LEFT_ATI][0], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
 	ViewColor( view, atiColorMap[RIGHT_ATI] );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &NormalForce[RIGHT_ATI][0], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *NormalForce[LEFT_ATI] ), MISSING_DOUBLE );
 	ViewColor( view, GREEN );
-	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &GripForce[0], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *GripForce ), MISSING_DOUBLE );
+	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &GripForce[0], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *GripForce ), MISSING_DOUBLE );
 
 }
 
-void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 
 	ViewColor( view, GREY6 );
 	ViewBox( view );
@@ -544,16 +544,16 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	ViewSetYLimits( view, lowerVisibilityLimit, upperVisibilityLimit );
 
 	ViewColor( view, BLACK );
-	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &PacketReceived[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *PacketReceived ), MISSING_DOUBLE );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &PacketReceived[0],  start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *PacketReceived ), MISSING_DOUBLE );
 	ViewColor( view, RED );
-	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &ManipulandumVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *ManipulandumVisibility ), MISSING_DOUBLE );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &ManipulandumVisibility[0],  start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumVisibility ), MISSING_DOUBLE );
 	ViewColor( view, GREEN );
-	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &FrameVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *FrameVisibility ), MISSING_DOUBLE );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &FrameVisibility[0],  start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *FrameVisibility ), MISSING_DOUBLE );
 	ViewColor( view, BLUE );
-	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &WristVisibility[0],  start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *WristVisibility ), MISSING_DOUBLE );
+	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &WristVisibility[0],  start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *WristVisibility ), MISSING_DOUBLE );
 
 }
-void GripMMIDesktop::GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ) {
+void GripMMIDesktop::GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 
 	int mrk;
 
@@ -575,11 +575,11 @@ void GripMMIDesktop::GraphVisibilityDetails( ::View view, double start_instant, 
 	//  such that the traces are spread out and grouped in the view.
 	for ( mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
 		ViewSelectColor( view, mrk );
-		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &MarkerVisibility[0][mrk], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *MarkerVisibility ), MISSING_DOUBLE );
+		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &MarkerVisibility[0][mrk], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *MarkerVisibility ), MISSING_DOUBLE );
 	}
 }
 
-void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 
 	ViewColor( view, GREY6 );
 	ViewBox( view );
@@ -595,12 +595,12 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	for ( int ati = 0; ati < 2; ati++ ) {
 		for ( int i = X; i <= Z; i++ ) {
 			ViewSelectColor( view, 3 * ati + i );
-			ViewXYPlotClippedDoubles( view, &RealMarkerTime[0], &CenterOfPressure[ati][0][i], start_frame, stop_frame, sizeof( *RealMarkerTime ), sizeof( *CenterOfPressure[ati] ), MISSING_DOUBLE );
+			ViewXYPlotClippedDoubles( view, &RealMarkerTime[0], &CenterOfPressure[ati][0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *CenterOfPressure[ati] ), MISSING_DOUBLE );
 		}
 	}
 }
 
-void GripMMIDesktop::PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame ){
+void GripMMIDesktop::PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 
 	::View view;
 
@@ -614,9 +614,9 @@ void GripMMIDesktop::PlotCoP( double start_instant, double stop_instant, int sta
 	// Plot the history of CoPs within the selected time window.
 	if ( stop_frame > start_frame ) {
 		ViewColor( view, atiColorMap[RIGHT_ATI] );
-		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &CenterOfPressure[RIGHT_ATI][0][Z], &CenterOfPressure[RIGHT_ATI][0][Y], start_frame, stop_frame, sizeof( *CenterOfPressure[RIGHT_ATI] ), sizeof( *CenterOfPressure[RIGHT_ATI] ), MISSING_FLOAT );
+		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &CenterOfPressure[RIGHT_ATI][0][Z], &CenterOfPressure[RIGHT_ATI][0][Y], start_frame, stop_frame, step, sizeof( *CenterOfPressure[RIGHT_ATI] ), sizeof( *CenterOfPressure[RIGHT_ATI] ), MISSING_FLOAT );
 		ViewColor( view, atiColorMap[LEFT_ATI] );
-		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &CenterOfPressure[LEFT_ATI][0][Z], &CenterOfPressure[LEFT_ATI][0][Y], start_frame, stop_frame, sizeof( *CenterOfPressure[LEFT_ATI] ), sizeof( *CenterOfPressure[0] ), MISSING_FLOAT );
+		ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &CenterOfPressure[LEFT_ATI][0][Z], &CenterOfPressure[LEFT_ATI][0][Y], start_frame, stop_frame, step, sizeof( *CenterOfPressure[LEFT_ATI] ), sizeof( *CenterOfPressure[0] ), MISSING_FLOAT );
 	}
 
 	// If we are live, plot the current CoP.
