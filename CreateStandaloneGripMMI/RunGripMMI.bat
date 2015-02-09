@@ -28,6 +28,14 @@ set ScriptDir=..\GripScripts\
 REM Uncomment the next line to use the alternate Software Unit ID.
 REM set UNIT=-alt
 
+REM Uncomment the next line if you want to display times in UTC rather than GPS
+REM Default value is -16 which corrects for leap seconds as of Jan. 2015.
+REM Modify the value if new leap seconds have been added (e.g. after July 2015 change to -17).
+set TIMEBASE_CORRECTION=-16
+
+REM Uncomment the next line if you want to display in GPS time.
+REM set TIMEBASE_CORRECTION=0
+
 REM **************************************************************************
 
 REM Normally you will not need to edit below this line, 
@@ -64,4 +72,4 @@ REM start GripGroundMonitor.exe %CacheDir%\%CacheRoot% %ScriptDir%
 REM Start the actual graphical GripMMI.
 REM First parameter is the path to the packet caches that serve as inputs.
 REM Second paramter is the path to the scripts that are installed on board.
-start .\GripMMI.exe %CacheDir%\%CacheRoot% %ScriptDir%
+start .\GripMMI.exe %CacheDir%\%CacheRoot% %ScriptDir% %TIMEBASE_CORRECTION%

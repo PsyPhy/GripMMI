@@ -36,9 +36,10 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Parse the command line arguments.
-	if ( args->Length > 0 ) packetRoot = args[0];
-	if ( args->Length > 1 ) scriptRoot = args[1];
-
+	if ( args->Length > 0 ) packetRoot = args[0];	// Where to look for packets written by GripGroundMonitorClient.exe
+	if ( args->Length > 1 ) scriptRoot = args[1];	// Where to find the script library.
+	if ( args->Length > 2 ) TimebaseOffset = Convert::ToInt32(args[2]); // Correct the time base. Default is 16 to correct to UTC. 0 is GPS time.
+	
 	// First, a lot of code to convert a String to the (char *)
 	//  values that the script crawler code needs.
 	pin_ptr<const wchar_t> pinchars = PtrToStringChars( scriptRoot );
