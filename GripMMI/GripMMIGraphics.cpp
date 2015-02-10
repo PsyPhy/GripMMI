@@ -17,6 +17,7 @@
 
 #include "..\Useful\Useful.h"
 #include "..\Useful\fOutputDebugString.h"
+#include "..\Useful\fMessageBox.h"
 #include "..\PsyPhy2dGraphicsLib\OglDisplayInterface.h"
 #include "..\PsyPhy2dGraphicsLib\OglDisplay.h"
 #include "..\PsyPhy2dGraphicsLib\Graphics.h"
@@ -169,16 +170,19 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	double span = windowSpanSeconds[spanSelector->Value];
 	double min, max;
 	int since_midnight, hour, minute, second;
-	char label[32];
+	int day_last, day_first;
+	char label[32], modifier[32];
 	unsigned long	i;
 
 	// Find the time window of the available data packets.
+	min = 0.0;
 	for ( i = 0; i < nFrames; i++ ) {
 		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
 			min = RealMarkerTime[i];
 			break;
 		}
 	}
+	max = span;
 	for ( i = nFrames - 1; i >= 0; i-- ) {
 		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
 			max = RealMarkerTime[i];
@@ -195,17 +199,15 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	// controls. Best you can do is to get within LargeChange of the maximum. 
 	// We extend the range of the scroll bar by that value so that one can
 	//  reach the end of the data.
-	scrollBar->Maximum = ceil( max ) + scrollBar->LargeChange;
-	scrollBar->Minimum = floor( min );
-	if ( scrollBar->Minimum >= floor( max ) ) scrollBar->Minimum = floor( max );
+	int top = ceil( max ) + scrollBar->LargeChange;
+	int bottom = floor( min );
+	if ( bottom >= floor( max ) ) bottom = floor( max );
+	scrollBar->Maximum = top;
+	scrollBar->Minimum = bottom;
+//	fMessageBox( MB_OK, "AdjustScrollSpan()", "span:    %10.0f\nmin:    %10.0f\nmax:    %10.0f\nchange: %10d\nbottom: %10d\ntop:    %10d\nsbmin:   %10d\nsbval:  %10d\nsbmax:  %10d", 
+//		span, min, max, scrollBar->LargeChange, top, bottom, scrollBar->Minimum, scrollBar->Value, scrollBar->Maximum );
 
-	since_midnight = ((int) floor( min ) + TimebaseOffset ) % (24 * 60 * 60);
-	hour = since_midnight / (60 * 60);
-	minute = (since_midnight % (60 * 60)) / 60;
-	second = (since_midnight % 60);
-	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
-	earliestTextBox->Text = gcnew String( label );
-
+	day_last = (int) ceil(( max + TimebaseOffset )) / (24 * 60 * 60);
 	since_midnight = ((int) ceil( max ) + TimebaseOffset ) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
 	minute = (since_midnight % (60 * 60)) / 60;
@@ -213,7 +215,15 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
 	latestTextBox->Text = gcnew String( label );
 
-
+	day_first = (int) floor(( min + TimebaseOffset )) / (24 * 60 * 60);
+	since_midnight = ((int) floor( min ) + TimebaseOffset ) % (24 * 60 * 60);
+	hour = since_midnight / (60 * 60);
+	minute = (since_midnight % (60 * 60)) / 60;
+	second = (since_midnight % 60);
+	if ( day_last == day_first ) sprintf( modifier, "" );
+	else sprintf( modifier, "J-%d", day_last - day_first );
+	sprintf( label, "%02d:%02d:%02d %s", hour, minute, second, modifier  );
+	earliestTextBox->Text = gcnew String( label );
 }
 void GripMMIDesktop::MoveToLatest( void ) {
 	double latest;
@@ -223,6 +233,7 @@ void GripMMIDesktop::MoveToLatest( void ) {
 			break;
 		}
 	}
+//	fMessageBox( MB_OK, "MoveToLatest()", "%d %d %d", scrollBar->Minimum, (int) ceil( latest ), scrollBar->Maximum );
 	scrollBar->Value = ceil( latest );
 }
 
@@ -230,7 +241,8 @@ void GripMMIDesktop::MoveToLatest( void ) {
 void GripMMIDesktop::RefreshGraphics( void ) {
 		
 	int since_midnight, hour, minute, second;
-	char label[32];
+	int day_last, day_first;
+	char label[32], modifier[32];
 
 	unsigned long first_sample;
 	unsigned long last_sample;
@@ -245,18 +257,22 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 	double span = windowSpanSeconds[spanSelector->Value];
 	double first_instant = last_instant - span;
 
-	since_midnight = ((int) floor( last_instant ) + TimebaseOffset ) % (24 * 60 * 60);
+	day_last = (int) ceil( last_instant + TimebaseOffset ) / (24 * 60 * 60);
+	since_midnight = ((int) ceil( last_instant + TimebaseOffset )) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
 	minute = (since_midnight % (60 * 60)) / 60;
 	second = (since_midnight % 60);
 	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
 	rightLimitTextBox->Text = gcnew String( label );
 
-	since_midnight = ((int) floor( first_instant ) + TimebaseOffset ) % (24 * 60 * 60);
+	day_first = (int) floor( first_instant + TimebaseOffset ) / (24 * 60 * 60);
+	since_midnight = ((int) floor( first_instant + TimebaseOffset )) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
 	minute = (since_midnight % (60 * 60)) / 60;
 	second = (since_midnight % 60);
-	sprintf( label, "%02d:%02d:%02d", hour, minute, second  );
+	if ( day_last == day_first ) sprintf( modifier, "" );
+	else sprintf( modifier, "J-%d", day_last - day_first );
+	sprintf( label, "%02d:%02d:%02d %s", hour, minute, second, modifier  );
 	leftLimitTextBox->Text = gcnew String( label );
 
 	// Find the indices into the arrays that correspond to the time window.
@@ -268,7 +284,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] < first_instant ) break;
 	}
 	first_sample = index + 1;
-	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %lu to %lu (%d)\n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample, (last_sample - first_sample) );
+	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %d to %d (%d)\n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample, (last_sample - first_sample) );
 
 	// Subsample the data if there is a lot to be plotted.
 	int step = 1;

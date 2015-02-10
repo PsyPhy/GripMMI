@@ -190,11 +190,6 @@ namespace GripMMI {
 	private: System::Windows::Forms::TextBox^  rightLimitTextBox;
 	private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 
-
-
-
-
-
 	private: 
 		/// <summary>
 		/// Periodically check for new data packets.
@@ -217,9 +212,9 @@ namespace GripMMI {
 			fOutputDebugString( "\n" );
 			fOutputDebugString( "Timer triggered.\n" );
 			new_data = GetGripRT();
-			if ( new_data ) AdjustScrollSpan();
+			AdjustScrollSpan();
 			if ( dataLiveCheckbox->Checked ) MoveToLatest();
-			if ( dataLiveCheckbox->Checked || forceUpdate ) RefreshGraphics();
+			if ( new_data || forceUpdate ) RefreshGraphics();
 
 			// Handle HK packets and the script crawler.
 			if ( scriptLiveCheckbox->Checked ) {
@@ -516,7 +511,7 @@ namespace GripMMI {
 				static_cast<System::Byte>(0)));
 			this->leftLimitTextBox->Location = System::Drawing::Point(11, 630);
 			this->leftLimitTextBox->Name = L"leftLimitTextBox";
-			this->leftLimitTextBox->Size = System::Drawing::Size(61, 16);
+			this->leftLimitTextBox->Size = System::Drawing::Size(87, 16);
 			this->leftLimitTextBox->TabIndex = 15;
 			this->leftLimitTextBox->Text = L"00:00:00";
 			// 
@@ -610,7 +605,7 @@ namespace GripMMI {
 				static_cast<System::Byte>(0)));
 			this->earliestTextBox->Location = System::Drawing::Point(242, 52);
 			this->earliestTextBox->Name = L"earliestTextBox";
-			this->earliestTextBox->Size = System::Drawing::Size(61, 16);
+			this->earliestTextBox->Size = System::Drawing::Size(102, 16);
 			this->earliestTextBox->TabIndex = 13;
 			this->earliestTextBox->Text = L"00:00:00";
 			// 
