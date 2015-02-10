@@ -652,7 +652,7 @@ namespace GripMMI {
 			this->dataLiveCheckbox->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->dataLiveCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->dataLiveCheckbox->Location = System::Drawing::Point(1019, 24);
+			this->dataLiveCheckbox->Location = System::Drawing::Point(1024, 31);
 			this->dataLiveCheckbox->Name = L"dataLiveCheckbox";
 			this->dataLiveCheckbox->Size = System::Drawing::Size(56, 24);
 			this->dataLiveCheckbox->TabIndex = 0;
