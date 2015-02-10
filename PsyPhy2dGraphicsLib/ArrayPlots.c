@@ -51,9 +51,8 @@ void ViewsSetArrayStep( int N ) {
 
 /***************************************************************************/
 
-void ViewPlotDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned step, unsigned size ) {
-  register unsigned i;
+void ViewPlotDoubles ( View view, double *array, int start, int end, int step, unsigned size ) {
+  register int i;
   register double	*pt;
 
   pt = (double *)(((char *) array) + start * size);
@@ -70,8 +69,8 @@ void ViewPlotDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewPlotClippedDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned size, double NA ) {
-  register unsigned i;
+		       int start, int end, unsigned size, double NA ) {
+  register int i;
   register double	*pt;
   double y;
   int penon = NO;
@@ -93,9 +92,9 @@ void ViewPlotClippedDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewPlotAvailableDoubles ( View view, double *array, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned size, double NA ) {
-  register unsigned i;
+  register int i;
   register double	*pt;
   int penon = NO;
 
@@ -115,9 +114,9 @@ void ViewPlotAvailableDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewPointPlotAvailableDoubles ( View view, double *array, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned size, double NA ) {
-  register unsigned i;
+  register int i;
   register double	*pt;
 
   for (i = start; i <= end; i++) {
@@ -131,9 +130,9 @@ void ViewPointPlotAvailableDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewPlotFloats (View view, float *array, 
-		     unsigned start, unsigned end, unsigned size ) {
+		     int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register float	*pt;
 
   pt = (float *)(((char *) array) + start * size);
@@ -151,8 +150,8 @@ void ViewPlotFloats (View view, float *array,
 /***************************************************************************/
 
 void ViewPlotClippedFloats ( View view, float *array, 
-		       unsigned start, unsigned end, unsigned size ) {
-  register unsigned i;
+		       int start, int end, unsigned size ) {
+  register int i;
   register float	*pt;
 
   pt = (float *)(((char *) array) + start * size);
@@ -171,10 +170,10 @@ void ViewPlotClippedFloats ( View view, float *array,
 /***************************************************************************/
 
 void ViewPlotAvailableFloats ( View view, float *array, 
-							   unsigned start, unsigned end, 
+							   int start, int end, 
 							   unsigned size, float NA ) {
 
-  register unsigned i;
+  register int i;
   register float	*pt;
   int penon = NO;
 
@@ -200,10 +199,10 @@ void ViewPlotAvailableFloats ( View view, float *array,
 /***************************************************************************/
 
 void ViewPlotFloatsDashed (View view, float *array, 
-			   unsigned start, unsigned end, 
+			   int start, int end, 
 			   unsigned size, double on_size, double off_size ) {
 					
-  register unsigned i;
+  register int i;
   register float *pt;
 
   Display dsp = view->display;
@@ -283,9 +282,9 @@ void ViewPlotFloatsDashed (View view, float *array,
 /*****************************************************************************/
 
 void ViewPlotInts ( View view, int *array, 
-		      unsigned start, unsigned end, unsigned size ) {
+		      int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register int		*pt;
 
   pt = (int *)(((char *) array) + start * size);
@@ -342,9 +341,9 @@ void ViewPointPlotAvailableInts ( View view, int *array,
 /*****************************************************************************/
 
 void ViewPlotShorts ( View view, short *array, 
-		      unsigned start, unsigned end, unsigned size ) {
+		      int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register short	*pt;
 
   pt = (short *)(((char *) array) + start * size);
@@ -361,9 +360,9 @@ void ViewPlotShorts ( View view, short *array,
 /***************************************************************************/
 
 void ViewPlotChars ( View view, char *array, 
-		     unsigned start, unsigned end, unsigned size ) {
+		     int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register char	*pt;
 
   pt = (char *)(((char *) array) + start * size);
@@ -380,9 +379,9 @@ void ViewPlotChars ( View view, char *array,
 /***************************************************************************/
 
 void ViewPlotAvailableChars ( View view, char *array, 
-							 unsigned start, unsigned end, 
+							 int start, int end, 
 							 unsigned size, int NA ) {
-  register unsigned i;
+  register int i;
   register char  	*pt;
   int penon = NO;
 
@@ -454,9 +453,9 @@ void ViewAutoScaleSetInterval( View view, double interval ) {
 /*****************************************************************************/
 
 void ViewAutoScaleShorts ( View view, short *array, 
-			   unsigned start, unsigned end, unsigned size ) {
+			   int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register short	*pt;
 	
   short min, max;
@@ -485,9 +484,9 @@ void ViewAutoScaleShorts ( View view, short *array,
 /***************************************************************************/
 
 void ViewAutoScaleFloats ( View view, float *array, 
-			   unsigned start, unsigned end, unsigned size ) {
+			   int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register float	*pt;
 	
   float min, max;
@@ -516,10 +515,10 @@ void ViewAutoScaleFloats ( View view, float *array,
 
 
 void ViewAutoScaleAvailableFloats ( View view, float *array, 
-				     unsigned start, unsigned end, unsigned size,
+				     int start, int end, unsigned size,
 				     float NA ) {
 
-  register unsigned i;
+  register int i;
   register float   *pt;
 
   double min, max;
@@ -550,9 +549,9 @@ void ViewAutoScaleAvailableFloats ( View view, float *array,
 /***************************************************************************/
 
 void ViewAutoScaleDoubles ( View view, double *array, 
-			    unsigned start, unsigned end, unsigned size ) {
+			    int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register double   *pt;
 	
   double min, max;
@@ -580,10 +579,10 @@ void ViewAutoScaleDoubles ( View view, double *array,
 /***************************************************************************/
 
 void ViewAutoScaleAvailableDoubles ( View view, double *array, 
-				     unsigned start, unsigned end, unsigned size,
+				     int start, int end, unsigned size,
 				     double NA ) {
 					
-  register unsigned i;
+  register int i;
   register double   *pt;
 	
   double min, max;
@@ -619,13 +618,13 @@ void ViewAutoScaleAvailableDoubles ( View view, double *array,
 
 void ViewAutoScaleMostDoubles ( View view,
 					double *array, 
-					unsigned start, 
-					unsigned end, 
+					int start, 
+					int end, 
 					unsigned size,
 					double NA,
-          double exclude ) {
+			          double exclude ) {
 					
-	register unsigned i, j;
+	register int i, j;
 	double 	*list, *pt;
 	int n, outlier_range, bytes;
 	double min, max, margin;
@@ -676,9 +675,9 @@ void ViewAutoScaleMostDoubles ( View view,
 /***************************************************************************/
 
 void ViewBoxPlotShorts (View view, short *array, 
-			unsigned start, unsigned end, unsigned size ) {
+			int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register short	*pt;
 
   pt = (short *)(((char *) array) + start * size);
@@ -702,9 +701,9 @@ void ViewBoxPlotShorts (View view, short *array,
 /***************************************************************************/
 
 void ViewBoxPlotFloats (View view, float *array, 
-			unsigned start, unsigned end, unsigned size ) {
+			int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register float	*pt;
 
   pt = (float *)(((char *) array) + start * size);
@@ -728,9 +727,9 @@ void ViewBoxPlotFloats (View view, float *array,
 /***************************************************************************/
 
 void ViewBoxPlotChars (View view, char *array, 
-			unsigned start, unsigned end, unsigned size ) {
+			int start, int end, unsigned size ) {
 					
-  register unsigned i;
+  register int i;
   register char		*pt;
 
   pt = (char *)(((char *) array) + start * size);
@@ -765,10 +764,10 @@ void ViewBoxPlotChars (View view, char *array,
 */
 
 void ViewXYPlotInts (View view, int *xarray, int *yarray, 
-		     unsigned start, unsigned end, 
+		     int start, int end, 
 		     unsigned xsize, unsigned ysize) {
 				  	
-  register unsigned i;
+  register int i;
   register int	*xpt, *ypt;
 
   xpt = (int *)(((char *) xarray) + start * xsize);
@@ -787,10 +786,10 @@ void ViewXYPlotInts (View view, int *xarray, int *yarray,
 /***************************************************************************/
 
 void ViewXYPlotFloats (View view, float *xarray, float *yarray, 
-		       unsigned start, unsigned end, 
+		       int start, int end, 
 		       unsigned xsize, unsigned ysize) {
 				  	
-  register unsigned i;
+  register int i;
   register float	*xpt, *ypt;
 
   xpt = (float *)(((char *) xarray) + start * xsize);
@@ -809,10 +808,10 @@ void ViewXYPlotFloats (View view, float *xarray, float *yarray,
 /***************************************************************************/
 
 void ViewXYPlotDoubles (View view, double *xarray, double *yarray, 
-			unsigned start, unsigned end, unsigned step,
+			int start, int end, int step,
 			unsigned xsize, unsigned ysize) {
 				   	
-  register unsigned i;
+  register int i;
   register double	*xpt, *ypt;
 
   xpt = (double *)(((char *) xarray) + start * xsize);
@@ -831,12 +830,12 @@ void ViewXYPlotDoubles (View view, double *xarray, double *yarray,
 /***************************************************************************/
 
 void ViewXYPlotAvailableChars (View view, char *xarray, char *yarray, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned xsize, unsigned ysize, 
 				float na)
 {
 	
-  register unsigned i;
+  register int i;
   register float	*xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
@@ -856,12 +855,12 @@ void ViewXYPlotAvailableChars (View view, char *xarray, char *yarray,
 /***************************************************************************/
 
 void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned xsize, unsigned ysize, 
 				float na)
 {
 	
-  register unsigned i;
+  register int i;
   register float	*xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
@@ -882,12 +881,12 @@ void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray,
 /***************************************************************************/
 
 void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, unsigned step,
+				 int start, int end, int step,
 				 unsigned xsize, unsigned ysize, 
 				 double na)
 {
 	
-  register          unsigned i;
+  register int i;
   register double   *xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
@@ -906,12 +905,12 @@ void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray,
   }
 }
 void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, unsigned step,
+				 int start, int end, int step,
 				 unsigned xsize, unsigned ysize, 
 				 double na)
 {
 	
-  register          unsigned i;
+  register int i;
   register double   *xpt1, *ypt1, *xpt2, *ypt2;
 
   i = start;
@@ -939,11 +938,11 @@ void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray,
 
 void ViewScatterPlotInts (	View view, int symbol,
 				int *xarray, int *yarray, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned xsize, unsigned ysize)
 {
 
-  register unsigned i;
+  register  i;
   register int	*xpt, *ypt;
 
   for (i = start; i <= end; i++) {
@@ -959,11 +958,11 @@ void ViewScatterPlotInts (	View view, int symbol,
 
 void ViewScatterPlotFloats (View view, int symbol,
 			    float *xarray, float *yarray, 
-			    unsigned start, unsigned end, 
+			    int start, int end, 
 			    unsigned xsize, unsigned ysize)
 {
 
-  register unsigned i;
+  register int i;
   register float	*xpt, *ypt;
 
   for (i = start; i <= end; i++) {
@@ -979,12 +978,12 @@ void ViewScatterPlotFloats (View view, int symbol,
 
 void ViewScatterPlotAvailableFloats (View view, int symbol,
 				     float *xarray, float *yarray, 
-				     unsigned start, unsigned end, 
+				     int start, int end, 
 				     unsigned xsize, unsigned ysize,
 				     float NA )
 {
 
-  register unsigned i;
+  register int i;
   register float	*xpt, *ypt;
 
   for (i = start; i <= end; i++) {
@@ -1002,10 +1001,10 @@ void ViewScatterPlotAvailableFloats (View view, int symbol,
 
 void ViewScatterPlotDoubles (View view, int symbol,
 			     double *xarray, double *yarray, 
-			     unsigned start, unsigned end, 
+			     int start, int end, 
 			     unsigned xsize, unsigned ysize)
 {
-  register unsigned i;
+  register int i;
   register double	*xpt, *ypt;
 
   for (i = start; i <= end; i++) {
@@ -1021,12 +1020,12 @@ void ViewScatterPlotDoubles (View view, int symbol,
 
 void ViewScatterPlotAvailableDoubles (View view, int symbol,
 				     double *xarray, double *yarray, 
-				     unsigned start, unsigned end, unsigned step,
+				     int start, int end, int step,
 				     unsigned xsize, unsigned ysize,
 				     double NA )
 {
 
-  register unsigned i;
+  register int i;
   register double	*xpt, *ypt;
 
   for (i = start; i <= end; i += step ) {

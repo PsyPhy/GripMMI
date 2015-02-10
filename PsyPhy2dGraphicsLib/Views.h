@@ -186,129 +186,86 @@ void ViewsSetArraySkip( int N );
 
 
 void ViewAutoScaleInit( View view );
-void ViewAutoScaleShorts ( View view, short *array, 
-
-			   unsigned start, unsigned end, unsigned size );
-
-void ViewAutoScaleInts ( View view, int *array, 
-
-			   unsigned start, unsigned end, unsigned size );
-
-void ViewAutoScaleFloats ( View view, float *array, 
-			   unsigned start, unsigned end, unsigned size );
-void ViewAutoScaleAvailableFloats ( View view, float *array, 
-
-				     unsigned start, unsigned end, unsigned size,
-
-				     float NA );
-
-void ViewAutoScaleDoubles ( View view, double *array, 
-			    unsigned start, unsigned end, unsigned size );
-void ViewAutoScaleAvailableDoubles ( View view, double *array, 
-				unsigned start, unsigned end, 
-				unsigned size, double NA );
-void ViewAutoScaleMostDoubles ( View view,
-					double *array, 
-					unsigned start, 
-					unsigned end, 
-					unsigned size,
-					double NA,
-          double exclude );
+void ViewAutoScaleShorts ( View view, short *array, int start, int end, unsigned size );
+void ViewAutoScaleInts ( View view, int *array, int start,  int end, unsigned size );
+void ViewAutoScaleFloats ( View view, float *array, int start,  int end, unsigned size );
+void ViewAutoScaleAvailableFloats ( View view, float *array, int start,  int end,  unsigned size, float NA );
+void ViewAutoScaleDoubles ( View view, double *array, int start, int end, unsigned size );
+void ViewAutoScaleAvailableDoubles ( View view, double *array, int start, int end, unsigned size, double NA );
+void ViewAutoScaleMostDoubles ( View view, double *array, int start, int end, unsigned size, double NA, double exclude );
 
 void ViewAutoScaleExpand( View view, double fraction );
 void ViewAutoScaleSetInterval( View view, double interval );
 
-void ViewPlotChars ( View view, char *array, 
-		     unsigned start, unsigned end, unsigned size );
-void ViewPlotAvailableChars ( View view, char *array, 
-							 unsigned start, unsigned end, 
-							 unsigned size, int NA );
-
-
-void ViewPlotShorts ( View view, short *array, 
-		      unsigned start, unsigned end, unsigned size );
-void ViewPlotInts ( View view, int *array, 
-		      unsigned start, unsigned end, unsigned size );
-void ViewPlotFloats (View view, float *array, 
-		     unsigned start, unsigned end, unsigned size );
-void ViewPlotClippedFloats ( View view, float *array, 
-		     unsigned start, unsigned end, unsigned size );
-void ViewPlotAvailableFloats ( View view, float *array, 
-				unsigned start, unsigned end, 
-				unsigned size, float NA );
-
-void ViewPlotFloatsDashed (View view, float *array, 
-			   unsigned start, unsigned end, 
-			   unsigned size, double on_size, double off_size );
-
-void ViewPlotDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned step, unsigned size );
-void ViewPlotClippedDoubles ( View view, double *array, 
-		       unsigned start, unsigned end, unsigned size, double NA );
-
-void ViewPlotAvailableDoubles ( View view, double *array, 
-				unsigned start, unsigned end, 
-				unsigned size, double NA );
-void ViewPointPlotAvailableDoubles ( View view, double *array, 
-				unsigned start, unsigned end, 
-				unsigned size, double NA );
+void ViewPlotChars ( View view, char *array, int start, int end, unsigned size );
+void ViewPlotAvailableChars ( View view, char *array, int start, int end, unsigned size, int NA );
+void ViewPlotShorts ( View view, short *array, int start, int end, unsigned size );
+void ViewPlotInts ( View view, int *array, int start, int end, unsigned size );
+void ViewPlotFloats (View view, float *array, int start, int end, unsigned size );
+void ViewPlotClippedFloats ( View view, float *array, int start, int end, unsigned size );
+void ViewPlotAvailableFloats ( View view, float *array, int start, int end, unsigned size, float NA );
+void ViewPlotFloatsDashed (View view, float *array, int start, int end, unsigned size, double on_size, double off_size );
+void ViewPlotDoubles ( View view, double *array, int start, int end, int step, unsigned size );
+void ViewPlotClippedDoubles ( View view, double *array, int start, int end, unsigned size, double NA );
+void ViewPlotAvailableDoubles ( View view, double *array, int start, int end, unsigned size, double NA );
+void ViewPointPlotAvailableDoubles ( View view, double *array, int start, int end, unsigned size, double NA );
 
 
 void ViewBoxPlotChars (View view, char *array, 
-			unsigned start, unsigned end, unsigned size );
+			int start, int end, unsigned size );
 void ViewBoxPlotShorts (View view, short *array, 
-			unsigned start, unsigned end, unsigned size );
+			int start, int end, unsigned size );
 void ViewBoxPlotInts (View view, int *array, 
-			unsigned start, unsigned end, unsigned size );
+			int start, int end, unsigned size );
 void ViewBoxPlotFloats (View view, float *array, 
-			unsigned start, unsigned end, unsigned size );
+			int start, int end, unsigned size );
 
 
 void ViewXYPlotInts (View view, int *xarray, int *yarray, 
-		     unsigned start, unsigned end, 
+		     int start, int end, 
 		     unsigned xsize, unsigned ysize);
 void ViewXYPlotFloats (View view, float *xarray, float *yarray, 
-		       unsigned start, unsigned end, 
+		       int start, int end, 
 		       unsigned xsize, unsigned ysize);
 void ViewXYPlotDoubles (View view, double *xarray, double *yarray, 
-			unsigned start, unsigned end, unsigned step,
+			int start, int end, int step,
 			unsigned xsize, unsigned ysize);
 void ViewXYPlotAvailableFloats (View view, float *xarray, float *yarray, 
-				unsigned start, unsigned end, 
+				int start, int end, 
 				unsigned xsize, unsigned ysize, 
 				float na);
 void ViewXYPlotAvailableDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, unsigned step,
+				 int start, int end, int step,
 				 unsigned xsize, unsigned ysize, 
 				 double na);
 void ViewXYPlotClippedDoubles (View view, double *xarray, double *yarray, 
-				 unsigned start, unsigned end, unsigned step,
+				 int start, int end, int step,
 				 unsigned xsize, unsigned ysize, 
 				 double na);
 						   
 void ViewScatterPlotFloats (View view, int symbol,  
 			    float *xarray, float *yarray, 
-			    unsigned start, unsigned end, 
+			    int start, int end, 
 			    unsigned xsize, unsigned ysize);
 
 void ViewScatterPlotAvailableFloats (View view, int symbol, 
 				     float *xarray, float *yarray, 
-				     unsigned start, unsigned end, 
+				     int start, int end, 
 				     unsigned xsize, unsigned ysize, 
 				     float NA);
 
 
 void ViewScatterPlotInts (View view, int symbol,
 			  int *xarray, int *yarray, 
-			  unsigned start, unsigned end, 
+			  int start, int end, 
 			  unsigned xsize, unsigned ysize);
 void ViewScatterPlotDoubles (View view, int symbol,
 			     double *xarray, double *yarray, 
-			     unsigned start, unsigned end, 
+			     int start, int end, 
 			     unsigned xsize, unsigned ysize);
 void ViewScatterPlotAvailableDoubles (View view, int symbol,
 				     double *xarray, double *yarray, 
-				     unsigned start, unsigned end, unsigned step,
+				     int start, int end, int step,
 				     unsigned xsize, unsigned ysize,
 				     double NA );
 
