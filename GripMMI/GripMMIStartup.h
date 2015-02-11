@@ -4,7 +4,7 @@
 /// 
 ///	Author:					J. McIntyre, PsyPhy Consulting
 /// Initial release:		18 December 2014
-/// Modification History:	see https://github.com/frenchjam/GripGroundMonitorClient
+/// Modification History:	see https://github.com/PsyPhy/GripMMI
 ///
 /// Copyright (c) 2014, 2015 PsyPhy Consulting
 ///
