@@ -62,14 +62,15 @@ NB: No compiler errors or warnings should be generated during build. \
 	dotNetFx40_Client_x86_x64.exe\
 Step 0 is necessary only if Microsoft Visual C++ 2010 Express is not already installed on the machine in question.\
 \
-1) Select a location for the executable files. Copy \'93GripMMI (version)\\GripExecutables\'94 from the development installation to that location.\
-2) Select a location for the Grip Script files. Copy \'93GripMMI (version)\\GripScripts\'94 from the development installation to that location.\
+1) On the development machine, Build the GripMMI solution in \'91Release\'92 mode.\
+2) Select a location for the executable files. Copy \'93GripMMI (version)\\GripExecutables\'94 from the development installation to that location.\
+3) Select a location for the Grip Script files. Copy \'93GripMMI (version)\\GripScripts\'94 from the development installation to that location.\
 \
 NB The script files are read-only for the MMI program and so they could be installed in the same location as the executable files. However, one might conceivably wish to change the scripts without changing the executables, for example, to run a sim with scripts other than the flight scripts. You might therefore wish to install the script files in a location that has read/write access.\
 \
-3) Select a location for the real-time data packet cache files. \
+4) Select a location for the real-time data packet cache files. \
 \
-4) Edit GripExecutables\\RunGripMMI.bat to: \
+5) Edit GripExecutables\\RunGripMMI.bat to: \
 \
 	1) set the full path to the cache file directory (CacheDir), \
 	2) set the script file directory (ScriptDir) and \
