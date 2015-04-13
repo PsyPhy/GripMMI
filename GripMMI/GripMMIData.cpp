@@ -63,7 +63,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	int bytes_read;
 	int return_code;
 	static unsigned short previousTMCounter = 0;
-	unsigned short bit = 0;
+	unsigned long bit = 0;
 	int retry_count;
 
 	EPMTelemetryPacket		packet;
@@ -347,7 +347,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 	int bytes_read;
 	int return_code;
 	static unsigned short previousTMCounter = 0;
-	unsigned short bit = 0;
+	unsigned long bit = 0;
 	int retry_count;
 
 	EPMTelemetryPacket packet;
