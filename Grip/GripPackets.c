@@ -371,10 +371,10 @@ void InsertGripRealtimeDataInfo( EPMTelemetryPacket *epm_packet, const GripRealt
 		// Insert the analog data.
 		ptr += insert_ulong( ptr, realtime_packet->dataSlice[slice].analogTick );
 		for ( sensor = 0; sensor < 2; sensor++ ) {
-			for ( i = X; i <=Z; i++ ) insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].force[i] * 100.0));
-			for ( i = X; i <=Z; i++ ) insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].torque[i] * 1000.0));
+			for ( i = X; i <= Z; i++ ) ptr += insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].force[i] * 100.0));
+			for ( i = X; i <= Z; i++ ) ptr += insert_short( ptr, (short) (realtime_packet->dataSlice[slice].ft[sensor].torque[i] * 1000.0));
 		}
-		for ( i = X; i <= Z; i++ ) insert_long( ptr, (long) (realtime_packet->dataSlice[slice].acceleration[i] * 1000.0 * 9.8));
+		for ( i = X; i <= Z; i++ ) ptr += insert_long( ptr, (long) (realtime_packet->dataSlice[slice].acceleration[i] * 1000.0 * 9.8));
 	}
 }
 

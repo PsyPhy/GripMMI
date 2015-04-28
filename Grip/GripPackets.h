@@ -8,7 +8,6 @@
 // The port number used to access EPM servers.
 // EPM-OHB-SP-0005 says:
 //  The Port number for all EPM LAN connections is 2345.
-
 #define EPM_DEFAULT_PORT "2345"
 
 // Per EPM-OHB-SP-0005, packets shall not exceed 1412 octets.
@@ -16,7 +15,7 @@
 #define EPM_TRANSFER_FRAME_HEADER_LENGTH	12
 #define EPM_TELEMETRY_HEADER_LENGTH			30
 
-// Definitions for Transfer Frame headers.
+// Definitions for Transfer Frame headers, per EPM-OHB-SP-0005.
 #define EPM_TRANSFER_FRAME_SYNC_VALUE	0xAA49DBFF
 #define TRANSFER_FRAME_CONNECT			0x0001
 #define TRANSFER_FRAME_ALIVE			0x0002
@@ -92,7 +91,8 @@ typedef struct {
 		Vector3	torque;
 	} ft[2];
 	Vector3			acceleration;
-	// Add a timestamp as best we can.
+	// Each data sample occurs at a separate instant in time, but the timestamp is not
+	//  transmitted with each sample. We add a timestamp as best we can.
 	long double bestGuessPoseTimestamp;
 	long double bestGuessAnalogTimestamp;
 } ManipulandumPacket;
@@ -195,7 +195,9 @@ static int alivePacketLengthInWords = 6;
 // The TM Identifier is 0x0301 for DATA_BULK_HK per DEX-ICD-00383-QS.
 // The total number of words is 114 / 2 = 57 for the GRIP packet, 6 for the Transfer Frame header, 
 //  15 for the Telemetry header and 1 for the checksum = 79 words = 158 bytes.
-// THIS IS WRONG AS IT IGNORES CERTAIN HOUSEKEEPING VALUES.
+// THIS IS ACTUALLY WRONG because it ignores certain housekeeping packets that are actually appended to the 
+//  end of the packet, but since that was not given in the documentation provided by Qinetiq/OHB/CADMOS, I am 
+//  not going to try to reverse engineer the details. The size of 158 works fine for the GripMMI.
 #define BULK_HK_BYTES	158
 static EPMTelemetryHeaderInfo hkHeader = { 
 	EPM_TRANSFER_FRAME_SYNC_VALUE, SPARE, GRIP_MMI_SOFTWARE_UNIT_ID, TRANSFER_FRAME_TELEMETRY, SPARE, BULK_HK_BYTES,
@@ -203,7 +205,7 @@ static EPMTelemetryHeaderInfo hkHeader = {
 static int hkPacketLengthInBytes = BULK_HK_BYTES;
 
 // Define a static packet header that is representative of a realtime data packet.
-// Not all of the members are properly filled. Just the ones important for the GripMMMI.
+// Not all of the members are properly filled. Just the ones important for the GripMMI.
 // The TM Identifier is 0x1001 for DATA_RT_SCIENCE per DEX-ICD-00383-QS.
 // The total number of words is 758 / 2 = 379 for the GRIP packet, 6 for the Transfer Frame header,
 //  15 for the EPM header and 1 for the checksum = 401 words = 802 bytes.
