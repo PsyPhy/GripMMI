@@ -22,6 +22,10 @@
 #define MAX_FRAMES (12*60*60*20) // Max number of frames (data slices)
 #define CODA_MARKERS 20
 #define	CODA_UNITS	2
+
+#define N_VERTICAL_TARGETS		13
+#define N_HORIZONTAL_TARGETS	10
+
 // Buffers to hold the data.
 extern Vector3 ManipulandumRotations[MAX_FRAMES];
 extern Vector3 ManipulandumPosition[MAX_FRAMES];
