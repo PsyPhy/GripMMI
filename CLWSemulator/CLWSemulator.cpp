@@ -32,9 +32,8 @@ PCSTR EPMport = EPM_DEFAULT_PORT;
 
 // Path to a file containing a mixture of different packet types.
 // These packets were stored during a real (albeit abbreviated) Grip sesion.
-// For the moment, this path is hard coded. Perhaps there should be a way
-//  to change it, but as this program is not a deliverable, it is not high priority.
-char *PacketSourceFile = ".\\GripPacketsForSimulator.gpk";
+// This is the default path to the file, but it can be changed on the command line.
+const char *DefaultPacketSourceFile = ".\\GripPacketsForSimulator.gpk";
 
 #ifdef _DEBUG
 	bool _debug = true;
@@ -69,7 +68,7 @@ void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 
 // This is the routine that sends out packets that were pre-recorded.
 // Takes as its only input the socket for outputing packets.
-int sendRecordedPackets ( SOCKET socket ) {
+int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 
 	// Count the total numbe of packets sent on the socket.
 	static int packetCount = 0;
@@ -403,6 +402,10 @@ int sendConstructedPackets ( SOCKET socket ) {
 	}
 }
 
+// This is the main routine of the executable.
+// It parses the command line, initializes a socket to create a CLWS-like server 
+// and calls the routine to output packets according to the command line options.
+
 int _tmain(int argc, char* argv[])
 {
 
@@ -416,12 +419,14 @@ int _tmain(int argc, char* argv[])
 	struct addrinfo *result = NULL;
 	struct addrinfo hints;
 
+	// Two possible sources of packets.
 	enum { RECORDED_PACKETS, CONSTRUCTED_PACKETS } packet_source = RECORDED_PACKETS;
-	int arg;
+	// Path to file containing pre-recorded packets. Not used in 'constructed' mode.
+	const char *packet_source_filename = DefaultPacketSourceFile;
+	// Keep track of how many packets get sent out.
+	int packet_count;
 
-	int packetCount;
-
-	// A place to store packets received from the client.
+	// A place to store raw command packets received from the client.
 	EPMTelemetryPacket inputPacket;
 	// A place to store the pertinent information from a client packet in usable form.
 	EPMTransferFrameHeaderInfo transferFrameInfo;
@@ -433,14 +438,20 @@ int _tmain(int argc, char* argv[])
 	fprintf( stderr, "\n" );
 
 	// Parse command line.
-	for ( arg = 1; arg < argc; arg++ ) {
-		// Playback previously recorded packets.
-		if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
-		// Construct simulated packets.
+	for ( int arg = 1; arg < argc; arg++ ) {
 		if ( !strcmp( argv[arg], "-constructed" ) ) packet_source = CONSTRUCTED_PACKETS;
+		// Playback previously recorded packets.
+		else if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
+		// Construct simulated packets.
+		else packet_source_filename = argv[arg];
 	}	
-	if ( packet_source == RECORDED_PACKETS ) fprintf( stderr, "Sending pre-recorded packets.\n\n" );
-	else if ( packet_source == CONSTRUCTED_PACKETS ) fprintf( stderr, "Constructing simulated packets.\n\n" );
+	if ( packet_source == RECORDED_PACKETS ) {
+		fprintf( stderr, "Sending pre-recorded packets.\n" );
+		fprintf( stderr, "Packet source file: %s\n\n", packet_source_filename );
+	}
+	else if ( packet_source == CONSTRUCTED_PACKETS ) {
+		fprintf( stderr, "Constructing simulated packets.\n\n" );
+	}
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -465,7 +476,7 @@ int _tmain(int argc, char* argv[])
 	}
 	else if ( _debug ) fprintf( stderr, "getaddrinfo() OK.\n" );
 
-	// Create a SOCKET for connecting to server
+	// Create a SOCKET for connecting to client
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (ListenSocket == INVALID_SOCKET) {
 		printf("socket failed with error: %ld\n", WSAGetLastError());
@@ -492,6 +503,7 @@ int _tmain(int argc, char* argv[])
 	// Enter an infinite loop that listens for connections,
 	//  outputs packets as long as the connection is valid and
 	//  then exits. 
+
 	// The only way out is to kill the program (<ctrl-c>).
 	// NB We effectively only allow one client at a time.
 
@@ -549,16 +561,16 @@ int _tmain(int argc, char* argv[])
 
 		}while ( iResult > 0 );
 
-		// Send out recorded or artifically constructed packets, depending on a flag.
+		// Send out recorded or artifically constructed packets, depending on a flag set by the command line.
 		// The total number of packets sent so far is stored in local variable packetCount.
 		switch ( packet_source ) {
 
 		case RECORDED_PACKETS:
-			packetCount = sendRecordedPackets( ClientSocket );
+			packet_count = sendRecordedPackets( ClientSocket, packet_source_filename );
 			break;
 
 		case CONSTRUCTED_PACKETS:
-			packetCount = sendConstructedPackets( ClientSocket );
+			packet_count = sendConstructedPackets( ClientSocket );
 			break;
 
 		}
@@ -573,7 +585,7 @@ int _tmain(int argc, char* argv[])
 		}
 		else if ( _debug ) fprintf( stderr, "shutdown() OK n" );
 
-		fprintf( stderr, "  Total packets sent: %d\n\n", packetCount );
+		fprintf( stderr, "  Total packets sent: %d\n\n", packet_count );
 
 	}
 
