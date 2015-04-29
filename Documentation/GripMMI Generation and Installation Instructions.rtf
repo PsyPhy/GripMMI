@@ -49,6 +49,8 @@ NB: No compiler errors or warnings should be generated during build. \
 4) Execute the GripMMI in simulation mode by double clicking RunGripMMI.bat.\
    This will run the CLWS emulator to send out recorded packet to the Grip MMI.\
    It will use the directory \'93GripMMI (version)\\GripCache\'94 to store packet files.\
+   \
+Note that you can edit RunGripMMI.bat to change the source file for the pre-recorded packet files or to change to \'91constructed\'92 mode. The module GripGroundMonitorClient stores all packets received from the CLWS server or the emulator in the cache directory with a filename of the form GripPacketsYYYY.MM.DD.any.gpk. Any of these files can be substituted for the default source file for the pre-recorded packets. Thus, one can use the packets recorded from any session using the real GRIP hardware to provide packets for further testing using the emulator.\
 \
 \
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720
@@ -72,11 +74,14 @@ NB The script files are read-only for the MMI program and so they could be insta
 \
 5) Edit GripExecutables\\RunGripMMI.bat to: \
 \
-	1) set the full path to the cache file directory (CacheDir), \
-	2) set the script file directory (ScriptDir) and \
-	3) to inhibit the execution of the CLWSeumulator.\
-	4) to select the alternate EPM Software Unit ID (if desired).\
+	1) to enable or inhibit the execution of the CLWS emulator.\
+	2) to set the IP address or host name of the CLWS server (or emulator).\
+	2) set the full path to the cache file directory (CacheDir), \
+	3) set the location of the GRIP Scirpts (ScriptDir) and \
+	4) to select the alternate EPM Software Unit ID  if running two clients off of the same CLWS server.\
 \
-Execute RunGripMMI.bat. This will launch 2 processes: GripGroundMonitorClient, which listens for packets from the CLWS server and stores them in the cache files and GripMMI which displays the cached data on the screen.\
+6) Execute RunGripMMI.bat. \
+\
+This will launch 2 processes: GripGroundMonitorClient.exe, which listens for packets from the CLWS server and stores them in the cache files and GripMMI.exe which displays the cached data on the screen. If configured to use the CLWS emulator for testing purposed, it will also launch CLWSemulator.exe.\
 \
 }
