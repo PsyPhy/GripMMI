@@ -28,7 +28,8 @@ PCSTR EPMport = EPM_DEFAULT_PORT;
 EPMTelemetryPacket epmPacket;
 EPMTelemetryHeaderInfo epmPacketHeaderInfo;
 
-// Buffers to hold the path to the packet caches.
+// Buffers to hold the paths to the various packet caches.
+// These will be initialized according to today's date, etc.
 char rtPacketCacheFilePath[1024];
 char hkPacketCacheFilePath[1024];
 char anyPacketCacheFilePath[1024];
@@ -38,8 +39,11 @@ unsigned long rtCount = 0;
 unsigned long hkCount = 0;
 unsigned long anyCount = 0;
 
-
-void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename ) {
+// Output the contents of a packet to a cache file in binary format, using low level write so that 
+//  another process can read the same file without colliding.
+// Parameters include a pilnter to the packer, the length of the packet in bytes and the 
+//  filename (includding path, if desired) of the cache file to which we wish to write the packet.
+void outputPacket( const EPMTelemetryPacket *packet, const int n_bytes, const char *filename ) {
 
 	int		fid;
 	errno_t	return_code;
@@ -63,6 +67,15 @@ void outputPacket( EPMTelemetryPacket *packet, int n_bytes, const char *filename
 
 }
 
+// Packets are written to three different cache files, one for GRIP housekeeping (HK) packets only,
+// one for GRIP real-time data (RT) packets only, and one for all EPM packets, including HK and RT 
+// i.e. HK and RT packets are written to two different cache files.
+// These routines simplify the call for each specific packet type, because the length of HK and RT 
+// packets are known. Packets of unknown type are stored with the maximum EPM packet length.
+// These routines rely on global variables that have been previously set up to define the path and 
+// filenames for each of the three cache files, while global counters keep track of how many packets 
+// are written to each cache file.
+
 void outputHK ( EPMTelemetryPacket *packet ) {
 	outputPacket( packet, hkPacketLengthInBytes, hkPacketCacheFilePath  );
 	hkCount++;
@@ -76,7 +89,8 @@ void outputANY ( EPMTelemetryPacket *packet ) {
 	anyCount++;
 }
 
-int __cdecl main(int argc, char **argv) 
+// The main routine, taking arguments from the command line.
+int __cdecl main(int argc, const char **argv) 
 {
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
@@ -90,8 +104,8 @@ int __cdecl main(int argc, char **argv)
 	bool	use_alt_id = false;
 	int		software_unit_id = GRIP_MMI_SOFTWARE_UNIT_ID;
 
-	char *packetCacheFilenameRoot = NULL;
-	char *server_name = NULL;
+	const char *packetCacheFilenameRoot = NULL;
+	const char *server_name = NULL;
 
 	fprintf( stderr, "GripGroundMonitorClient started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
 	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
@@ -101,18 +115,29 @@ int __cdecl main(int argc, char **argv)
 	// Parse the command line.
 	for ( int arg = 1; arg < argc; arg ++ ) {
 
+		// The CLWS server can only talk to one instance with a given EPM software unit ID.
+		// The command line argument -alt causes an alternate EPM software unit ID to be used,
+		//  allowing two clients to connect to the same CLWS server.
 		if ( !strcmp( argv[arg], "-alt" )) use_alt_id = true;
+		// By default, a copy of all packets are placed in the cache file *.any.gpk.
+		// This action can be inhibitedw with the -only flag, causing only HK and RT packets
+		//  to be written to their respective cahce files.
 		else if ( !strcmp( argv[arg], "-only" )) cache_all = false;
+		// The first argument that is encountered that is not a -flag is the path to the cache file directory.
 		else if ( packetCacheFilenameRoot == NULL ) {
 			packetCacheFilenameRoot = argv[arg];
 			printf( "Using command-line packet output root: %s\n", packetCacheFilenameRoot );
 		}
+		// The second argument that is not a -flag is the host name or IP address of the CLWS server host.
 		else if ( server_name == NULL ) {
 			server_name = argv[arg];
 			printf( "Using command-line server name: %s\n", server_name );
 		}
+		// More than 2 arguments that are not -alt or -only is  an error condition.
 		else printf( "Too many command line arguments (%s)\n", argv[arg] );
 	}
+	// Set default values if command line arguments are not given.
+	// Indicate the choices to stdout.
 	if (packetCacheFilenameRoot == NULL ) {
 		packetCacheFilenameRoot = ".\\";
 		printf( "Using default output root: %s\n", packetCacheFilenameRoot );
@@ -140,12 +165,11 @@ int __cdecl main(int argc, char **argv)
         return 102;
     }
 
+    // Resolve the server address and port
     ZeroMemory( &hints, sizeof(hints) );
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-
-    // Resolve the server address and port
     iResult = getaddrinfo( server_name, EPMport, &hints, &result );
     if ( iResult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -153,7 +177,7 @@ int __cdecl main(int argc, char **argv)
         return 103;
     }
 
-    // Attempt to connect to an address until one succeeds
+    // Attempt to connect to the CLWS server one succeeds
 	printf( "Waiting for connection with host %s on port %s.\n", server_name, EPMport );
 	printf( "Will wait until connection achieved or <ctrl-C>.\n"  );
 
@@ -186,9 +210,10 @@ int __cdecl main(int argc, char **argv)
 		else printf( "." );
 	}
 
-	// We have a connection. 
+	// We have a connection. Send the EPM 'connect' command to start flow of packets.
+	// The packet connectPacket is a global define by GripPackets.h.
 	printf( "\nConnection established with server.\n" );
-	printf( "Sending Connect command.\n" );
+	printf( "Sending EPM Connect command.\n" );
 	InsertEPMTransferFrameHeaderInfo( &epmPacket, &connectPacket );
 	iResult = send( ConnectSocket, epmPacket.buffer, connectPacketLengthInBytes, 0 );
 	// If we get a socket error it is probably because the client has closed the connection.
@@ -205,7 +230,7 @@ int __cdecl main(int argc, char **argv)
 
 	// We have a connection and are ready to start receiving packets.
 	// Create the file names that will hold the packets. 
-	// The filenames are based on today's date.
+	// The filenames are based on today's date and the specified path to the cache directory.
 	CreateGripPacketCacheFilename( hkPacketCacheFilePath, sizeof( hkPacketCacheFilePath ), GRIP_HK_BULK_PACKET,    packetCacheFilenameRoot );
 	fprintf( stderr, "Output HK packets to: %s\n", hkPacketCacheFilePath );
 	CreateGripPacketCacheFilename( rtPacketCacheFilePath, sizeof( rtPacketCacheFilePath ), GRIP_RT_SCIENCE_PACKET, packetCacheFilenameRoot );
@@ -230,10 +255,11 @@ int __cdecl main(int argc, char **argv)
 		}
         else if ( iResult > 0 ) {
 
-			// Collect all packets, according to the command line flag.
+			// Unless inhibited by the -only command line flag, write all packets 
+			//  to the .any.gpk cache file, regardless of type.
 			if ( cache_all ) outputANY( &epmPacket );
 			
-			// Get the EPM header info and process the packet according to the type.
+			// Now get the EPM header info and process the packet according to the type.
 			// First check for the EPM sync words and discard if not valid.
 			ExtractEPMTelemetryHeaderInfo( &epmPacketHeaderInfo, &epmPacket );
 			if ( epmPacketHeaderInfo.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE ) {
@@ -297,6 +323,7 @@ int __cdecl main(int argc, char **argv)
 		}
 
 		// Every second or so we should send an Alive command to the server.
+		// The alive packet is defined in GripPackets.h.
 		_ftime32_s( &utctime );
 		if ( utctime.time > previous_alive_time ) {
 			previous_alive_time = utctime.time;

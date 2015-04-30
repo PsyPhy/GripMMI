@@ -32,7 +32,7 @@ GripHealthAndStatusInfo		hkInfo;
 GripRealtimeDataInfo		rtInfo;
 
 // Default path for packet storage is the current directory.
-char *packetCacheFilenameRoot = ".\\GripPackets";
+const char *packetCacheFilenameRoot = ".\\GripPackets";
 
 // Buffers to hold the path to the packet caches.
 char rtPacketCacheFilePath[1024];
