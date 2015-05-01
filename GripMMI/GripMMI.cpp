@@ -40,28 +40,45 @@ int main(array<System::String ^> ^args)
 	if ( args->Length > 1 ) scriptRoot = args[1];	// Where to find the script library.
 	if ( args->Length > 2 ) TimebaseOffset = Convert::ToInt32(args[2]); // Correct the time base. Default is 16 to correct to UTC. 0 is GPS time.
 	
-	// First, a lot of code to convert a String to the (char *)
-	//  values that the script crawler code needs.
+	// First, a lot of code to convert the Strings that we get from the command line
+	// to the (char *) values that the legacy script crawler code needs.
+
 	pin_ptr<const wchar_t> pinchars = PtrToStringChars( scriptRoot );
 	size_t converted_chars;
 	size_t  size_in_bytes;
 	errno_t err = 0;
-	// Create scriptDirectory
+
+	// Create a classical character array with the path to the scriptDirectory.
 	converted_chars = 0;
 	size_in_bytes = ((scriptRoot->Length + 1) * 2);
 	err = wcstombs_s(&converted_chars, 
 			scriptDirectory, sizeof( scriptDirectory ),
-			pinchars, size_in_bytes);
+			pinchars, _TRUNCATE);
+	if ( strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - 2 ) {
+		String^ message = 
+			"Invalid Script Directory Path   \nString is too long?\n\n" + scriptRoot + "\n\nExiting program.";
+		MessageBox::Show( message, "Fatal Error", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+		return 0;
+	}
+
 	// Create pictureFilenamePrefix
+	// Pictures are stored in the "pictures" subdirectory to the script directory.
+	if ( strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - sizeof( "pictures\\" ) ) {
+		String^ message = 
+			"Invalid Picture Directory Path   \nString is too long?\n\n" + scriptRoot + "pictures\\ \n\nExiting program.";
+		MessageBox::Show( message, "Fatal Error", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+		return 0;
+	}
 	strcpy( pictureFilenamePrefix, scriptDirectory );
 	strcat( pictureFilenamePrefix, "pictures\\" );
+
 	// Create packetBufferPathRoot
 	pinchars = PtrToStringChars( packetRoot );
 	converted_chars = 0;
 	size_in_bytes = ((packetRoot->Length + 1) * 2);
 	err = wcstombs_s(&converted_chars, 
 			packetBufferPathRoot, sizeof( packetBufferPathRoot ),
-			pinchars, size_in_bytes);
+			pinchars, _TRUNCATE);
 
 	// Before we do anything else, check if packets are available in the
 	//  cache directory. If not, there is nothing to display.

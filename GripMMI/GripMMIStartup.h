@@ -34,6 +34,7 @@ namespace GripMMI {
 		{
 			InitializeComponent();
 			versionText->Text = gcnew String( version_string );
+			DisplayCachePaths();
 			CreateRefreshTimer( RETRY_TIMEOUT );
 			StartRefreshTimer();
 		}
@@ -52,11 +53,17 @@ namespace GripMMI {
 	private: System::Windows::Forms::PictureBox^	LogoPictureBox;
 	private: System::Windows::Forms::Button^		startupCancelButton;
 	private: System::Windows::Forms::Label^			versionText;
-	private: System::Windows::Forms::PictureBox^	pictureBox1;
+
 	private: System::Windows::Forms::Label^			label1;
+	private: System::Windows::Forms::Label^  rtCacheFilenameText;
+	private: System::Windows::Forms::Label^  hkCacheFilenameText;
+
+
+
 
 	protected: 
 		static Timer^ timer;
+		void DisplayCachePaths( void );
 		void CreateRefreshTimer( int interval );
 		void StartRefreshTimer( void );
 		void StopRefreshTimer( void );
@@ -80,10 +87,10 @@ namespace GripMMI {
 			this->LogoPictureBox = (gcnew System::Windows::Forms::PictureBox());
 			this->startupCancelButton = (gcnew System::Windows::Forms::Button());
 			this->versionText = (gcnew System::Windows::Forms::Label());
-			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
 			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->rtCacheFilenameText = (gcnew System::Windows::Forms::Label());
+			this->hkCacheFilenameText = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->BeginInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// LogoPictureBox
@@ -91,7 +98,7 @@ namespace GripMMI {
 			this->LogoPictureBox->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"LogoPictureBox.Image")));
 			this->LogoPictureBox->Location = System::Drawing::Point(2, 2);
 			this->LogoPictureBox->Name = L"LogoPictureBox";
-			this->LogoPictureBox->Size = System::Drawing::Size(132, 132);
+			this->LogoPictureBox->Size = System::Drawing::Size(144, 144);
 			this->LogoPictureBox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->LogoPictureBox->TabIndex = 8;
 			this->LogoPictureBox->TabStop = false;
@@ -101,53 +108,66 @@ namespace GripMMI {
 			this->startupCancelButton->DialogResult = System::Windows::Forms::DialogResult::Cancel;
 			this->startupCancelButton->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, 
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-			this->startupCancelButton->Location = System::Drawing::Point(177, 108);
+			this->startupCancelButton->Location = System::Drawing::Point(296, 107);
 			this->startupCancelButton->Name = L"startupCancelButton";
 			this->startupCancelButton->Size = System::Drawing::Size(72, 26);
 			this->startupCancelButton->TabIndex = 7;
 			this->startupCancelButton->Text = L"Cancel";
 			this->startupCancelButton->UseVisualStyleBackColor = true;
+			this->startupCancelButton->Click += gcnew System::EventHandler(this, &GripMMIStartup::startupCancelButton_Click);
 			// 
 			// versionText
 			// 
 			this->versionText->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->versionText->Location = System::Drawing::Point(140, 9);
+			this->versionText->Location = System::Drawing::Point(262, 15);
 			this->versionText->Name = L"versionText";
 			this->versionText->Size = System::Drawing::Size(140, 13);
 			this->versionText->TabIndex = 9;
 			this->versionText->Text = L"GripMMI V \?.\?";
 			this->versionText->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
 			// 
-			// pictureBox1
-			// 
-			this->pictureBox1->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"pictureBox1.Image")));
-			this->pictureBox1->InitialImage = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"pictureBox1.InitialImage")));
-			this->pictureBox1->Location = System::Drawing::Point(177, 48);
-			this->pictureBox1->Name = L"pictureBox1";
-			this->pictureBox1->Size = System::Drawing::Size(71, 54);
-			this->pictureBox1->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
-			this->pictureBox1->TabIndex = 10;
-			this->pictureBox1->TabStop = false;
-			// 
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(152, 29);
+			this->label1->Location = System::Drawing::Point(152, 41);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(111, 13);
+			this->label1->Size = System::Drawing::Size(114, 13);
 			this->label1->TabIndex = 11;
-			this->label1->Text = L"Waiting for packets ...";
+			this->label1->Text = L"Waiting for packets at:";
 			this->label1->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
+			// 
+			// rtCacheFilenameText
+			// 
+			this->rtCacheFilenameText->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, 
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->rtCacheFilenameText->Location = System::Drawing::Point(169, 54);
+			this->rtCacheFilenameText->Name = L"rtCacheFilenameText";
+			this->rtCacheFilenameText->Size = System::Drawing::Size(327, 16);
+			this->rtCacheFilenameText->TabIndex = 12;
+			this->rtCacheFilenameText->Text = L"reatime cache";
+			this->rtCacheFilenameText->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
+			// 
+			// hkCacheFilenameText
+			// 
+			this->hkCacheFilenameText->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, 
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->hkCacheFilenameText->Location = System::Drawing::Point(169, 70);
+			this->hkCacheFilenameText->Name = L"hkCacheFilenameText";
+			this->hkCacheFilenameText->Size = System::Drawing::Size(327, 15);
+			this->hkCacheFilenameText->TabIndex = 13;
+			this->hkCacheFilenameText->Text = L"housekeeping cache";
+			this->hkCacheFilenameText->TextAlign = System::Drawing::ContentAlignment::MiddleCenter;
 			// 
 			// GripMMIStartup
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Window;
-			this->ClientSize = System::Drawing::Size(300, 138);
+			this->ClientSize = System::Drawing::Size(509, 154);
+			this->Controls->Add(this->hkCacheFilenameText);
+			this->Controls->Add(this->rtCacheFilenameText);
 			this->Controls->Add(this->label1);
-			this->Controls->Add(this->pictureBox1);
 			this->Controls->Add(this->versionText);
 			this->Controls->Add(this->LogoPictureBox);
 			this->Controls->Add(this->startupCancelButton);
@@ -155,8 +175,8 @@ namespace GripMMI {
 			this->MinimizeBox = false;
 			this->Name = L"GripMMIStartup";
 			this->Text = L"GripMMI Startup";
+			this->Load += gcnew System::EventHandler(this, &GripMMIStartup::GripMMIStartup_Load);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->EndInit();
-			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -164,5 +184,11 @@ namespace GripMMI {
 #pragma endregion
 
 
+private: System::Void startupCancelButton_Click(System::Object^  sender, System::EventArgs^  e) {
+		 }
+private: System::Void pictureBox1_Click(System::Object^  sender, System::EventArgs^  e) {
+		 }
+private: System::Void GripMMIStartup_Load(System::Object^  sender, System::EventArgs^  e) {
+		 }
 };
 }
