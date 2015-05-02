@@ -12,7 +12,7 @@
 
 // My original code in VC 6 used static arrays with known dimensions, and an number of (char *) objects.
 // VC 2010 doesn't allow 'mixed' types in Forms objects. So here I define a number of global variables to 
-//  replace the arrays that I was using previously. It's ugly, but I don't have time to convert it all.
+//  replace the arrays that I was using previously. It's ugly, but this was an unexpected 'feature' of VC2010.
 
 #include "StdAfx.h"
 #include "..\Grip\DexAnalogMixin.h"
@@ -52,6 +52,8 @@ char *soundBar[16] = {
 char *massDecoder[4] = {".", "M", "S", "L" };
 
 // Data buffers
+// Data are read from the packet caches and then written into these buffers.
+// They can then be plotted on the screen.
 Vector3 ManipulandumRotations[MAX_FRAMES];
 Vector3 ManipulandumPosition[MAX_FRAMES];
 Vector3 Acceleration[MAX_FRAMES];

@@ -39,11 +39,15 @@ REM Directory holding cache files
 REM
 
 REM The client program will store packets received from the CLWS in this directory.
+REM Note that you should include a final backslash.
 set CacheDir=..\GripCache\
 
 REM
 REM Directory holding the Grip scripts (.dex)
 REM
+
+REM The client program will look for the GRIP scripts here.
+REM Again, you should include a terminating backslash.
 set ScriptDir=..\GripScripts\
 
 REM
@@ -73,7 +77,6 @@ REM **************************************************************************
 REM Normally you will not need to edit below this line, 
 
 REM Root of the file names for the cache files
-set TIMESTAMP=
 set CacheRoot=GripPackets.%date:~10,4%.%date:~4,2%.%date:~7,2%
 
 echo %cd%

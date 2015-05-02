@@ -28,8 +28,10 @@ using namespace GripMMI;
 int main(array<System::String ^> ^args)
 {
 	// Default locations for packet buffer file and the script tree.
-	String^ scriptRoot = "scripts\\";
-	String^ packetRoot = "GripPackets";
+	String^ scriptRoot = gcnew String( "scripts\\" );
+	String^ packetRoot = gcnew String( "GripPackets" );
+	char *picture_subdirectory = "pictures\\";
+	String^ pictureSubdirectory = gcnew String( picture_subdirectory );
 
 	// Enabling Windows XP visual effects before any controls are created
 	Application::EnableVisualStyles();
@@ -43,18 +45,11 @@ int main(array<System::String ^> ^args)
 	// First, a lot of code to convert the Strings that we get from the command line
 	// to the (char *) values that the legacy script crawler code needs.
 
-	pin_ptr<const wchar_t> pinchars = PtrToStringChars( scriptRoot );
-	size_t converted_chars;
-	size_t  size_in_bytes;
-	errno_t err = 0;
-
 	// Create a classical character array with the path to the scriptDirectory.
-	converted_chars = 0;
-	size_in_bytes = ((scriptRoot->Length + 1) * 2);
-	err = wcstombs_s(&converted_chars, 
-			scriptDirectory, sizeof( scriptDirectory ),
-			pinchars, _TRUNCATE);
-	if ( strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - 2 ) {
+	pin_ptr<const wchar_t> pinchars = PtrToStringChars( scriptRoot );
+	errno_t err = 0;
+	err = wcstombs_s( NULL, scriptDirectory, sizeof( scriptDirectory ), pinchars, _TRUNCATE);
+	if ( err || strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - 1 ) {
 		String^ message = 
 			"Invalid Script Directory Path   \nString is too long?\n\n" + scriptRoot + "\n\nExiting program.";
 		MessageBox::Show( message, "Fatal Error", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
@@ -63,9 +58,10 @@ int main(array<System::String ^> ^args)
 
 	// Create pictureFilenamePrefix
 	// Pictures are stored in the "pictures" subdirectory to the script directory.
-	if ( strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - sizeof( "pictures\\" ) ) {
+	char *subdirectory = "picture\\";
+	if ( strlen( scriptDirectory ) >= sizeof( scriptDirectory ) - sizeof( subdirectory ) ) {
 		String^ message = 
-			"Invalid Picture Directory Path   \nString is too long?\n\n" + scriptRoot + "pictures\\ \n\nExiting program.";
+			"Invalid Picture Directory Path   \nString is too long?\n\n" + scriptRoot + pictureSubdirectory + " \n\nExiting program.";
 		MessageBox::Show( message, "Fatal Error", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
 		return 0;
 	}
@@ -74,11 +70,13 @@ int main(array<System::String ^> ^args)
 
 	// Create packetBufferPathRoot
 	pinchars = PtrToStringChars( packetRoot );
-	converted_chars = 0;
-	size_in_bytes = ((packetRoot->Length + 1) * 2);
-	err = wcstombs_s(&converted_chars, 
-			packetBufferPathRoot, sizeof( packetBufferPathRoot ),
-			pinchars, _TRUNCATE);
+	err = wcstombs_s( NULL, packetBufferPathRoot, sizeof( packetBufferPathRoot ), pinchars, _TRUNCATE);
+	if ( err || strlen( packetBufferPathRoot ) >= sizeof( packetBufferPathRoot ) - 1 ) {
+		String^ message = 
+			"Invalid Packet Buffer Root   \nString is too long?\n\n" + packetRoot + "\n\nExiting program.";
+		MessageBox::Show( message, "Fatal Error", MessageBoxButtons::OK, MessageBoxIcon::Exclamation);
+		return 0;
+	}
 
 	// Before we do anything else, check if packets are available in the
 	//  cache directory. If not, there is nothing to display.

@@ -64,7 +64,7 @@ extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for e
 /// <summary>
 /// Strings used to construct the path to various files.
 /// </summary>
-#define MAX_PATHLENGTH	1024
+#define MAX_PATHLENGTH	260	// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx#maxpath
 extern char packetBufferPathRoot[MAX_PATHLENGTH];
 extern char scriptDirectory[MAX_PATHLENGTH];
 extern char pictureFilenamePrefix[MAX_PATHLENGTH];

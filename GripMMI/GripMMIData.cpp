@@ -34,6 +34,10 @@
 
 using namespace GripMMI;
 
+// Path to the cache files for telemetry data.
+// This is initialized at startup and can be modified by a command line parameter.
+char packetBufferPathRoot[MAX_PATHLENGTH] = "";		
+
 // Max times to try to open the cache file before asking user to continue or not.
 #define MAX_OPEN_CACHE_RETRIES	(5)
 // Pause time in milliseconds between file open retries.
