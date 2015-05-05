@@ -18,37 +18,47 @@
 #include "..\Useful\Useful.h"
 #include "..\Useful\fOutputDebugString.h"
 #include "..\Useful\fMessageBox.h"
+
+// We make use of a package of plotting routines that I have had around for decades.
 #include "..\PsyPhy2dGraphicsLib\OglDisplayInterface.h"
 #include "..\PsyPhy2dGraphicsLib\OglDisplay.h"
 #include "..\PsyPhy2dGraphicsLib\Graphics.h"
 #include "..\PsyPhy2dGraphicsLib\Views.h"
 #include "..\PsyPhy2dGraphicsLib\Layouts.h"
+
+// Some of the raw data needs to be processed in the same way as the GRIP hardware does it.
 #include "..\Grip\DexAnalogMixin.h"
 
 using namespace GripMMI;
 
-double lowerPositionLimit;
-double upperPositionLimit;
+// Local constants defining the ranges of various plots.
 
-double lowerRotationLimit;
-double upperRotationLimit;
+double	lowerPositionLimit = -500.0;
+double	upperPositionLimit =  750.0;
 
+double	lowerRotationLimit = -Pi;
+double	upperRotationLimit =  Pi;
+
+double	lowerAccelerationLimit = -2.0;
+double	upperAccelerationLimit =  2.0;
+
+double	lowerVisibilityLimit = -20.0;
+double	upperVisibilityLimit =  100.0;
+
+double	lowerForceLimit = -10.0;
+double	upperForceLimit =  10.0;
+
+double	lowerGripLimit =  -2.0;
+double	upperGripLimit =  40.0;
+
+double	lowerCopLimit =  -0.030;
+double	upperCopLimit =   0.030;
+
+// It is convenient to have an array of position ranges
+//  that are specific to X, Y and Z.
+// These are initialized by GripMMIDesktop::InitializeGraphics().
 double lowerPositionLimitSpecific[3];
 double upperPositionLimitSpecific[3];
-
-double lowerForceLimit;
-double upperForceLimit;
-double lowerGripLimit;
-double upperGripLimit;
-
-double lowerAccelerationLimit;
-double upperAccelerationLimit;
-
-double lowerCopLimit;
-double upperCopLimit;
-
-double lowerVisibilityLimit;
-double upperVisibilityLimit;
 
 // Define the pairs for each phase plot.
 static struct {
@@ -58,22 +68,17 @@ static struct {
 
 static int  atiColorMap[N_FORCE_TRANSDUCERS] = { CYAN, MAGENTA };
 
+//  It is useful to group the phase plots into arrays so that they can be processed in a loop.
 ::View phase_view[PHASEPLOTS];
 ::Display phase_display[PHASEPLOTS];
 
+// Initialize the objects used to plot the data on the screen.
 void GripMMIDesktop::InitializeGraphics( void ) {
 
 	HWND	parent;
 
-	// Set the limits for the various graphs.
-	// For the moment they are constant.
-
-	lowerPositionLimit = -500.0;
-	upperPositionLimit =  750.0;
-
-	lowerRotationLimit = - Pi;
-	upperRotationLimit =   Pi;
-
+	// It is convenient to have an array of position ranges
+	//  that are specific to X, Y and Z.
 	lowerPositionLimitSpecific[X] = -200.0;
 	upperPositionLimitSpecific[X] =  600.0, 
 		
@@ -83,28 +88,18 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 	lowerPositionLimitSpecific[Z] = -800.0;
 	upperPositionLimitSpecific[Z] =    0.0;
 
-	lowerAccelerationLimit = -2.0;
-	upperAccelerationLimit =  2.0;
-
-	lowerVisibilityLimit = -20.0;
-	upperVisibilityLimit =  100.0;
-
-	lowerForceLimit = -10.0;
-	upperForceLimit =  10.0;
-
-	lowerGripLimit =  -2.0;
-	upperGripLimit =  40.0;
-
-	lowerCopLimit =  -0.030;
-	upperCopLimit =   0.030;
-
-				
 	// Each Display will draw into a defined subwindow. 
-	// All this code creates the link between the Display object
-	//  and the corresponding subwindow, setting the size of the 
-	//  Display object to that of the window.
+	// The View code defines 'Displays' as regions of a window and
+	// 'Views' as sub-regions with define limits in user coordinates.
+
+	// All the code below creates the link between the Display object
+	//  and the corresponding Windows pane, setting the size of the 
+	//  Display object to that of the pane.
 	// More of this should be done inside the routine that creates
 	//  the Display, but for historical purposes it is done here.
+
+	// Then the Views are defined with respect to each Display and the 
+	//  limits in user coordinates are initialized. 
 
 	// XY (Frontal plane)
 	parent = static_cast<HWND>(XYPlot->Handle.ToPointer());
@@ -154,27 +149,36 @@ void GripMMIDesktop::InitializeGraphics( void ) {
 	DisplayInit( stripchart_display );
 	Erase( stripchart_display );
 
-	// Create an array of Views that will be used to plot data in stripchart form.
+	// Create a Layout (an array of Views) that will be used to plot data in stripchart form.
 	stripchart_layout = CreateLayout( stripchart_display, STRIPCHARTS, 1 );
 	LayoutSetDisplayEdgesRelative( stripchart_layout, 0.0, 0.065, 1.0, 1.0 );
 	visibility_view = CreateView( stripchart_display );
 	ViewSetDisplayEdgesRelative( visibility_view, 0.005, 0.0, 0.995, 0.06 );
 
-	// Create a view for displaying detailed visibility information.
+	// Create a specific view for displaying detailed visibility information.
+	// It is not part of the stripchart Layout because I want it to be smaller in height
+	//  than the rest of the stripcharts.
 	detailed_visibility_layout = CreateLayout( stripchart_display, 4, 1 );
 	LayoutSetDisplayEdgesRelative( detailed_visibility_layout, 0.0, 0.065, 1.0, 1.0 );
 
 }
 
+// The GUI has a scroll bar allowing one to look back at different parts of the data and
+// a slider that determines the time span of the data window. Here we determine the time span 
+// of the available data, set the limits on the scroll bar accordingly, and show the limits
+// in clock format under the scroll bar.
 void GripMMIDesktop::AdjustScrollSpan( void ) {
-	double span = windowSpanSeconds[spanSelector->Value];
 	double min, max;
 	int since_midnight, hour, minute, second;
 	int day_last, day_first;
 	char label[32], modifier[32];
 	unsigned long	i;
 
+	// The time span of data to plot is determined by the slider.
+	double span = windowSpanSeconds[spanSelector->Value];
+
 	// Find the time window of the available data packets.
+	// The global array RealMarkerTime[] has been filled previously.
 	min = 0.0;
 	for ( i = 0; i < nFrames; i++ ) {
 		if ( RealMarkerTime[i] != MISSING_DOUBLE ) {
@@ -204,9 +208,8 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	if ( bottom >= floor( max ) ) bottom = floor( max );
 	scrollBar->Maximum = top;
 	scrollBar->Minimum = bottom;
-//	fMessageBox( MB_OK, "AdjustScrollSpan()", "span:    %10.0f\nmin:    %10.0f\nmax:    %10.0f\nchange: %10d\nbottom: %10d\ntop:    %10d\nsbmin:   %10d\nsbval:  %10d\nsbmax:  %10d", 
-//		span, min, max, scrollBar->LargeChange, top, bottom, scrollBar->Minimum, scrollBar->Value, scrollBar->Maximum );
 
+	// Label the two ends of the scroll bar.
 	day_last = (int) ceil(( max + TimebaseOffset )) / (24 * 60 * 60);
 	since_midnight = ((int) ceil( max ) + TimebaseOffset ) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
@@ -225,6 +228,9 @@ void GripMMIDesktop::AdjustScrollSpan( void ) {
 	sprintf( label, "%02d:%02d:%02d %s", hour, minute, second, modifier  );
 	earliestTextBox->Text = gcnew String( label );
 }
+
+// When the display is 'live' we want to be able to automatically position the scroll bar 
+// so as to display the most recent data.
 void GripMMIDesktop::MoveToLatest( void ) {
 	double latest;
 	for ( int i = nFrames - 1; i >= 0; i-- ) {
@@ -233,11 +239,12 @@ void GripMMIDesktop::MoveToLatest( void ) {
 			break;
 		}
 	}
-//	fMessageBox( MB_OK, "MoveToLatest()", "%d %d %d", scrollBar->Minimum, (int) ceil( latest ), scrollBar->Maximum );
 	scrollBar->Value = ceil( latest );
 }
 
-
+// Here we do the actual work of plotting the strip charts and phase plots.
+// It is assumed that the global data arrays have been filled. The time span
+// of the plots is determined by the scroll bar and span slider.
 void GripMMIDesktop::RefreshGraphics( void ) {
 		
 	int since_midnight, hour, minute, second;
@@ -252,11 +259,12 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 	DisplayActivate( stripchart_display );
 	Erase( stripchart_display );
 
-	// Determine the time window based on the scroll bar position and the span slider.
+	// Determine the time window, in seconds, based on the scroll bar position and the span slider.
 	double last_instant = scrollBar->Value;
 	double span = windowSpanSeconds[spanSelector->Value];
 	double first_instant = last_instant - span;
 
+	// Convert the earliest and latest instants to clock format and display them.
 	day_last = (int) ceil( last_instant + TimebaseOffset ) / (24 * 60 * 60);
 	since_midnight = ((int) ceil( last_instant + TimebaseOffset )) % (24 * 60 * 60);
 	hour = since_midnight / (60 * 60);
@@ -284,15 +292,17 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		if ( RealMarkerTime[index] != MISSING_DOUBLE && RealMarkerTime[index] < first_instant ) break;
 	}
 	first_sample = index + 1;
-	fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %d to %d (%d)\n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample, (last_sample - first_sample) );
+	// fOutputDebugString( "Data: %d to %d Graph: %lf to %lf Indices: %d to %d (%d)\n", scrollBar->Minimum, scrollBar->Maximum, first_instant, last_instant, first_sample, last_sample, (last_sample - first_sample) );
 
 	// Subsample the data if there is a lot to be plotted.
 	int step = 1;
 	while ( ((last_sample - first_sample) / step) > MAX_PLOT_SAMPLES && step < (MAX_PLOT_STEP - 1) ) step++;
-	fOutputDebugString( "Plot step: %d\n", step );
+	// fOutputDebugString( "Plot step: %d\n", step );
 
+	// The user can select different combinations of strip charts to plot by making a selection in a pull-down list.
+	// The following code generates the different plots depending on the selection.
 	switch ( graphCollectionComboBox->SelectedIndex ) {
-	// Marker Visibility
+	// Marker Visibility Plot
 	case 2:
 		GraphManipulandumPositionComponent( X, LayoutViewN( detailed_visibility_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
 		GraphManipulandumPositionComponent( Y, LayoutViewN( detailed_visibility_layout, 1 ), first_instant, last_instant, first_sample, last_sample, step );
@@ -300,7 +310,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		GraphVisibilityDetails( LayoutViewN( detailed_visibility_layout, 3 ), first_instant, last_instant, first_sample, last_sample, step );
 		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
-	// Kinematics
+	// Kinematics Plot
 	case 1:
 		GraphManipulandumPositionComponent( X, LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
 		GraphManipulandumPositionComponent( Y, LayoutViewN( stripchart_layout, 1 ), first_instant, last_instant, first_sample, last_sample, step );
@@ -310,7 +320,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		GraphAccelerationComponent( Z, LayoutViewN( stripchart_layout, 5 ), first_instant, last_instant, first_sample, last_sample, step );
 		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
-	// Summary
+	// Summary Plot
 	case 0:
 	default:
 		GraphManipulandumPosition( LayoutViewN( stripchart_layout, 0 ), first_instant, last_instant, first_sample, last_sample, step );
@@ -322,8 +332,10 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 		GraphVisibility( visibility_view, first_instant, last_instant, first_sample, last_sample, step );
 		break;
 	}
+	// The Views code requires a display swap to make the plots visible.
 	OglSwap( stripchart_display );
 
+	// Generate the phase plots.
 	PlotManipulandumPosition( first_instant, last_instant, first_sample, last_sample, step );
 	PlotCoP( first_instant, last_instant, first_sample, last_sample, step );
 
@@ -331,7 +343,7 @@ void GripMMIDesktop::RefreshGraphics( void ) {
 
 }
 
-
+// Clean up resources allocated by the Views system.
 void GripMMIDesktop::KillGraphics( void ) {
 
 	Close( cop_display );
@@ -340,6 +352,27 @@ void GripMMIDesktop::KillGraphics( void ) {
 	Close( stripchart_display );
 
 }
+
+///
+/// Plotting into Stripcharts
+///
+
+// The following routines all share a similar format:
+//
+//  Parameter 'view' is a pointer to a structure that maps data values to screen coordinates. Basically it references a rectangle on the screen.
+//  Parameters 'start_instant' and 'stop_instant' determine the time window in seconds.
+//  Parameters 'start_index', 'stop_index' determine the range of entries in the data arrays to be used for the graphs.
+//  Parameter 'step' allows for sub-sampling of the data to reduce the number of points that are actually plotted.
+//
+// All of these routines assume that the data arrays are already filled with valid data.
+
+// The plotting routines use pointers and byte sizes to allow one to plot, for instance, one component from an array 
+// of vectors. The sizeof() macro is used to compute the distance in bytes between elements in the array.
+
+// The plotting routines also take a "missing value" flag. Data that is set to this value will not be plotted. This
+//  is used to mark breaks in the data stream.
+
+// In the following method names, 'Graph...' refers to a stripchart, while 'Plot...' refers to a phase plot.
 
 void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 			
@@ -356,6 +389,7 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 	//  can be compared between X, Y and Z.
 	ViewSetXLimits( view, start_instant, stop_instant );
 	if ( autoscaleCheckBox->Checked ) {
+		// Find the common range.
 		range = 0.0;
 		for ( int i = X; i <= Z; i++ ) {
 			ViewAutoScaleInit( view );
@@ -367,11 +401,17 @@ void GripMMIDesktop::GraphManipulandumPosition( ::View view, double start_instan
 	for ( int i = X; i <= Z; i++ ) {
 		ViewSelectColor( view, i );
 		if ( autoscaleCheckBox->Checked ) {
+			// Autoscale each component to center each trace on its respective mean.
 			ViewAutoScaleInit( view );
 			ViewAutoScaleAvailableDoubles( view, &ManipulandumPosition[0][i], start_frame, stop_frame, sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+			// But expand the Y limits so that all 3 components are plotted on a common scale.
 			ViewSetYRange( view, range );
 		}
-		else ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
+		else {
+			// Use the fixed limits.
+			ViewSetYLimits( view, lowerPositionLimit, upperPositionLimit );
+		}
+		// Actually plot the data.
 		ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][i], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 	}
 
@@ -401,6 +441,7 @@ void GripMMIDesktop::GraphManipulandumPositionComponent( int component, ::View v
 	ViewSelectColor( view, component );
 	ViewXYPlotAvailableDoubles( view, &RealMarkerTime[0], &ManipulandumPosition[0][component], start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
 }
+
 void GripMMIDesktop::GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 			
 	char *title;
@@ -434,7 +475,7 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	ViewColor( view, BLACK );
 	ViewTitle( view, "Manipulandum Rotation ", INSIDE_RIGHT, INSIDE_TOP, 0.0 );
 
-	// Plot all 3 components of the manipulandum position in the same view;
+	// Plot all 3 components of the manipulandum rotation in the same view;
 	ViewSetXLimits( view, start_instant, stop_instant );
 	if ( autoscaleCheckBox->Checked ) {
 		ViewAutoScaleInit( view );
@@ -449,25 +490,6 @@ void GripMMIDesktop::GraphManipulandumRotations( ::View view, double start_insta
 	}
 }
 
-void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
-
-	::View view;
-
-	// Phase plots of Manipulandum position data.
-	for ( int i = 0; i < PHASEPLOTS - 1; i++ ) {
-
-		DisplayActivate( phase_display[i] );
-		Erase( phase_display[i] );
-		view = phase_view[i];
-		ViewSetXLimits( view, lowerPositionLimitSpecific[pair[i].abscissa], upperPositionLimitSpecific[pair[i].abscissa] );
-		ViewSetYLimits( view, lowerPositionLimitSpecific[pair[i].ordinate], upperPositionLimitSpecific[pair[i].ordinate] );
-		ViewMakeSquare( view );
-		ViewSelectColor( view, i );
-		// ViewBox( view );
-		if ( stop_frame > start_frame ) ViewXYPlotAvailableDoubles( view, &ManipulandumPosition[0][pair[i].abscissa], &ManipulandumPosition[0][pair[i].ordinate], start_frame, stop_frame, step, sizeof( *ManipulandumPosition ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
-		OglSwap( phase_display[i] );
-	}
-}
 
 void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 	
@@ -488,6 +510,7 @@ void GripMMIDesktop::GraphLoadForce( ::View view, double start_instant, double s
 	}
 	else ViewSetYLimits( view, lowerForceLimit, upperForceLimit );
 	ViewAxes( view );
+	// Show zero load force and a +/- 4 Newton range.
 	ViewHorizontalLine( view, 0.0 );
 	if ( view->user_top > 4.0 ) ViewHorizontalLine( view, 4.0 );
 	if ( view->user_bottom < -4.0 ) ViewHorizontalLine( view, -4.0 );
@@ -569,6 +592,7 @@ void GripMMIDesktop::GraphVisibility( ::View view, double start_instant, double 
 	ViewScatterPlotAvailableDoubles( view, SYMBOL_FILLED_SQUARE, &RealMarkerTime[0], &WristVisibility[0],  start_frame, stop_frame, step, sizeof( *RealMarkerTime ), sizeof( *WristVisibility ), MISSING_DOUBLE );
 
 }
+
 void GripMMIDesktop::GraphVisibilityDetails( ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int step ) {
 
 	int mrk;
@@ -616,6 +640,27 @@ void GripMMIDesktop::GraphCoP( ::View view, double start_instant, double stop_in
 	}
 }
 
+// Phase plots of Manipulandum position data.
+void GripMMIDesktop::PlotManipulandumPosition( double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
+
+	::View view;
+
+	for ( int i = 0; i < PHASEPLOTS - 1; i++ ) {
+
+		DisplayActivate( phase_display[i] );
+		Erase( phase_display[i] );
+		view = phase_view[i];
+		ViewSetXLimits( view, lowerPositionLimitSpecific[pair[i].abscissa], upperPositionLimitSpecific[pair[i].abscissa] );
+		ViewSetYLimits( view, lowerPositionLimitSpecific[pair[i].ordinate], upperPositionLimitSpecific[pair[i].ordinate] );
+		ViewMakeSquare( view );
+		ViewSelectColor( view, i );
+		// ViewBox( view );
+		if ( stop_frame > start_frame ) ViewXYPlotAvailableDoubles( view, &ManipulandumPosition[0][pair[i].abscissa], &ManipulandumPosition[0][pair[i].ordinate], start_frame, stop_frame, step, sizeof( *ManipulandumPosition ), sizeof( *ManipulandumPosition ), MISSING_DOUBLE );
+		OglSwap( phase_display[i] );
+	}
+}
+
+// Phase plots of center-of-pressure data.
 void GripMMIDesktop::PlotCoP( double start_instant, double stop_instant, int start_frame, int stop_frame, int step ){
 
 	::View view;
