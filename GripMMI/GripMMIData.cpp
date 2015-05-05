@@ -8,7 +8,7 @@
 /// Copyright (c) 2014, 2015 PsyPhy Consulting
 ///
 
-/// Methods for drawing the various graphs on the screen.
+/// Methods for retrieving the telemetry data that is stored in cache files.
 
 #include "stdafx.h"
 #include <Windows.h>
@@ -47,16 +47,19 @@ char packetBufferPathRoot[MAX_PATHLENGTH] = "";
 // Grip force threshold for a valid CoP.
 #define COP_MIN_GRIP	0.5
 // If the time between two realtime data packets exceeds the following threshold
-//  then we insert a blank record into the data buffer to show the break.
+//  then we insert a blank record into the data buffer to show the break in the strip charts.
 #define PACKET_STREAM_BREAK_THRESHOLD	1.0
 
+///
+/// Show the data buffers as empty.
+///
 void GripMMIDesktop::ResetBuffers( void ){
 	nFrames = 0;
 }
 
-/// <summary>
 /// Read in the cached realtime data packets.
-/// </summary>
+/// The path to the cache file is presumed to be set in global variable packetBufferPathRoot.
+/// The data is stored in the global arrays found in GripMMIGlobals.cpp.
 int GripMMIDesktop::GetGripRT( void ) {
 
 	static int count = 0;
@@ -78,10 +81,11 @@ int GripMMIDesktop::GetGripRT( void ) {
 
 	char filename[MAX_PATHLENGTH];
 
-	// Create the path to the packet file, based on the root and the packet type.
+	// Create the path to the realtime science packet file, based on the root and the packet type.
+	// The global variable 'packetBufferPathRoot' has been initialized elsewhere.
 	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_RT_SCIENCE_PACKET, packetBufferPathRoot );
 
-	// Empty the data buffers, or more precisely, fill them with missing values.
+	// Empty the data buffers.
 	ResetBuffers();
 
 	// Attempt to open the packet cache to read the accumulated packets.
@@ -96,7 +100,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	}
 	// If fid is negative, file is not open. This should not happen, because GripMMIStartup should verify 
 	// the availability of files containing packets before the GripMMIDesktop form is executed.
-	// So if we do fail to open the file, signal the error and exit.
+	// But if we do fail to open the file, just signal the error and exit the hard way.
 	if ( fid < 0 ) {
 			fMessageBox( MB_OK, "GripMMI", "Error opening packet file %s.", filename );
 			exit( -1 );
@@ -104,7 +108,6 @@ int GripMMIDesktop::GetGripRT( void ) {
 
 	// Read in all of the data packets in the file.
 	// Be careful not to overrun the data buffers.
-	// The -2 is to take into account when a break in the data is inserted.
 	packets_read = 0;
 	while ( nFrames < MAX_FRAMES ) {
 
@@ -127,14 +130,16 @@ int GripMMIDesktop::GetGripRT( void ) {
 			exit( -1 );
 		}
 			
-		// Transfer the data to the buffers for plotting.
+		// Packets are stings of bytes. Extract the data values into a more usable form.
 		ExtractGripRealtimeDataInfo( &rt, &packet );
 
 		// If there has been a break in the arrival of the packets, insert
 		//  a blank frame into the data buffer. This will cause breaks in
 		//  the traces in the data graphs.
 		if ( (rt.packetTimestamp - previous_packet_timestamp) > PACKET_STREAM_BREAK_THRESHOLD ) {
+			// Subsampling in graphs will be used when the data record is very long.
 			// Insert enough points so that we see the break even if we are sub-sampling in the graphs.
+			// MAX_PLOT_STEP defines the maximum number of frames that will be skipped when plotting.
 			for ( int count = 0; count < MAX_PLOT_STEP && nFrames < MAX_FRAMES - 1; count++ ) {
 				ManipulandumPosition[nFrames][X] = MISSING_DOUBLE;
 				ManipulandumPosition[nFrames][Y] = MISSING_DOUBLE;
@@ -188,7 +193,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 				ManipulandumRotations[nFrames][Y] = MISSING_DOUBLE;
 				ManipulandumRotations[nFrames][Z] = MISSING_DOUBLE;
 			}
-			// The ICD does not say what is the reference frame for the force data.
+			// The GRIP ICD does not say what is the reference frame for the force data.
 			// I'm pretty sure that this is right.
 			GripForce[nFrames] = (float) dex.ComputeGripForce( rt.dataSlice[slice].ft[LEFT_ATI].force, rt.dataSlice[slice].ft[RIGHT_ATI].force );
 			GripForce[nFrames] = (float) dex.FilterGripForce( GripForce[nFrames] );
@@ -284,9 +289,9 @@ int GripMMIDesktop::GetGripRT( void ) {
 	}
 	else return ( FALSE );
 }
-/// <summary>
 /// Simulate a set of realtime data packets.
-/// </summary>
+/// This is not an option that is available at run time. It can only be used by modifying the code
+///  to call this routine instead of GetGripRT().
 void GripMMIDesktop::SimulateGripRT ( void ) {
 
 	// Simulate some data to test memory limites and graphics functions.
@@ -341,6 +346,8 @@ void GripMMIDesktop::SimulateGripRT ( void ) {
 }
 
 /// Read housekeeping cache, taking just the most recent value.
+/// The path to the cache file is presumed to be set in global variable 'packetBufferPathRoot'.
+/// The contents of the latest HK packet are returned in the structure pointed to by parameter 'hk'.
 int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 
 	static int count = 0;
@@ -358,6 +365,8 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 
 	char filename[1024];
 
+	// Create the path to the housekeeping packet file, based on the root and the packet type.
+	// The global variable 'packetBufferPathRoot' has been initialized elsewhere.
 	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
 
 	// Attempt to open the packet cache to read the accumulated packets.
@@ -407,6 +416,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 		exit( return_code );
 	}
 
+	// The structure pointed to by 'hk' contains the data from the last valid packet that was read from the cache file.
 	// Check if there were new packets since the last time we read the cache.
 	// Return TRUE if yes, FALSE if no.
 	if ( previousTMCounter != epmHeader.TMCounter ) {

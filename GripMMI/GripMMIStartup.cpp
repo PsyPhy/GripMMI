@@ -8,7 +8,9 @@
 /// Copyright (c) 2014, 2015 PsyPhy Consulting
 ///
 
-/// Methods to wait for the intial packets to arrive before proceeding.
+// Methods to wait for the intial packets to arrive before proceeding.
+// GripMMI pops up an initial window to show the wait state and shows where
+//  it is expecting to find the packet buffer caches.
 
 #include "StdAfx.h"
 
