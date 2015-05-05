@@ -64,20 +64,32 @@ extern double windowSpanSeconds[SPAN_VALUES]; // Number of seconds to plot for e
 /// <summary>
 /// Strings used to construct the path to various files.
 /// </summary>
-#define MAX_PATHLENGTH	260	// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx#maxpath
+
+// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx#maxpath
+//  MAX_PATHLENGTH is 260 caracters. Here we make it 1024 so that we are sure
+//  to not overrun the buffer when constructing paths. We rely on error generated when 
+//  opening the file to signal if a pathname has exceeded the limit. 
+#define MAX_PATHLENGTH	1024
 extern char packetBufferPathRoot[MAX_PATHLENGTH];
 extern char scriptDirectory[MAX_PATHLENGTH];
 extern char pictureFilenamePrefix[MAX_PATHLENGTH];
+
 /// <summary>
 /// Buffers to hold the contents of the scripts.
 /// </summary>
-#define MAX_TOKENS				32
-#define MAX_STEPS				4096
-#define MAX_MENU_ITEMS			256
-#define MAX_MENU_ITEM_LENGTH	1024
-extern char picture[MAX_STEPS][256];
-extern char message[MAX_STEPS][132];
-extern char *type[MAX_STEPS];
+#define MAX_TOKENS				32			// No DEX command has close to this many tokens.
+#define MAX_STEPS				4096		// I am not aware of any limit on the number of steps in a task definition.
+#define MAX_MENU_ITEMS			256			// This should be more than enough for subject, protocol and task menus.
+#define MAX_MENU_ITEM_LENGTH	1024		// Text strings in the ListBoxes will be much smaller than this as well.
+#define MAX_PICTURE_LENGTH	256				// Name of a picture file will be much shorter than this.
+#define MAX_MESSAGE_LENGTH	256				// DEX Messages are also shorter than this.
+#define MAX_ERROR_MESSAGE_LENGTH 2048		// More than long enough to hold a path and a lot of text.
+
+
+// Define the buffers used to hold the contents of the currently selected task script.
+extern char picture[MAX_STEPS][MAX_PICTURE_LENGTH];
+extern char message[MAX_STEPS][MAX_MESSAGE_LENGTH];
+extern const char *type[MAX_STEPS];
 extern bool comment[MAX_STEPS];
 /// <summary>
 /// Constants to translate enums to strings.

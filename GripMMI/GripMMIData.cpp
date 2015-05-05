@@ -339,9 +339,8 @@ void GripMMIDesktop::SimulateGripRT ( void ) {
 	fOutputDebugString( "End SimulateGripRT().\n" );
 	fOutputDebugString( "nFrames: %d %d\n", nFrames, MAX_FRAMES );
 }
-/// <summary>
+
 /// Read housekeeping cache, taking just the most recent value.
-/// </summary>
 int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 
 	static int count = 0;
@@ -416,10 +415,9 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 	}
 	else return ( FALSE );
 }
-/// <summary>
-/// Update the script crawler windows and state indicators (markers, targets, etc.
+
+/// Update the script crawler windows and state indicators (markers, targets, etc.)
 /// based on realtime HK data packet info.
-/// </summary>
 void GripMMIDesktop::UpdateStatus( bool force ) {
 
 	int i;
@@ -444,8 +442,8 @@ void GripMMIDesktop::UpdateStatus( bool force ) {
 		if ( hk_info.task != 0 && hk_info.scriptEngineStatusEnum == 0x1000 ) scriptErrorCheckbox->Checked = true;
 		else scriptErrorCheckbox->Checked = false;
 
-		// Update everything as if the subject, protocol, task and step had been entered by
-		//  hand and then someone pushes the GoTo button.
+		// Update the Script Crawler display as if somone has entered the subject, protocol, task and step 
+		//  IDs by hand and then pushes the GoTo button.
 		GoToSpecifiedIDs( hk_info.user, hk_info.protocol, hk_info.task, hk_info.step );
 
 		// State of the target LEDs.

@@ -6,7 +6,7 @@
     <LocalDebuggerWorkingDirectory>$(ProjectDir)\..\..\..\GripExecutables</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>..\GripCache\GripPackets  ..\GripScriptsy\</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>..\GripCache\GripPackets  ..\GripScripts\</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)\..\..\..\GripExecutables</LocalDebuggerWorkingDirectory>
   </PropertyGroup>

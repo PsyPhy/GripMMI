@@ -38,6 +38,9 @@
 // The bigger it is, the lower the cutoff frequency.
 #define FILTER_CONSTANT 2.0
 
+// Flags for return values.
+enum { NORMAL_EXIT = 0, NO_USER_FILE, NO_LOG_FILE, ERROR_EXIT };
+
 namespace GripMMI {
 
 	using namespace System;
@@ -61,42 +64,11 @@ namespace GripMMI {
 
 			// Show the version number in the window title.
 			this->Text = gcnew String( GripMMIVersion );
+
 			// Create other dialog windows.
 			fullStepForm = gcnew GripMMIFullStep();
 			aboutForm = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
 
-
-			//
-			// Initialize the script crawler menus.
-			//
-
-			// Construct the path to the root script and intialize the crawler menus.
-			char filename[MAX_PATHLENGTH];
-			strcpy( filename, scriptDirectory );
-			strcat( filename, "users.dex" );
-			ParseSubjectFile( filename );
-
-			// 
-			// Initialize the data display.
-			//
-
-			// Create a timer to periodically check for data and refresh.
-			CreateRefreshTimer( REFRESH_TIMEOUT );
-
-			// Set up graphs.
-			InitializeGraphics();
-			AdjustScrollSpan();
-
-			// Set the filter constant according to the initial state of the filter checkbox.
-			if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
-			else dex.SetFilterConstant( 0.0 );
-
-			// Select the summary graph collection by default.
-			graphCollectionComboBox->SelectedIndex = 0;
-
-			// In the next cycle, plot the data regardless of whether there
-			//  is new data or not. This draws the data plots, even if empty.
-			ForceUpdate();
 		}
 
 	protected:
@@ -111,11 +83,12 @@ namespace GripMMI {
 			}
 		}
 
-
+	// Forms used to create and show popup windows.
 	private: GripMMIFullStep^	fullStepForm;
 	private: GripMMIAbout^		aboutForm;
 	private: GripMMIStartup^	startupForm;
 
+	// Automatically created components of the main Form.
 	private: System::Windows::Forms::GroupBox^  groupBox1;
 	private: System::Windows::Forms::GroupBox^  groupBox2;
 	private: System::Windows::Forms::GroupBox^  groupBox3;
@@ -128,8 +101,6 @@ namespace GripMMI {
 	private: System::Windows::Forms::PictureBox^  ZYPlot;
 	private: System::Windows::Forms::PictureBox^  StripCharts;
 	private: System::Windows::Forms::CheckBox^  filterCheckbox;
-
-
 	private: System::Windows::Forms::CheckBox^  dataLiveCheckbox;
 
 	private: System::Windows::Forms::HScrollBar^  scrollBar;
@@ -190,11 +161,46 @@ namespace GripMMI {
 	private: System::Windows::Forms::TextBox^  rightLimitTextBox;
 	private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 
+	// Initialize the display when it first gets shown.
+	private: System::Void GripMMIDesktop_Shown(System::Object^  sender, System::EventArgs^  e) {
+
+				 // Set up graphs.
+				 InitializeGraphics();
+				 AdjustScrollSpan();
+
+				 // Construct the path to the root script and intialize the crawler menus.
+				 char filename[MAX_PATHLENGTH];
+				 strcpy( filename, scriptDirectory );
+				 strcat( filename, "users.dex" );
+				 if ( ERROR_EXIT == ParseSubjectFile( filename ) ) {
+					// If we are unable to parse the subject file, just shut down.
+					 Close();
+				 }
+				 else {
+					 // Subject file was parsed, so move ahead.
+					 // Create a timer to periodically check for data and refresh.
+					 CreateRefreshTimer( REFRESH_TIMEOUT );
+					 // Set the filter constant according to the initial state of the filter checkbox.
+					 if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
+					 else dex.SetFilterConstant( 0.0 );
+					 // Select the summary graph collection by default.
+					 // This does a ForceUdate as a side effect, which requires that the refresh timer
+					 //  be created already. That is why CreateRefreshTimer() is performed first in this else clause.
+					 graphCollectionComboBox->SelectedIndex = 0;
+					 // The next time that the refresh timer goes off, plot the data regardless of 
+					 //  whether there is new data or not. This draws the data plots, even if empty.
+					 // ForceUpdate() is a side effect of changing the graph collection,
+					 //  so it is commented out here. But if the previous line is removed, 
+					 //  the ForceUpdate() call should be made here.
+					 // ForceUpdate();
+				 }	
+			 }
 	private: 
-		/// <summary>
-		/// Periodically check for new data packets.
-		/// </summary>
+		/// 
+		/// Periodically check for new data packets and refresh the display if required.
+		/// 
 		static Timer^ timer;
+		bool forceUpdate;
 		void CreateRefreshTimer( int interval ) {
 			timer = gcnew Timer;
 			timer->Interval = interval;
@@ -206,16 +212,24 @@ namespace GripMMI {
 		void StopRefreshTimer( void ) {
 			timer->Stop();
 		}
+		// This is what we do when the timer goes off.
 		void OnTimerElapsed( System::Object^ source, System::EventArgs ^ e ) {
 			int new_data;
+			// Stop the timer so that it does not retrigger until we are done refreshing.
 			StopRefreshTimer();
 			fOutputDebugString( "\n" );
 			fOutputDebugString( "Timer triggered.\n" );
+			// Get the realtime science data packets. Return value says if new packets
+			// have arrived since the previous call.
 			new_data = GetGripRT();
+			// Adjust the scrollbar limits according to the newly loaded data.
 			AdjustScrollSpan();
+			// If we are live, shift the limits of the plots to reflect the most recent data.
+			// Otherwise, keep the window span where it is.
 			if ( dataLiveCheckbox->Checked ) MoveToLatest();
+			// If we have received new data, or if another function has requested a forced update,
+			//  replot all of the strip charts and scatter plots.
 			if ( new_data || forceUpdate ) RefreshGraphics();
-
 			// Handle HK packets and the script crawler.
 			if ( scriptLiveCheckbox->Checked ) {
 				fOutputDebugString( "UpdateStatus.\n" );
@@ -223,29 +237,37 @@ namespace GripMMI {
 			}
 			// If we forced an update, reset it to false so that we do it only once.
 			forceUpdate = false;
+			// Start the timer again to trigger the next cycle after a delay.
 			StartRefreshTimer();
 		}
-		bool forceUpdate;
+		// Some plot parameters can be changed by the GUI interface.
+		// When that happens, ForceUpdate() is called so that the data will be replotted
+		// on the next refresh cycle even if there is no new data.
 		void ForceUpdate( void ) {
 			StartRefreshTimer();
 			forceUpdate = true;
 		}
+		// During some operations a new refresh should not be performed. This routine
+		// will cancel a pending refresh timer. To restart, use ForceUpdate() or StartRefreshTimer().
 		void ImpedeUpdate( void ) {
 			StopRefreshTimer();
 		}
+		void UpdateStatus( bool force );
 
 	private: 
 
-		::Display xy_display;
-		::Display zy_display;
-		::Display cop_display;
-		::Display stripchart_display;
-		::Layout  stripchart_layout;
-		::View	visibility_view;
+		// Objects used by the legacy code for data plots.
+		// These items will be initialized by InitializeGraphics().
+		::Display	xy_display;
+		::Display	zy_display;
+		::Display	cop_display;
+		::Display	stripchart_display;
+		::Layout	stripchart_layout;
+		::View		visibility_view;
 		::Layout	detailed_visibility_layout;
-		::View  xy_view;
-		::View  zy_view;
-		::View  cop_view;
+		::View		xy_view;
+		::View		zy_view;
+		::View		cop_view;
 
 		// GripMMIGraphics.cpp
 
@@ -271,27 +293,25 @@ namespace GripMMI {
 		void GraphAccelerationComponent( int component, ::View view, double start_instant, double stop_instant, int start_frame, int stop_frame, int skip );
 
 		// GripMMIData.cpp
+
 		void SimulateGripRT ( void );
 		int  GetGripRT( void );
 		int	 GetLatestGripHK( GripHealthAndStatusInfo *hk );
 
 		// GripMMIScripts.cpp
-		int nSubjects;
-		int nProtocols;
-		int nTasks;
-		int nSteps;
 
-		void ParseTaskFile ( const char *filename );
-		void ParseProtocolFile ( const char *filename );
-		void ParseSessionFile ( const char *filename );
-		int ParseSubjectFile ( const char *filename );
+		void ParseTaskFile ( const char *task_file );
+		void ParseProtocolFile ( const char *protocol_file );
+		void ParseSessionFile ( const char *session_file );
+		int  ParseSubjectFile ( const char *subject_file );
 
 		void GoToSpecifiedSubject ( int subject );
 		void GoToSpecifiedProtocol ( int protocol );
 		void GoToSpecifiedTask ( int task );
 		void GoToSpecifiedStep ( int step );
 		void GoToSpecifiedIDs( int subject_id, int protocol_id, int task_id, int step_id );
-		void  UpdateStatus( bool force );
+
+
 	private:
 		/// <summary>
 		/// Required designer variable.
@@ -1168,7 +1188,7 @@ namespace GripMMI {
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1524, 1016);
+			this->ClientSize = System::Drawing::Size(1444, 878);
 			this->Controls->Add(this->groupBox4);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
@@ -1195,6 +1215,7 @@ namespace GripMMI {
 			this->Text = L"GripMMI";
 			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &GripMMIDesktop::GripMMIDesktop_FormClosing);
 			this->Load += gcnew System::EventHandler(this, &GripMMIDesktop::GripMMIDesktop_Load);
+			this->Shown += gcnew System::EventHandler(this, &GripMMIDesktop::GripMMIDesktop_Shown);
 			this->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &GripMMIDesktop::GripMMIDesktop_Paint);
 			this->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::GripMMIDesktop_KeyPress);
 			this->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::GripMMIDesktop_MouseClick);
@@ -1239,163 +1260,156 @@ namespace GripMMI {
 #pragma endregion
 
 	private: System::Void GripMMIDesktop_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) {
-		// The graphs may need to be refreshed.
-		// RefreshGraphics();
-	}
+				 // The graphs may need to be refreshed.
+				 // RefreshGraphics();
+			 }
 
 	private: System::Void GripMMIDesktop_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
-		 // Free resources allocated by the PsyPhy graphics routines.
-		 KillGraphics();
-	}
+				 // Free resources allocated by the PsyPhy graphics routines.
+				 KillGraphics();
+			 }
 
 	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {}
-
-	private: System::Void GripMMIDesktop_Load(System::Object^  sender, System::EventArgs^  e) {
-			 }
+	private: System::Void GripMMIDesktop_Load(System::Object^  sender, System::EventArgs^  e) {}
 	private: System::Void GripMMIDesktop_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 			 }
 	private: System::Void spanSelector_ValueChanged(System::Object^  sender, System::EventArgs^  e) {
-				AdjustScrollSpan();
-				RefreshGraphics();
+				 AdjustScrollSpan();
+				 RefreshGraphics();
 			 }
 	private: System::Void scrollBar_Scroll(System::Object^  sender, System::Windows::Forms::ScrollEventArgs^  e) {
-			dataLiveCheckbox->Checked = false;
-			RefreshGraphics();
-		 }
+				 dataLiveCheckbox->Checked = false;
+				 RefreshGraphics();
+			 }
 	private: System::Void textBox1_TextChanged(System::Object^  sender, System::EventArgs^  e) {
 			 }
 	private: System::Void subjectList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-				// Script crawler is no longer live.
-				scriptLiveCheckbox->Checked = false;
+				 // Script crawler is no longer live.
+				 scriptLiveCheckbox->Checked = false;
 			 }
 	private: System::Void subjectList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-				// Update when a different subject is selected.
-				int subject = subjectList->SelectedIndex;
-				GoToSpecifiedSubject( subject );
-			}
+				 // Update when a different subject is selected.
+				 int subject = subjectList->SelectedIndex;
+				 GoToSpecifiedSubject( subject );
+			 }
 	private: System::Void protocolList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-				// Script crawler is no longer live.
-				scriptLiveCheckbox->Checked = false;
+				 // Script crawler is no longer live.
+				 scriptLiveCheckbox->Checked = false;
 			 }
 	private: System::Void protocolList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-				// Update when a different subject is selected.
-				int protocol = protocolList->SelectedIndex;
-				GoToSpecifiedProtocol( protocol );
+				 // Update when a different protocol is selected.
+				 int protocol = protocolList->SelectedIndex;
+				 GoToSpecifiedProtocol( protocol );
 			 }
 	private: System::Void taskList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-				// Script crawler is no longer live.
-				scriptLiveCheckbox->Checked = false;
+				 // Script crawler is no longer live.
+				 scriptLiveCheckbox->Checked = false;
 			 }
 	private: System::Void taskList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-				// Update when a different subject is selected.
-				int task = taskList->SelectedIndex;
-				// Keep the selected task near the top of the box
-				//  so that we can see what is coming next.
-				int top_index = task - 10;
-				if ( top_index < 0 ) top_index = 0;
-				taskList->TopIndex = top_index;
-				// Now update to show the selected task.
-				GoToSpecifiedTask( task );
+				 // Update when a different task is selected.
+				 int task = taskList->SelectedIndex;
+				 // Keep the selected task near the top of the box
+				 //  so that we can see what is coming next.
+				 int top_index = task - 10;
+				 if ( top_index < 0 ) top_index = 0;
+				 taskList->TopIndex = top_index;
+				 // Now update to show the selected task.
+				 GoToSpecifiedTask( task );
 			 }
 	private: System::Void stepList_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {	
-					fullStepForm->Show();
-				}
-				else {
-					// Script crawler is no longer live.
-					scriptLiveCheckbox->Checked = false;
-				}
+				 if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {	
+					 fullStepForm->Show();
+				 }
+				 else {
+					 // Script crawler is no longer live.
+					 scriptLiveCheckbox->Checked = false;
+				 }
 			 }
 	private: System::Void stepList_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
-				// Update when a different subject is selected.
-				int step = stepList->SelectedIndex;
-				// Keep the selected step near the top of the box
-				//  so that we can see what is coming next.
-				int top_index = step - 10;
-				if ( top_index < 0 ) top_index = 0;
-				stepList->TopIndex = top_index;
-				// Now update the picture and text.
-				GoToSpecifiedStep( step );
+				 // Update when a different subject is selected.
+				 int step = stepList->SelectedIndex;
+				 // Keep the selected step near the top of the box
+				 //  so that we can see what is coming next.
+				 int top_index = step - 10;
+				 if ( top_index < 0 ) top_index = 0;
+				 stepList->TopIndex = top_index;
+				 // Now update the picture and text.
+				 GoToSpecifiedStep( step );
 			 }
-	private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {
-			 }
-	private: System::Void groupBox17_Enter(System::Object^  sender, System::EventArgs^  e) {
-			 }
-	private: System::Void groupBox15_Enter(System::Object^  sender, System::EventArgs^  e) {
-			 }
-	private: System::Void groupBox14_Enter(System::Object^  sender, System::EventArgs^  e) {
-			 }
-	private: System::Void groupBox13_Enter(System::Object^  sender, System::EventArgs^  e) {
-			 }
+	private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {}
+	private: System::Void groupBox17_Enter(System::Object^  sender, System::EventArgs^  e) {}
+	private: System::Void groupBox15_Enter(System::Object^  sender, System::EventArgs^  e) {}
+	private: System::Void groupBox14_Enter(System::Object^  sender, System::EventArgs^  e) {}
+	private: System::Void groupBox13_Enter(System::Object^  sender, System::EventArgs^  e) {}
 	private: System::Void nextButton_Click(System::Object^  sender, System::EventArgs^  e) {
-			 
-		// Script crawler is no longer live.
-		scriptLiveCheckbox->Checked = false;
 
-		// Find the next non-comment step.
-		// int selected_line = SendDlgItemMessage( IDC_STEPS, LB_GETCURSEL, 0, 0 );
-		int selected_line = stepList->SelectedIndex;
-		selected_line++;
-		while ( comment[selected_line] ) selected_line++;
-		// SendDlgItemMessage( IDC_STEPS, LB_SETCURSEL, selected_line, 0 );
-		stepList->SelectedIndex = selected_line;
-		//OnSelchangeSteps();
-		GoToSpecifiedStep( selected_line );
+				 // Script crawler is no longer live.
+				 scriptLiveCheckbox->Checked = false;
 
-	}
+				 // Find the next non-comment step.
+				 // int selected_line = SendDlgItemMessage( IDC_STEPS, LB_GETCURSEL, 0, 0 );
+				 int selected_line = stepList->SelectedIndex;
+				 selected_line++;
+				 while ( comment[selected_line] ) selected_line++;
+				 // SendDlgItemMessage( IDC_STEPS, LB_SETCURSEL, selected_line, 0 );
+				 stepList->SelectedIndex = selected_line;
+				 //OnSelchangeSteps();
+				 GoToSpecifiedStep( selected_line );
+
+			 }
 
 	private: System::Void gotoButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		// Script crawler is no longer live.
-		scriptLiveCheckbox->Checked = false;
+				 // Script crawler is no longer live.
+				 scriptLiveCheckbox->Checked = false;
 
-		//int subject_id = GetDlgItemInt( IDC_SUBJECTID );
-		//int protocol_id = GetDlgItemInt( IDC_PROTOCOLID );
-		//int task_id = GetDlgItemInt( IDC_TASKID );
-		//int step_id = GetDlgItemInt( IDC_STEPID );
-		int subject_id;
-		int protocol_id;
-		int task_id;
-		int step_id;
-		try
-			{
-				subject_id = Convert::ToInt32( subjectIDBox->Text );
-			}
-			catch (System::FormatException^ e)
-			{
-				subject_id = 0;
-				e;
-			}
-		try
-			{
-				protocol_id = Convert::ToInt32( protocolIDBox->Text );
-			}
-			catch (System::FormatException^ e)
-			{
-				protocol_id = 0;
-				e;
-			}
-		try
-			{
-				task_id = Convert::ToInt32( taskIDBox->Text );
-			}
-			catch (System::FormatException^ e)
-			{
-				task_id = 0;
-				e;
-		  }
-		try
-			{
-				step_id = Convert::ToInt32( stepIDBox->Text );
-			}
-			catch (System::FormatException^ e)
-			{
-				step_id = 0;
-				e;
-		   }
+				 //int subject_id = GetDlgItemInt( IDC_SUBJECTID );
+				 //int protocol_id = GetDlgItemInt( IDC_PROTOCOLID );
+				 //int task_id = GetDlgItemInt( IDC_TASKID );
+				 //int step_id = GetDlgItemInt( IDC_STEPID );
+				 int subject_id;
+				 int protocol_id;
+				 int task_id;
+				 int step_id;
+				 try
+				 {
+					 subject_id = Convert::ToInt32( subjectIDBox->Text );
+				 }
+				 catch (System::FormatException^ e)
+				 {
+					 subject_id = 0;
+					 e;
+				 }
+				 try
+				 {
+					 protocol_id = Convert::ToInt32( protocolIDBox->Text );
+				 }
+				 catch (System::FormatException^ e)
+				 {
+					 protocol_id = 0;
+					 e;
+				 }
+				 try
+				 {
+					 task_id = Convert::ToInt32( taskIDBox->Text );
+				 }
+				 catch (System::FormatException^ e)
+				 {
+					 task_id = 0;
+					 e;
+				 }
+				 try
+				 {
+					 step_id = Convert::ToInt32( stepIDBox->Text );
+				 }
+				 catch (System::FormatException^ e)
+				 {
+					 step_id = 0;
+					 e;
+				 }
 
-		GoToSpecifiedIDs( subject_id, protocol_id, task_id, step_id );
-		 
-		}
+				 GoToSpecifiedIDs( subject_id, protocol_id, task_id, step_id );
+
+			 }
 	private: System::Void scriptLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 				 if ( scriptLiveCheckbox->Checked ) ForceUpdate();
 			 }
@@ -1412,66 +1426,65 @@ namespace GripMMI {
 			 }
 	private: System::Void graphCollectionComboBox_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 				 ForceUpdate();
-			}
-
-	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-				// Show an about box on right click in the main window.
-				if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
-					GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
-					about->ShowDialog();
-				}
 			 }
 
-// Add an 'About ...' item to the system menu. 
+	private: System::Void GripMMIDesktop_MouseClick(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				 // Show an about box on right click in the main window.
+				 if ( e->Button == System::Windows::Forms::MouseButtons::Right ) {
+					 GripMMIAbout^ about = gcnew GripMMIAbout( GripMMIVersion, GripMMIBuildInfo );
+					 about->ShowDialog();
+				 }
+			 }
+
+			 // Add an 'About ...' item to the system menu. 
 #define SYSMENU_ABOUT_ID 0x01
-	
+
 	protected:  virtual void OnHandleCreated( System::EventArgs^ e) override {	
 
-				// Do what one would normally do when the handle is created.
-				Form::OnHandleCreated( e );
+					// Do what one would normally do when the handle is created.
+					Form::OnHandleCreated( e );
 
-				// Get a handle to a copy of this form's system (window) menu
-				HWND hWnd;
-				hWnd = static_cast<HWND>( Handle.ToPointer() );
-				HMENU hSysMenu = GetSystemMenu( hWnd, false );
-				// Add a separator
-				AppendMenu(hSysMenu, MF_SEPARATOR, 0, "" );
-				// Add the About menu item
-				AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About …");
-	
-			}
+					// Get a handle to a copy of this form's system (window) menu
+					HWND hWnd;
+					hWnd = static_cast<HWND>( Handle.ToPointer() );
+					HMENU hSysMenu = GetSystemMenu( hWnd, false );
+					// Add a separator
+					AppendMenu(hSysMenu, MF_SEPARATOR, 0, "" );
+					// Add the About menu item
+					AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About …");
+
+				}
 
 	protected:  virtual void WndProc(System::Windows::Forms::Message% m) override {	
-				// Test if the About item was selected from the system menu
-				if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
-				{
-					aboutForm->ShowDialog();
-					return;
-				}
-				// Do what one would normally do.
+					// Test if the About item was selected from the system menu
+					if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
+					{
+						aboutForm->ShowDialog();
+						return;
+					}
+					// Do what one would normally do.
 					Form::WndProc( m );
 				}
 
-private: System::Void graphCollectionComboBox_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
-			 // Don't do an update of the data screens while the user
-			 //  is making a selection.
-			 ImpedeUpdate();
-		 }
-private: System::Void graphCollectionComboBox_MouseCaptureChanged(System::Object^  sender, System::EventArgs^  e) {
-			 // If the combo box loses focus, restart periodic updates.
-			if ( !(this->graphCollectionComboBox->Focused) ) ForceUpdate();
-		 }
-private: System::Void graphCollectionComboBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
-			 // If the user leaves the combo box by pressing ESC or RETURN
-			 //  we need to restart the periodic refresh.
-			 if ( e->KeyChar == 0x1b || e->KeyChar == 0x0d ) ForceUpdate();
-		 }
+	private: System::Void graphCollectionComboBox_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+				 // Don't do an update of the data screens while the user
+				 //  is making a selection.
+				 ImpedeUpdate();
+			 }
+	private: System::Void graphCollectionComboBox_MouseCaptureChanged(System::Object^  sender, System::EventArgs^  e) {
+				 // If the combo box loses focus, restart periodic updates.
+				 if ( !(this->graphCollectionComboBox->Focused) ) ForceUpdate();
+			 }
+	private: System::Void graphCollectionComboBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				 // If the user leaves the combo box by pressing ESC or RETURN
+				 //  we need to restart the periodic refresh.
+				 if ( e->KeyChar == 0x1b || e->KeyChar == 0x0d ) ForceUpdate();
+			 }
+	private: System::Void LogoPictureBox_Click(System::Object^  sender, System::EventArgs^  e) {}
+	private: System::Void XYPlot_Click(System::Object^  sender, System::EventArgs^  e) {}
 
-private: System::Void LogoPictureBox_Click(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void XYPlot_Click(System::Object^  sender, System::EventArgs^  e) {
-		 }
-};
+
+	};
 
 }
 
