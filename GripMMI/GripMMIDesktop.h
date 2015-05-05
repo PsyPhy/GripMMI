@@ -197,10 +197,12 @@ namespace GripMMI {
 			 }
 	private: 
 		/// 
-		/// Periodically check for new data packets and refresh the display if required.
+		/// GripMMI periodically checks for new data packets and refresh the display if required.
+		/// The following routines implement that functionality.
 		/// 
+
+		// A timer to trigger new polling for packets after a delay.
 		static Timer^ timer;
-		bool forceUpdate;
 		void CreateRefreshTimer( int interval ) {
 			timer = gcnew Timer;
 			timer->Interval = interval;
@@ -212,6 +214,9 @@ namespace GripMMI {
 		void StopRefreshTimer( void ) {
 			timer->Stop();
 		}
+		// The display will normally be updated only when there are new packets.
+		// This flag allows one to force the update, for instance when the filtering is turned off or on.
+		bool forceUpdate;
 		// This is what we do when the timer goes off.
 		void OnTimerElapsed( System::Object^ source, System::EventArgs ^ e ) {
 			int new_data;
@@ -252,7 +257,6 @@ namespace GripMMI {
 		void ImpedeUpdate( void ) {
 			StopRefreshTimer();
 		}
-		void UpdateStatus( bool force );
 
 	private: 
 
@@ -294,9 +298,10 @@ namespace GripMMI {
 
 		// GripMMIData.cpp
 
-		void SimulateGripRT ( void );
 		int  GetGripRT( void );
+		void SimulateGripRT ( void ); // For testing only.
 		int	 GetLatestGripHK( GripHealthAndStatusInfo *hk );
+		void UpdateStatus( bool force );
 
 		// GripMMIScripts.cpp
 

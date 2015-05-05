@@ -13,7 +13,11 @@
 // the current subject, protocol, task and step ID as part of the housekeeping
 // telemetry packet. By using an exact copy of the scripts with the GripMMI
 // one can follow the progress of the experiment on the ground. This file provides
-// the methods to parse the script files and step through them.
+// the methods to parse the script files and step through them. The so-called 
+// script crawler part of the display will either be live, showing the current step indicated
+// by GRIP housekeeping telemetry, or in manual mode where the GripMMI operator 
+// can select the subject, protocol, task and step through ListBoxes and TextBoxes
+// on the GripMMI GUI.
 
 // NB Thorough knowledge of EPM and GRIP (DEX) interfaces is assumed.
 // See https://github.com/PsyPhy/GripMMI/wiki, and the documents 
@@ -51,13 +55,12 @@ using namespace GripMMI;
 // Thus, it is built on some legacy code that preceded the conversion to VC2010. 
 // Some functionality is therefore built on local static arrays, rather than dynamically
 // allocated arrays in the GripMMI class, in a large part because VC2010 does not support
-// 'mixed' data types. Again, this was an unexpected 'feature' (limitation) of VC2010.
+// 'mixed' data types (i.e. arrays of strings). This was an unexpected 'feature' (limitation) of VC2010.
 
 // Relative or absolute paths to the script files are set at startup and kept here
 // as global variables for access by various routines.
 char scriptDirectory[MAX_PATHLENGTH];
 char pictureFilenamePrefix[MAX_PATHLENGTH];
-
 
 // The subject/session file defines the session file for each subject.
 int  subjectID[MAX_MENU_ITEMS];
@@ -72,27 +75,31 @@ int  nProtocols = 0;
 // A task file contains the list of tasks for a given protocol.
 char task_file_list[MAX_MENU_ITEMS][MAX_MENU_ITEM_LENGTH];
 int  taskID[MAX_MENU_ITEMS];
-int	 nTasks = 0;			// Number of tasks in the protocol.
+int	 nTasks = 0;			
 
 // A task is a list of lines made up of steps and comments.
-// Each step has an associated step ID, a picture and a message.
-// The 'comment' array determines which lines are steps and which are comments.
+// Each step has an associated step ID and the picture and message that the GRIP
+// subject will see at that point in the script execution.
 const char *type[MAX_STEPS];
 char picture[MAX_STEPS][MAX_PICTURE_LENGTH];
 char message[MAX_STEPS][MAX_MESSAGE_LENGTH];
-bool comment[MAX_STEPS];
 int  stepID[MAX_STEPS];
-int nSteps = 0;		// Number of lines in the task file. 
-// nSteps holds the number of lines, including comments, not the number of 
-// true steps, and is therefore a misnomer.
+// The 'comment' array determines which lines are steps and which are comments.
+// This is used to skip to the next actual step when the 'Next' button in pressed.
+bool comment[MAX_STEPS];
+// nSteps holds the number of lines, including comments, in the task script.
+// It is not the number of executable steps. Therefore nSteps is a misnomer.
+int nSteps = 0; 
 
-// These are the 3 types of step. 
+// These are the 3 types of steps. 
 const char *type_status = "Status (script will continue)";
 const char *type_query =  "Query (waiting for response)";
 const char *type_alert =  "Alert (seen only if error)";
 
 // A convenient macro to hand message/picture pairs.
-#define add_to_message_pair(x,y,z) { strcpy( message[lines], y ); if ( z ) strcpy( picture[lines], z ); else strcpy( picture[lines], "" ); type[lines] = type_alert; }
+// It makes the parsing code more readable, but be careful how it is used.
+// Improper use could lead to side effects that are hard to detect.
+#define add_alert(y,z) { strcpy( message[lines], y ); if ( z ) strcpy( picture[lines], z ); else strcpy( picture[lines], "" ); type[lines] = type_alert; }
 
 // Parse the specified task file, filling the GUI ListBox and the global tables
 // 'message', 'picture', 'comment' and 'stepID'.
@@ -119,7 +126,7 @@ void GripMMIDesktop::ParseTaskFile ( const char *task_file ) {
 	if ( !fp ) {
 		// Signal the error.
 		sprintf( msg, "Error opening task file %s for read.\n", task_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 		return;
 	}
 
@@ -190,22 +197,22 @@ void GripMMIDesktop::ParseTaskFile ( const char *task_file ) {
 				type[lines] = type_query;
 			}
 			// The following commands generate 'alerts'.
-			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_ATTARGET" ) ) add_to_message_pair( &alert, token[13], token[14] )		
-			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_GRIP" ) ) add_to_message_pair( &alert, token[4], token[5] )
-			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_GRIPFORCE" ) ) add_to_message_pair( &alert, token[11], token[12] )
-			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_SLIP" ) ) add_to_message_pair( &alert, token[11], token[12] )
-			else if ( !strcmp( token[0], "CMD_CHK_MASS_SELECTION" ) ) add_to_message_pair( &alert, "Put mass in cradle X and pick up mass from cradle Y.", "TakeMass.bmp" )
-			else if ( !strcmp( token[0], "CMD_CHK_HW_CONFIG" ) ) add_to_message_pair( &alert, token[1], token[2] )
-			else if ( !strcmp( token[0], "CMD_ALIGN_CODA" ) ) add_to_message_pair( &alert, token[1], token[2] )
-			else if ( !strcmp( token[0], "CMD_CHK_CODA_ALIGNMENT" ) ) add_to_message_pair( &alert, token[4], token[5] )
-			else if ( !strcmp( token[0], "CMD_CHK_CODA_FIELDOFVIEW" ) ) add_to_message_pair( &alert, token[9], token[10] )
-			else if ( !strcmp( token[0], "CMD_CHK_CODA_PLACEMENT" ) ) add_to_message_pair( &alert, token[11], token[12] )
-			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_AMPL" ) ) add_to_message_pair( &alert, token[6], token[7] )
-			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_CYCLES" ) ) add_to_message_pair( &alert, token[7], token[8] )
-			else if ( !strcmp( token[0], "CMD_CHK_START_POS" ) ) add_to_message_pair( &alert, token[7], token[8] )
-			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_DIR" ) ) add_to_message_pair( &alert, token[6], token[7] )
-			else if ( !strcmp( token[0], "CMD_CHK_COLLISIONFORCE" ) ) add_to_message_pair( &alert, token[4], token[5] )
-			else if ( !strcmp( token[0], "CMD_CHK_MANIP_VISIBILITY" ) ) add_to_message_pair( &alert, token[3], token[4] )
+			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_ATTARGET" ) ) add_alert( token[13], token[14] )		
+			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_GRIP" ) ) add_alert( token[4], token[5] )
+			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_GRIPFORCE" ) ) add_alert( token[11], token[12] )
+			else if ( !strcmp( token[0], "CMD_WAIT_MANIP_SLIP" ) ) add_alert( token[11], token[12] )
+			else if ( !strcmp( token[0], "CMD_CHK_MASS_SELECTION" ) ) add_alert( "Put mass in cradle X and pick up mass from cradle Y.", "TakeMass.bmp" )
+			else if ( !strcmp( token[0], "CMD_CHK_HW_CONFIG" ) ) add_alert( token[1], token[2] )
+			else if ( !strcmp( token[0], "CMD_ALIGN_CODA" ) ) add_alert( token[1], token[2] )
+			else if ( !strcmp( token[0], "CMD_CHK_CODA_ALIGNMENT" ) ) add_alert( token[4], token[5] )
+			else if ( !strcmp( token[0], "CMD_CHK_CODA_FIELDOFVIEW" ) ) add_alert( token[9], token[10] )
+			else if ( !strcmp( token[0], "CMD_CHK_CODA_PLACEMENT" ) ) add_alert( token[11], token[12] )
+			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_AMPL" ) ) add_alert( token[6], token[7] )
+			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_CYCLES" ) ) add_alert( token[7], token[8] )
+			else if ( !strcmp( token[0], "CMD_CHK_START_POS" ) ) add_alert( token[7], token[8] )
+			else if ( !strcmp( token[0], "CMD_CHK_MOVEMENTS_DIR" ) ) add_alert( token[6], token[7] )
+			else if ( !strcmp( token[0], "CMD_CHK_COLLISIONFORCE" ) ) add_alert( token[4], token[5] )
+			else if ( !strcmp( token[0], "CMD_CHK_MANIP_VISIBILITY" ) ) add_alert( token[3], token[4] )
 			// If it wasn't a 'query' or an 'alert' then it was a 'status' command.
 			else {
 				strcpy( message[lines], status_message );
@@ -237,7 +244,7 @@ void GripMMIDesktop::ParseTaskFile ( const char *task_file ) {
 	if ( nSteps >= MAX_STEPS ) {
 		// Signal the error, but allow execution to continue.
 		sprintf( msg, "Number of lines in %s exceeds limit.\n", task_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 	}
 	else {
 		// Show the end of the script in the GUI with a final comment line and status message.
@@ -306,12 +313,12 @@ void GripMMIDesktop::ParseProtocolFile ( const char *protocol_file ) {
 			// First parameter must be CMD_TASK.
 			if ( strcmp( token[0], "CMD_TASK" ) ) {
 				sprintf( msg, "%s Line %03d Command not CMD_TASK: %s\n", protocol_file, line_n, token[0] );
-				::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+				::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 			}
 			// Second parameter is a task ID. Should be an integer value.
 			if ( 1 != sscanf( token[1], "%d", &taskID[nTasks] ) ) {
 				sprintf( msg, "%s Line %03d Error reading task ID: %s\n", protocol_file, line_n, token[1] );
-				::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+				::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 				exit( - 1 );
 			}
 			// The third item is the name of the protocol file.
@@ -322,7 +329,7 @@ void GripMMIDesktop::ParseProtocolFile ( const char *protocol_file ) {
 				strcat( task_filename, token[2] );
 				if ( _access( task_filename, 0x00 ) ) {
 					sprintf( msg, "%s Line %03d Cannot access protocol file: %s\n", protocol_file, line_n, task_filename );
-					::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+					::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 				}
 				else {
 					// Add the filename to the global list of protocols and to the GUI.
@@ -334,7 +341,7 @@ void GripMMIDesktop::ParseProtocolFile ( const char *protocol_file ) {
 		}
 		else if ( tokens != 0 ) {
 			sprintf( msg, "%s Line %03d Wrong number of parameters: %s\n", protocol_file, line_n, line );
-			::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+			::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 		}
 		// If tokens is 0, then skip the line as a comment.
 		else {}
@@ -343,7 +350,7 @@ void GripMMIDesktop::ParseProtocolFile ( const char *protocol_file ) {
 	if ( nTasks >= MAX_MENU_ITEMS ) {
 		// Signal the error, but allow execution to continue.
 		sprintf( msg, "Number of items in %s exceeds limit.\n", protocol_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 	}
 }
 
@@ -391,7 +398,7 @@ void GripMMIDesktop::ParseSessionFile ( const char *session_file ) {
 	if ( !fp ) {
 		// Signal the error.
 		sprintf( msg, "Error opening session file %s for read.\n", session_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 		return;
 	}
 
@@ -406,7 +413,7 @@ void GripMMIDesktop::ParseSessionFile ( const char *session_file ) {
 			// First parameter must be CMD_PROTOCOL.
 			if ( strcmp( token[0], "CMD_PROTOCOL" ) ) {
 				sprintf( msg, "%s Line %03d Command not CMD_PROTOCOL: %s\n", session_file, line_n, token[0] );
-				::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+				::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 			}
 			// Second parameter is a protocol ID. Should be an integer value.
 			if ( 1 != sscanf( token[1], "%d", &protocolID[nProtocols] ) ) {
@@ -436,7 +443,7 @@ void GripMMIDesktop::ParseSessionFile ( const char *session_file ) {
 		}
 		else if ( tokens != 0 ) {
 			sprintf( msg, "%s Line %03d Wrong number of parameters: %s\n", session_file, line_n, line );
-			::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+			::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 			return;
 		}
 		// If tokens is 0, then skip the line as a comment.
@@ -446,7 +453,7 @@ void GripMMIDesktop::ParseSessionFile ( const char *session_file ) {
 	if ( nProtocols >= MAX_MENU_ITEMS ) {
 		// Signal the error, but allow execution to continue.
 		sprintf( msg, "Number of items in %s exceeds limit.\n", session_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 	}
 }
 
@@ -489,7 +496,7 @@ int GripMMIDesktop::ParseSubjectFile ( const char *subject_file ) {
 		char msg[1024];
 		sprintf( msg, "Error opening subject file %s for read.", subject_file );
 		printf( "%s\n", msg );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 		return( ERROR_EXIT );
 	}
 
@@ -509,7 +516,7 @@ int GripMMIDesktop::ParseSubjectFile ( const char *subject_file ) {
 			if ( strcmp( token[0], "CMD_USER" ) ) {
 				char msg[1024];
 				sprintf( msg, "%s Line %03d Command not CMD_USER: %s\n", subject_file, line_n, token[0] );
-				::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+				::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 				exit( ERROR_EXIT );
 			}
 			// Second parameter is a subject ID. Should be an integer value.
@@ -531,7 +538,7 @@ int GripMMIDesktop::ParseSubjectFile ( const char *subject_file ) {
 				// The file must not only be present, it also has to be readable.
 				// I had a funny problem with this at one point. Maybe MAC OS had created links.
 				sprintf( msg, "%s Line %03d Cannot access session file: %s\n", subject_file, line_n, session_filename );
-				::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+				::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 				exit( ERROR_EXIT );
 			}	
 			else {		
@@ -546,7 +553,7 @@ int GripMMIDesktop::ParseSubjectFile ( const char *subject_file ) {
 		else if ( tokens != 0 ) {
 			char msg[MAX_ERROR_MESSAGE_LENGTH];
 			sprintf( msg, "%s Line %03d Wrong number of parameters: %s\n", subject_file, line_n, line );
-			::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+			::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 			exit( ERROR_EXIT );
 		}	
 		// If the number of tokens is 0, it is a comment or blank line.
@@ -558,16 +565,20 @@ int GripMMIDesktop::ParseSubjectFile ( const char *subject_file ) {
 		char msg[MAX_ERROR_MESSAGE_LENGTH];
 		// Signal the error, but allow execution to continue.
 		sprintf( msg, "Number of items in %s exceeds limit.\n", subject_file );
-		::MessageBox( NULL, msg, "DexScriptCrawler", MB_OK | MB_ICONERROR );
+		::MessageBox( NULL, msg, "GRIP Script Crawler", MB_OK | MB_ICONERROR );
 	}
 	return( 0 );
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Given an index into the list of subjects, load the protocols from the associated session file 
+//  and show the specified subject as the selected subject in the subjectList ListBox.
 void GripMMIDesktop::GoToSpecifiedSubject( int subject ) 
 {
 	if ( subject < 0 || subject >= nSubjects ) {
-		// Show no subject selected.
+		// If subject index is out of range, show no subject selected.
 		subjectList->SelectedIndex = -1;
 		subjectIDBox->Text = "";
 		// Clear the protocol list to reflect that there is no subject selected.
@@ -575,24 +586,23 @@ void GripMMIDesktop::GoToSpecifiedSubject( int subject )
 		nProtocols = 0;
 	}
 	else {
+		// Parse the session file associated with this subject.
+		// This will reload the list of protocols stored in global variable protocol_file_list.
 		ParseSessionFile( session_file_list[subject] );
-		// SendDlgItemMessage( IDC_SUBJECTS, LB_SETCURSEL, subject, 0 );
+		// Show which subject is selected in both the ListBox and TextBox of the GUI.
 		subjectList->SelectedIndex = subject;
-		// SetDlgItemInt( IDC_SUBJECTID, subjectID[subject] );
 		subjectIDBox->Text = Convert::ToString( subjectID[subject] );
 	}	
 	// We don't know yet what protocol will be selected.
 	GoToSpecifiedProtocol( UNDEFINED );
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Given an index into the current list of protocols, load the tasks from the specified protocol 
 //  and show it as the selected protocol in the protocolList ListBox.
 void GripMMIDesktop::GoToSpecifiedProtocol( int protocol ) 
 {
 	if ( protocol < 0 || protocol >= nProtocols ) {
-		// Show no protocol selected.
+		// If out of range, show no protocol selected.
 		protocolList->SelectedIndex = -1;
 		protocolIDBox->Text = "";
 		// Clear the protocol list to reflect that there is no subject selected.
@@ -600,7 +610,10 @@ void GripMMIDesktop::GoToSpecifiedProtocol( int protocol )
 		nTasks = 0;
 	}
 	else {
+		// Parse the protocol file associated with the selected protocol.
+		// This will reload the list of tasks stored in the global variable task_file_list.
 		ParseProtocolFile( protocol_file_list[protocol] );
+		// Show which protocol is selected in the ListBox and TextBox of the GUI.
 		protocolList->SelectedIndex = protocol;
 		protocolIDBox->Text = Convert::ToString( protocolID[protocol] );
 	}	
@@ -613,15 +626,17 @@ void GripMMIDesktop::GoToSpecifiedProtocol( int protocol )
 void GripMMIDesktop::GoToSpecifiedTask( int task ) 
 {
 	if ( task < 0 || task >= nTasks ) {
-		// Show no protocol selected.
+		// If task is out of range, show no task selected.
 		taskList->SelectedIndex = -1;
 		taskIDBox->Text = "";
-		// Clear the protocol list to reflect that there is no subject selected.
+		// Clear the step list to reflect that there is no task selected.
 		stepList->Items->Clear();
 		nSteps = 0;
 	}
 	else {
+		// Load the steps in the selected task.
 		ParseTaskFile( task_file_list[task] );
+		// Show which task is selected in the ListBox and TextBox of the GUI.
 		taskList->SelectedIndex = task;
 		taskIDBox->Text = Convert::ToString( taskID[task] );
 	}	
@@ -631,13 +646,12 @@ void GripMMIDesktop::GoToSpecifiedTask( int task )
 
 // Given an index into the current list of steps, update the message, picture and status accordingly 
 //  and show the specified stap as the selected step in the stepList ListBox.
-
 void GripMMIDesktop::GoToSpecifiedStep( int step ) 
 {
 	char local_message[1024], local_picture[1024];
 
 	if ( step <= 0 ) {
-		// SetDlgItemInt( IDC_STEPID, 0 );
+		// If step is out of range, show no step selected.
 		stepIDBox->Text = "";
 		stepList->SelectedIndex = -1;
 		// Clear the DEX display;
@@ -648,44 +662,63 @@ void GripMMIDesktop::GoToSpecifiedStep( int step )
 	}
 	else {
 		// Center the selected line in the box.
-		// stepList->SelectedIndex = step + 14;
-		// Select the specified step.
+		// This allows us to see what is going to come next.
 		stepList->SelectedIndex = step;
 		stepIDBox->Text = Convert::ToString( stepID[step] );
 
-		// Show the full line in a larger box.
+		// Show the full line in a larger, popup text box.
+		// This box is typically hidden but can be shown by right-clicking on the step menu.
 		fullStepForm->fullStep->Text = stepList->SelectedItem->ToString();
+
+		// Update the representation of the GRIP display.
+		// There are 'fake' buttons that show which options the user sees on the GRIP touchscreen.
+		// Show or hide buttons according to what kind of text and message is current (status, query, alert).
+		// Then show the picture and message that the subject sees at this step in the script.
 		if ( type[step] == type_alert ) {
-			// Show or hide buttons accordingly.
 			fakeOK->Visible = false;
 			fakeRetry->Visible = true;
 			fakeIgnore->Visible = true;
 			fakeCancel->Visible = true;
 			fakeInterrupt->Visible = false;
+			// Alerts are generated on GRIP when a test condition fails.
+			// We cannot tell just by looking at the step ID whether the alert has
+			// been triggered or if the test is running but the result is pending.
+			// Housekeeping telemetry packets include a flag to say if the GRIP interpreter 
+			// is in an error state or not and the packet parser will update the scriptErrorCheckbox accordingly.
+			// So here we decide which message to show depending on whether the script crawler display is 'live', 
+			// meaning it is following the step info sent in the housekeeping telemetry, and whether GRIP is in 
+			// an error state or not.
 			if ( scriptLiveCheckbox->Checked && scriptErrorCheckbox->Checked ) {
+				// Error state means that the alert has been triggered.
 				strcpy( local_message, message[step] );
 				strcpy( local_picture, picture[step] );
 				messageTypeBox->Text = "Alert (triggered)";
 			}
 			else if ( scriptLiveCheckbox->Checked ) {
+				// Live, but no error state means that the test is still pending.
 				strcpy( local_message, "Test pending ..." );
 				strcpy( local_picture, "blank.bmp" );
 				messageTypeBox->Text = "Alert (not triggered)";
 			}
 			else {
+				// Not 'live' means that we are navigating through the script manually.
+				// So here we show what could happen when the subject gets to this point in the script.
 				strcpy( local_message, message[step] );
 				strcpy( local_picture, picture[step] );
 				messageTypeBox->Text = "Alert (shown if error)";
 			}
 		}
 		else if ( type[step] == type_query ) {
+			// Show the options available to the subject when queried.
 			fakeOK->Visible = true;
 			fakeRetry->Visible = false;
 			fakeIgnore->Visible = false;
 			fakeCancel->Visible = true;
 			fakeInterrupt->Visible = false;
+			// The text and picture of the query.
 			strcpy( local_message, message[step] );
 			strcpy( local_picture, picture[step] );
+			// Inidicate that GRIP is waiting for the subject to respond.
 			messageTypeBox->Text = "Query (Awaiting user response)";
 		}
 		else {
@@ -698,23 +731,23 @@ void GripMMIDesktop::GoToSpecifiedStep( int step )
 			strcpy( local_picture, picture[step] );
 			messageTypeBox->Text = "Status (Script will continue)";
 		}
-		// Convert \n escape sequence to newline. 
-		for ( char *ptr = local_message; *ptr; ptr++ ) {
-			if ( *ptr == '\\' && *(ptr+1) == 'n' ) {
-				*ptr = '\r';
-				*(ptr+1) = '\n';
-			}
-		}
 	}
 
 	// Show the text message.
+	// Convert and \n escape sequences within the message to newline. 
+	for ( char *ptr = local_message; *ptr; ptr++ ) {
+		if ( *ptr == '\\' && *(ptr+1) == 'n' ) {
+			*ptr = '\r';
+			*(ptr+1) = '\n';
+		}
+	}
 	dexText->Text = gcnew String( local_message );
 
 	// Show the picture.
 	if ( strlen( local_picture ) ) {
 		char picture_path[1024];
-		strncpy( picture_path, pictureFilenamePrefix, sizeof( picture_path ) );
-		strncat( picture_path, local_picture, sizeof( picture_path ) );
+		strcpy( picture_path, pictureFilenamePrefix );
+		strcat( picture_path, local_picture );
 		dexPicture->ImageLocation = gcnew String( picture_path );
 		dexPicture->Load();
 	}
@@ -738,7 +771,6 @@ void GripMMIDesktop::GoToSpecifiedIDs( int subject_id, int protocol_id, int task
 	static bool guess_next = false;
 
 	// Which subject is already selected?
-	// current_selection =  SendDlgItemMessage( IDC_SUBJECTS, LB_GETCURSEL, 0, 0 );
 	current_selection = subjectList->SelectedIndex;
 	// Look for the desired subject ID in the table of available subject IDs.
 	for ( i = 0; i < nSubjects - 1; i++ ) {
@@ -750,7 +782,6 @@ void GripMMIDesktop::GoToSpecifiedIDs( int subject_id, int protocol_id, int task
 	else if ( i != current_selection ) GoToSpecifiedSubject( i );
 
 	// Which protocol is already selected?
-	//current_selection =  SendDlgItemMessage( IDC_PROTOCOLS, LB_GETCURSEL, 0, 0 );
 	current_selection = protocolList->SelectedIndex;
 	// Look for the desired protocol ID in the table of available protocols.
 	for ( i = 0; i < nProtocols - 1; i++ ) {
@@ -762,7 +793,6 @@ void GripMMIDesktop::GoToSpecifiedIDs( int subject_id, int protocol_id, int task
 	else if ( i != current_selection ) GoToSpecifiedProtocol( i );
 
 	// Which task is already selected?
-	// current_selection =  SendDlgItemMessage( IDC_TASKS, LB_GETCURSEL, 0, 0 );
 	current_selection = taskList->SelectedIndex;
 
 	// If both task_id and step_id go to zero, it means that the subjec just
