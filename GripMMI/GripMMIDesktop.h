@@ -430,7 +430,6 @@ namespace GripMMI {
 			this->LogoPictureBox->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->LogoPictureBox->TabIndex = 0;
 			this->LogoPictureBox->TabStop = false;
-			this->LogoPictureBox->Click += gcnew System::EventHandler(this, &GripMMIDesktop::LogoPictureBox_Click);
 			// 
 			// XYPlot
 			// 
@@ -441,7 +440,6 @@ namespace GripMMI {
 			this->XYPlot->Size = System::Drawing::Size(246, 196);
 			this->XYPlot->TabIndex = 2;
 			this->XYPlot->TabStop = false;
-			this->XYPlot->Click += gcnew System::EventHandler(this, &GripMMIDesktop::XYPlot_Click);
 			// 
 			// groupBox1
 			// 
@@ -1021,7 +1019,6 @@ namespace GripMMI {
 			this->groupBox13->Size = System::Drawing::Size(302, 40);
 			this->groupBox13->TabIndex = 18;
 			this->groupBox13->TabStop = false;
-			this->groupBox13->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::groupBox13_Enter);
 			// 
 			// label1
 			// 
@@ -1057,7 +1054,6 @@ namespace GripMMI {
 			this->groupBox14->Size = System::Drawing::Size(214, 40);
 			this->groupBox14->TabIndex = 21;
 			this->groupBox14->TabStop = false;
-			this->groupBox14->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::groupBox14_Enter);
 			// 
 			// targetsTextBox
 			// 
@@ -1104,7 +1100,6 @@ namespace GripMMI {
 			this->groupBox15->Size = System::Drawing::Size(187, 40);
 			this->groupBox15->TabIndex = 22;
 			this->groupBox15->TabStop = false;
-			this->groupBox15->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::groupBox15_Enter);
 			// 
 			// label3
 			// 
@@ -1127,7 +1122,6 @@ namespace GripMMI {
 			this->groupBox16->Size = System::Drawing::Size(156, 40);
 			this->groupBox16->TabIndex = 23;
 			this->groupBox16->TabStop = false;
-			this->groupBox16->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::groupBox16_Enter);
 			// 
 			// cradlesTextBox
 			// 
@@ -1162,7 +1156,6 @@ namespace GripMMI {
 			this->groupBox17->Size = System::Drawing::Size(156, 40);
 			this->groupBox17->TabIndex = 24;
 			this->groupBox17->TabStop = false;
-			this->groupBox17->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::groupBox17_Enter);
 			// 
 			// acquisitionTextBox
 			// 
@@ -1219,10 +1212,8 @@ namespace GripMMI {
 			this->StartPosition = System::Windows::Forms::FormStartPosition::Manual;
 			this->Text = L"GripMMI";
 			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &GripMMIDesktop::GripMMIDesktop_FormClosing);
-			this->Load += gcnew System::EventHandler(this, &GripMMIDesktop::GripMMIDesktop_Load);
 			this->Shown += gcnew System::EventHandler(this, &GripMMIDesktop::GripMMIDesktop_Shown);
 			this->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &GripMMIDesktop::GripMMIDesktop_Paint);
-			this->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::GripMMIDesktop_KeyPress);
 			this->MouseClick += gcnew System::Windows::Forms::MouseEventHandler(this, &GripMMIDesktop::GripMMIDesktop_MouseClick);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->EndInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->XYPlot))->EndInit();
@@ -1274,10 +1265,6 @@ namespace GripMMI {
 				 KillGraphics();
 			 }
 
-	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void GripMMIDesktop_Load(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void GripMMIDesktop_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
-			 }
 	private: System::Void spanSelector_ValueChanged(System::Object^  sender, System::EventArgs^  e) {
 				 AdjustScrollSpan();
 				 RefreshGraphics();
@@ -1341,11 +1328,6 @@ namespace GripMMI {
 				 // Now update the picture and text.
 				 GoToSpecifiedStep( step );
 			 }
-	private: System::Void groupBox16_Enter(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void groupBox17_Enter(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void groupBox15_Enter(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void groupBox14_Enter(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void groupBox13_Enter(System::Object^  sender, System::EventArgs^  e) {}
 	private: System::Void nextButton_Click(System::Object^  sender, System::EventArgs^  e) {
 
 				 // Script crawler is no longer live.
@@ -1485,9 +1467,6 @@ namespace GripMMI {
 				 //  we need to restart the periodic refresh.
 				 if ( e->KeyChar == 0x1b || e->KeyChar == 0x0d ) ForceUpdate();
 			 }
-	private: System::Void LogoPictureBox_Click(System::Object^  sender, System::EventArgs^  e) {}
-	private: System::Void XYPlot_Click(System::Object^  sender, System::EventArgs^  e) {}
-
 
 	};
 
