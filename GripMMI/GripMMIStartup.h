@@ -114,7 +114,6 @@ namespace GripMMI {
 			this->startupCancelButton->TabIndex = 7;
 			this->startupCancelButton->Text = L"Cancel";
 			this->startupCancelButton->UseVisualStyleBackColor = true;
-			this->startupCancelButton->Click += gcnew System::EventHandler(this, &GripMMIStartup::startupCancelButton_Click);
 			// 
 			// versionText
 			// 
@@ -175,7 +174,6 @@ namespace GripMMI {
 			this->MinimizeBox = false;
 			this->Name = L"GripMMIStartup";
 			this->Text = L"GripMMI Startup";
-			this->Load += gcnew System::EventHandler(this, &GripMMIStartup::GripMMIStartup_Load);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->LogoPictureBox))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
@@ -183,12 +181,5 @@ namespace GripMMI {
 		}
 #pragma endregion
 
-
-private: System::Void startupCancelButton_Click(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void pictureBox1_Click(System::Object^  sender, System::EventArgs^  e) {
-		 }
-private: System::Void GripMMIStartup_Load(System::Object^  sender, System::EventArgs^  e) {
-		 }
 };
 }
