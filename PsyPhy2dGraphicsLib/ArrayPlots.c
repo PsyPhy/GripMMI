@@ -22,11 +22,50 @@
 /***************************************************************************/
 
 /*
-	Plot a series of numbers versus the array index.  We have to do a lot of
-	stuff to allow variable record lengths - size is the number of bytes
-	between successive numbers - best computed with the sizeof() macro.
-*/
+ 
+ Plot a series of numbers versus the array index, or one series versus another.
 
+ Routines work with pointers to allow plotting of series with different 
+ sized elements, such an array of vectors or an array of structs.
+ 
+ Example:
+
+	void ViewPlotDoubles ( View view, double *array, int start, int end, int step, unsigned size );
+
+	View view		a pointer to a View structure that maps user coordinates to screen coordinates.
+	double *array	a pointer to the first element of series of doubles
+	int start		the starting index into the series of values
+	int end			the ending index in the series of values
+	int step		how many entries to skip for sub-sampling (1 to plot every point)
+	unsigned size	the size in bytes in each element of the list
+
+	Note that size is not necessarily the size of a double. The double value could be, for instance,
+	an element of a multidimensional vector or a component of a structure. This is useful for plotting 
+	components of arrays of vectors or arrays of structures.
+
+	To plot a simple array of doubles:
+
+		double values[100];
+		ViewPlotDoubles( view, values, 0, 99, 1, sizeof( *values ));
+	
+	To plot the second component of an array of 3D vectors defined as:
+
+		double vectors[100][3];
+		ViewPlotDoubles( view, &vectors[2], 0, 99, 1, sizeof( *vectors ));
+
+	To plot an element of an array of structures:
+
+		struct {
+			double x;
+			double y;
+			double z
+			double roll;
+			double pitch;
+			double yaw
+		} poses[100];
+		ViewPlotDoubles( view, &poses[0].pitch, 0, 99, 1, sizeof( *poses ) );
+
+*/
 
 /***************************************************************************/
 

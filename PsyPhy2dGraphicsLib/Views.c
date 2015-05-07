@@ -6,6 +6,9 @@
 
 /*    (c) Copyright 1994, 1995 - PsyPhy Consulting. All Rights Reserved.    */
 
+// Views are objects that facilitate plotting of data on the screen.
+// The main purpose is to map user coordinates to screen coordinates.
+
 // Defines that increase the amount of info in the memory leak report.
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>

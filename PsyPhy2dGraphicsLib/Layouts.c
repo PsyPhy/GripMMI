@@ -3,7 +3,8 @@
 /*                                  Layouts                                  */
 /*                                                                           */
 /*****************************************************************************/
-// Defines that increase the amount of info in the memory leak report.
+
+// Routines to create a grid of Views.
 
 // Disable warnings about unsafe functions.
 // We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
