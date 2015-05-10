@@ -107,14 +107,19 @@ int __cdecl main(int argc, const char **argv)
 	const char *packetCacheFilenameRoot = NULL;
 	const char *server_name = NULL;
 
-	fprintf( stderr, "GripGroundMonitorClient started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
-	fprintf( stderr, "This is the EPM/GRIP packet receiver.\n" );
-	fprintf( stderr, "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
-	fprintf( stderr, "\n" );
+	printf( "GripGroundMonitorClient started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
+	printf( "This is the EPM/GRIP packet receiver.\n" );
+	printf( "It waits for a connection to the EPM server,\n then processes incoming packets.\n" );
+	printf( "\n\n" );
 
-	// Parse the command line.
+	// Parse command line.
+	// Note here that the project must have "Character Set" option in the project configuration
+	//  set to "Not Set" in both the debug and release configurations. Otherwise, the command line
+	//  arguments are not passed as the simple (legacy) charcter strings that we expect here.
 	for ( int arg = 1; arg < argc; arg ++ ) {
-
+		// Provide a visual check to see that the command line arguments are passed correclty.
+		// This line helped to debug the character set problem in the project settings.
+		printf( "Command Line Argument #%d: %s\n", arg, argv[arg] );
 		// The CLWS server can only talk to one instance with a given EPM software unit ID.
 		// The command line argument -alt causes an alternate EPM software unit ID to be used,
 		//  allowing two clients to connect to the same CLWS server.
@@ -136,8 +141,8 @@ int __cdecl main(int argc, const char **argv)
 		// More than 2 arguments that are not -alt or -only is  an error condition.
 		else printf( "Too many command line arguments (%s)\n", argv[arg] );
 	}
+
 	// Set default values if command line arguments are not given.
-	// Indicate the choices to stdout.
 	if (packetCacheFilenameRoot == NULL ) {
 		packetCacheFilenameRoot = ".\\";
 		printf( "Using default output root: %s\n", packetCacheFilenameRoot );
@@ -146,17 +151,17 @@ int __cdecl main(int argc, const char **argv)
 		server_name = "localhost";
 		printf( "Using default server name: %s\n", server_name );
 	}
-	if ( cache_all ) fprintf( stderr, "Saving all packets.\n" );
-	else fprintf( stderr, "Saving only GRIP packets.\n" );
+	if ( cache_all ) printf( "Saving all packets.\n" );
+	else printf( "Saving only GRIP packets.\n" );
 	if ( use_alt_id ) {
 		software_unit_id = GRIP_MMI_SOFTWARE_ALT_UNIT_ID;
 		printf( "Using alternate Software Unit ID.\n" );
 	}
-	fprintf( stderr, "Software Unit ID: %d\n", software_unit_id );
+	printf( "Software Unit ID: %d\n", software_unit_id );
 	connectPacket.softwareUnitID = software_unit_id;
 	alivePacket.softwareUnitID = software_unit_id;
 
-	fprintf( stderr, "\n" );
+	printf( "\n" );
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -219,11 +224,11 @@ int __cdecl main(int argc, const char **argv)
 	// If we get a socket error it is probably because the client has closed the connection.
 	// So we break out of the loop.
 	if ( iResult == SOCKET_ERROR ) {
-		fprintf( stderr, "Command packet send failed with error: %3d\n", WSAGetLastError());
+		printf( "Command packet send failed with error: %3d\n", WSAGetLastError());
 		getchar();
 		exit( -100 );
 	}
-	else fprintf( stderr, "Command packet bytes sent: %3d\n\n", iResult);
+	else printf( "Command packet bytes sent: %3d\n\n", iResult);
 
 	// We no longer need the address info.
     freeaddrinfo(result);
@@ -232,14 +237,14 @@ int __cdecl main(int argc, const char **argv)
 	// Create the file names that will hold the packets. 
 	// The filenames are based on today's date and the specified path to the cache directory.
 	CreateGripPacketCacheFilename( hkPacketCacheFilePath, sizeof( hkPacketCacheFilePath ), GRIP_HK_BULK_PACKET,    packetCacheFilenameRoot );
-	fprintf( stderr, "Output HK packets to: %s\n", hkPacketCacheFilePath );
+	printf( "Output HK packets to: %s\n", hkPacketCacheFilePath );
 	CreateGripPacketCacheFilename( rtPacketCacheFilePath, sizeof( rtPacketCacheFilePath ), GRIP_RT_SCIENCE_PACKET, packetCacheFilenameRoot );
-	fprintf( stderr, "Output RT packets to: %s\n", rtPacketCacheFilePath );
+	printf( "Output RT packets to: %s\n", rtPacketCacheFilePath );
 	if ( cache_all ) {
 		CreateGripPacketCacheFilename( anyPacketCacheFilePath, sizeof( anyPacketCacheFilePath ), GRIP_UNKNOWN_PACKET, packetCacheFilenameRoot );
-		fprintf( stderr, "Output ALL packets to: %s\n", anyPacketCacheFilePath );
+		printf( "Output ALL packets to: %s\n", anyPacketCacheFilePath );
 	}
-	fprintf( stderr, "\n" );
+	printf( "\n" );
 
 	// Receive as long as the server stays connected or until <ctrl-C>.
     do {
@@ -333,11 +338,10 @@ int __cdecl main(int argc, const char **argv)
 			// If we get a socket error it is probably because the client has closed the connection.
 			// So we break out of the loop.
 			if ( iResult == SOCKET_ERROR ) {
-				fprintf( stderr, "Alive packet send failed with error: %3d\n", WSAGetLastError());
+				printf( "Alive packet send failed with error: %3d\n", WSAGetLastError());
 				getchar();
 				exit( -100 );
 			}
-			// else fprintf( stderr, "Alive packet bytes sent: %3d\n", iResult);
 		}
 
 	// Keep looping as long as we are receiving packets.

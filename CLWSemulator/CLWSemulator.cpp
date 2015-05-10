@@ -125,7 +125,7 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 					// If we get a socket error it is probably because the client has closed the connection.
 					// So we break out of the loop.
 					if (iSendResult == SOCKET_ERROR) {
-						fprintf( stderr, "Recorded packet send failed with error: %3d\n", WSAGetLastError());
+						printf( "Recorded packet send failed with error: %3d\n", WSAGetLastError());
 						return( packetCount );
 					}
 					// What we SHOULD do here is sleep based on the difference in time between the previous
@@ -338,10 +338,10 @@ int sendConstructedPackets ( SOCKET socket ) {
 		// If we get a socket error it is probably because the client has closed the connection.
 		// So we break out of the loop.
 		if (iSendResult == SOCKET_ERROR) {
-			fprintf( stderr, "RT packet send failed with error: %3d\n", WSAGetLastError());
+			printf( "RT packet send failed with error: %3d\n", WSAGetLastError());
 			return ( packet_count );
 		}
-		fprintf( stderr, "  RT packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
+		printf( "  RT packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
 
 		// One HK packet gets sent out for every two real-time data packets. 
 		// The BOOL send_hk is used to turn off and on HK output for each RT cycle.
@@ -376,16 +376,16 @@ int sendConstructedPackets ( SOCKET socket ) {
 			// If we get a socket error it is probably because the client has closed the connection.
 			// So we break out of the loop.
 			if (iSendResult == SOCKET_ERROR) {
-				fprintf( stderr, "HK send failed with error: %3d\n", WSAGetLastError());
+				printf( "HK send failed with error: %3d\n", WSAGetLastError());
 				return ( packet_count );
 			}
-			fprintf( stderr, "  HK packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
+			printf( "  HK packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
 		}
 		send_hk = !send_hk; // Toggle enable flag so that we do one out of two cycles.
 
 		// Every once in a while, pause a bit to simulate breaks between tasks.
 		if ( (packet_count % 20) == 0 ) {
-			fprintf( stderr, "\nSimulating inter-trial pause.\n\n" );
+			printf( "\nSimulating inter-trial pause.\n\n" );
 			Sleep( 5000 );
 
 			// On each new epoch, fabricate new values
@@ -406,10 +406,8 @@ int sendConstructedPackets ( SOCKET socket ) {
 // It parses the command line, initializes a socket to create a CLWS-like server 
 // and calls the routine to output packets according to the command line options.
 
-int _tmain(int argc, char* argv[])
+int _tmain( int argc, char **argv )
 {
-
-
 	WSADATA wsaData;
 	int iResult;
 
@@ -431,14 +429,20 @@ int _tmain(int argc, char* argv[])
 	// A place to store the pertinent information from a client packet in usable form.
 	EPMTransferFrameHeaderInfo transferFrameInfo;
 
-	fprintf( stderr, "CLWS Emulator started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
-	fprintf( stderr, "This is the EPM/GRIP packet server emulator.\n" );
-	fprintf( stderr, "It waits for a client to connect and then sends\n" );
-	fprintf( stderr, " out HK and RT packets.\n" );
-	fprintf( stderr, "\n" );
+	printf( "CLWS Emulator started.\n%s\n%s\n\n", GripMMIVersion, GripMMIBuildInfo );
+	printf( "This is the EPM/GRIP packet server emulator.\n" );
+	printf( "It waits for a client to connect and then sends\n" );
+	printf( " out HK and RT packets.\n" );
+	printf( "\n\n" );
 
 	// Parse command line.
+	// Note here that the project must have "Character Set" option in the project configuration
+	//  set to "Not Set" in both the debug and release configurations. Otherwise, the command line
+	//  arguments are not passed as the simple (legacy) charcter strings that we expect here.
 	for ( int arg = 1; arg < argc; arg++ ) {
+		// Provide a visual check to see that the command line arguments are passed correclty.
+		// This line helped to debug the character set problem in the project settings.
+		printf( "Command Line Argument #%d: %s\n", arg, argv[arg] );
 		if ( !strcmp( argv[arg], "-constructed" ) ) packet_source = CONSTRUCTED_PACKETS;
 		// Playback previously recorded packets.
 		else if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
@@ -446,20 +450,20 @@ int _tmain(int argc, char* argv[])
 		else packet_source_filename = argv[arg];
 	}	
 	if ( packet_source == RECORDED_PACKETS ) {
-		fprintf( stderr, "Sending pre-recorded packets.\n" );
-		fprintf( stderr, "Packet source file: %s\n\n", packet_source_filename );
+		printf( "\nSending pre-recorded packets.\n" );
+		printf( "Packet source file: %s\n\n", packet_source_filename );
 	}
 	else if ( packet_source == CONSTRUCTED_PACKETS ) {
-		fprintf( stderr, "Constructing simulated packets.\n\n" );
+		printf( "Constructing simulated packets.\n\n" );
 	}
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
 	if (iResult != 0) {
-		fprintf( stderr, "WSAStartup failed with error: %d\n", iResult );
+		printf( "WSAStartup failed with error: %d\n", iResult );
 		return 1;
 	}
-	else if ( _debug ) fprintf( stderr, "WSAStartup() OK.\n" );
+	else if ( _debug ) printf( "WSAStartup() OK.\n" );
 
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -474,7 +478,7 @@ int _tmain(int argc, char* argv[])
 		WSACleanup();
 		return 2;
 	}
-	else if ( _debug ) fprintf( stderr, "getaddrinfo() OK.\n" );
+	else if ( _debug ) printf( "getaddrinfo() OK.\n" );
 
 	// Create a SOCKET for connecting to client
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -484,7 +488,7 @@ int _tmain(int argc, char* argv[])
 		WSACleanup();
 		return 3;
 	}
-	else if ( _debug ) fprintf( stderr, "ListenSocket() OK.\n" );
+	else if ( _debug ) printf( "ListenSocket() OK.\n" );
 
 	// Setup the TCP listening socket
 	iResult = bind( ListenSocket, result->ai_addr, (int)result->ai_addrlen);
@@ -495,7 +499,7 @@ int _tmain(int argc, char* argv[])
 		WSACleanup();
 		return 4;
 	}
-	else if ( _debug ) fprintf( stderr, "bind() OK.\n" );
+	else if ( _debug ) printf( "bind() OK.\n" );
 
 	// We don't need the address info anymore, so free it.
 	freeaddrinfo(result);
@@ -510,7 +514,7 @@ int _tmain(int argc, char* argv[])
 	while ( 1 ) {
 
 		// Listen until we get a connection.
-		fprintf( stderr, "Listening for a connection ... " );
+		printf( "Listening for a connection ... " );
 		iResult = listen(ListenSocket, SOMAXCONN);
 		if (iResult == SOCKET_ERROR) {
 			printf("listen failed with error: %d\n", WSAGetLastError());
@@ -518,21 +522,21 @@ int _tmain(int argc, char* argv[])
 			WSACleanup();
 			return 5;
 		}
-		else if ( _debug ) fprintf( stderr, "listen() OK " );
+		else if ( _debug ) printf( "listen() OK " );
 
 		// Accept a client socket
 		ClientSocket = accept(ListenSocket, NULL, NULL);
 		if (ClientSocket == INVALID_SOCKET) {
-			fprintf( stderr, "accept failed with error: %d\n", WSAGetLastError());
+			printf( "accept failed with error: %d\n", WSAGetLastError());
 			closesocket(ListenSocket);
 			WSACleanup();
 			return 6;
 		}
-		else if ( _debug ) fprintf( stderr, "acceot() OK " );
-		fprintf( stderr, "connected.\n" );
+		else if ( _debug ) printf( "acceot() OK " );
+		printf( "connected.\n" );
 
 		// Wait for a 'Connect' command to start sending packets.
-		fprintf( stderr, "Waiting for a Connect command ... " );
+		printf( "Waiting for a Connect command ... " );
 		do {
 
 			iResult = recv(ClientSocket, inputPacket.buffer, sizeof( inputPacket.buffer ), 0);
@@ -578,14 +582,14 @@ int _tmain(int argc, char* argv[])
 		// shutdown the connection since we're done
 		iResult = shutdown(ClientSocket, SD_SEND);
 		if (iResult == SOCKET_ERROR) {
-			fprintf( stderr, "shutdown() failed with error: %d\n", WSAGetLastError());
+			printf( "shutdown() failed with error: %d\n", WSAGetLastError());
 			closesocket(ClientSocket);
 			WSACleanup();
 			return 7;
 		}
-		else if ( _debug ) fprintf( stderr, "shutdown() OK n" );
+		else if ( _debug ) printf( "shutdown() OK n" );
 
-		fprintf( stderr, "  Total packets sent: %d\n\n", packet_count );
+		printf( "  Total packets sent: %d\n\n", packet_count );
 
 	}
 
