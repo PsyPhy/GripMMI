@@ -20,6 +20,10 @@
 //  are new packets in either file with respect to the previous iteraion, it outputs
 //  a subset of the data to stdout, i.e. to the console for display.
 
+// This program is meant to be edited as needed to output values of interest when
+// testing or debugging any issues that may arise. It is provide 'as is' with no guarantee
+// that it is currently in a stable and usable state.
+
 #include "stdafx.h"
 #include "..\Grip\GripPackets.h"
 #include "..\Useful\fMessageBox.h"
