@@ -3,6 +3,8 @@ echo This is a DOS batch file used to export the current executables to the stan
 REM Follow progress during a build.
 echo CD =      %cd%
 
+
+
 REM Destination is the 'GripExecutables' directory relative to this one.
 set DEST=..\..\GripExecutables
 echo DEST =   %DEST%
@@ -12,9 +14,25 @@ REM Should be 'Debug' or 'Release'
 set CONFIG=%1
 echo CONFIG = %CONFIG%
 
+REM Clean any previous executables from the destination directory.
+REM Create a dummy executable so that the subsequent delete command
+REM  won't complain if it doesn't find any .exe files.
+echo Dummy file. > %DEST%\dummy.exe
+del /Q %DEST%\*.exe
+
+REM Remove the previous timestamps as well.
+echo Dummy file. > %DEST%\Timestamp.txt
+del %DEST%\Timestamp.txt
+echo Dummy file. > %DEST%\LatestBuildInfo.txt
+del %DEST%\LatestBuildInfo.txt
+
+REM Remove the batch file used to launch the executables.
+REM It will be recopied from the source file further on.
+echo Dummy file. > %DEST%\RunGripMMI.bat
+del %DEST%\RunGripMMI.bat
+
 REM Create a timestamp so that we know when this standalone was created.
-REM Make sure that the old timestamp doesn't get left in place if the
-REM build fails.
+REM Here we create a phony timestamp that will let us know if the make failed before completing.
 set TIMESTAMP=%DEST%\Timestamp.txt
 echo Unfinished > %TIMESTAMP%
 
