@@ -894,6 +894,9 @@ namespace GripMMI {
 			this->stepIDBox->Size = System::Drawing::Size(47, 24);
 			this->stepIDBox->TabIndex = 3;
 			this->stepIDBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+			this->stepIDBox->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::stepIDBox_Enter);
+			this->stepIDBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::stepIDBox_KeyPress);
+			this->stepIDBox->Leave += gcnew System::EventHandler(this, &GripMMIDesktop::stepIDBox_Leave);
 			// 
 			// taskIDBox
 			// 
@@ -904,6 +907,9 @@ namespace GripMMI {
 			this->taskIDBox->Size = System::Drawing::Size(47, 24);
 			this->taskIDBox->TabIndex = 2;
 			this->taskIDBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+			this->taskIDBox->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::taskIDBox_Enter);
+			this->taskIDBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::taskIDBox_KeyPress);
+			this->taskIDBox->Leave += gcnew System::EventHandler(this, &GripMMIDesktop::taskIDBox_Leave);
 			// 
 			// protocolIDBox
 			// 
@@ -914,6 +920,9 @@ namespace GripMMI {
 			this->protocolIDBox->Size = System::Drawing::Size(47, 24);
 			this->protocolIDBox->TabIndex = 1;
 			this->protocolIDBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+			this->protocolIDBox->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::protocolIDBox_Enter);
+			this->protocolIDBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::protocolIDBox_KeyPress);
+			this->protocolIDBox->Leave += gcnew System::EventHandler(this, &GripMMIDesktop::protocolIDBox_Leave);
 			// 
 			// subjectIDBox
 			// 
@@ -924,6 +933,9 @@ namespace GripMMI {
 			this->subjectIDBox->Size = System::Drawing::Size(47, 24);
 			this->subjectIDBox->TabIndex = 0;
 			this->subjectIDBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+			this->subjectIDBox->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::subjectIDBox_Enter);
+			this->subjectIDBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::subjectIDBox_KeyPress);
+			this->subjectIDBox->Leave += gcnew System::EventHandler(this, &GripMMIDesktop::subjectIDBox_Leave);
 			// 
 			// groupBox9
 			// 
@@ -1201,7 +1213,7 @@ namespace GripMMI {
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::White;
-			this->ClientSize = System::Drawing::Size(1444, 878);
+			this->ClientSize = System::Drawing::Size(1526, 1016);
 			this->Controls->Add(this->groupBox4);
 			this->Controls->Add(this->groupBox12);
 			this->Controls->Add(this->groupBox11);
@@ -1414,6 +1426,63 @@ namespace GripMMI {
 
 			 }
 
+	// The user can manually enter subject, protocol, task and step IDs in the text boxes
+	// and then press GoTo to position the list boxes accordingly. This creates some issues
+	// of when to update the display while the user is typing into the text boxes.
+	// The following routines are intended to deal with this situation.
+	private: System::Void subjectIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
+				 // Inhibit script crawler update if we start to manually enter an ID.
+				 scriptLiveCheckbox->Checked = false;
+				 ImpedeUpdate();
+			 }
+	private: System::Void subjectIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Restart updating after manually specifying a value.
+				 ForceUpdate();
+			 }
+	private: System::Void subjectIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				 // If user presses <enter>, treat it like pressing GoTo.
+				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+			 }
+	private: System::Void protocolIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
+				// Inhibit script crawler update if we start to manually enter an ID.
+				scriptLiveCheckbox->Checked = false;
+				ImpedeUpdate();
+			}
+	private: System::Void protocolIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Restart updating after manually specifying a value.
+				 ForceUpdate();
+			 }
+	private: System::Void protocolIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				 // If user presses <enter>, treat it like pressing GoTo.
+				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+			 }
+	private: System::Void taskIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
+				// Inhibit script crawler update if we start to manually enter an ID.
+				scriptLiveCheckbox->Checked = false;
+				ImpedeUpdate();
+			 }
+	private: System::Void taskIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Restart updating after manually specifying a value.
+				 ForceUpdate();
+			 }
+	private: System::Void taskIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				 // If user presses <enter>, treat it like pressing GoTo.
+				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+			 }
+	private: System::Void stepIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
+				// Inhibit script crawler update if we start to manually enter an ID.
+				scriptLiveCheckbox->Checked = false;
+				ImpedeUpdate();
+			}
+	private: System::Void stepIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Restart updating after manually specifying a value.
+				 ForceUpdate();
+			 }
+	private: System::Void stepIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				 // If user presses <enter>, treat it like pressing GoTo.
+				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+			 }
+
 	// The GUI includes a number of checkboxes and pulldown lists to set the configuration.
 	// The Forms objects take care of changing the state according to the action and 
 	// the state of these objects will be read by the various graphing routines. But
@@ -1491,7 +1560,8 @@ namespace GripMMI {
 					// Do what one would normally do.
 					Form::WndProc( m );
 				}
-	};
+
+};
 
 }
 
