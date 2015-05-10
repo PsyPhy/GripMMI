@@ -4,7 +4,7 @@
 /*                                                                               */
 /*********************************************************************************/
 //
-// Packet definitions for realtime data from Grip.
+// Routines to process telemetry packets sent by the GRIP hardware.
 //
 
 // Disable warnings about unsafe functions.
@@ -22,7 +22,9 @@
 #include "GripPackets.h"
 
 // Routines to change the byte order in various data types.
-// These are useful when inserting or extracting data from an EPM packet.
+// These are useful when inserting or extracting data from an EPM packet
+// because the packets are encoded in ESA-specified byte order, while
+// Windows / Intel use a different byte order.
 
 unsigned short swapbytes_short( unsigned short input ) {
 	union {
@@ -98,6 +100,7 @@ float extract_reversed_float( const unsigned char bytes[4] ) {
 // These macros facilate stepping through a buffer with a pointer and make the code cleaner.
 // On each use of the macro, the pointer is incremented by the number of bytes corresponding to the data type.
 // Use of the macros reduces the chance of error due to mismatch between data type and increment of the pointer.
+// Nevertheless, improper use can cause unexpected results.
 // Note the comma, rather than semicolon, between statements. This make it OK to put it in a single-line 
 // 'if' or 'for' statement, i.e. "for ( i = X; i <= Z; i++ ) position[i] = ExtractShort( ptr );"
 #define ExtractShort( ptr ) extract_short( ptr ), ptr += sizeof( short ) 
@@ -105,6 +108,52 @@ float extract_reversed_float( const unsigned char bytes[4] ) {
 #define ExtractReversedLong( ptr ) extract_reversed_long( ptr ), ptr += sizeof( long ) 
 #define ExtractReversedFloat( ptr ) extract_reversed_float( ptr ), ptr += sizeof( float ) 
 #define ExtractChar( ptr ) (*ptr++)
+
+union {
+	float	float_value;
+	long	long_value;
+	unsigned long	ulong_value;
+	short	short_value;
+	unsigned short	ushort_value;
+	char  bytes[16]; // More bytes than we need.
+} __item;
+
+int insert_float( char *ptr, float value ) {
+	int i;
+	__item.float_value = value;
+	for (i = sizeof( float ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( float ) );
+}
+int insert_long( char *ptr, long value ) {
+	int i;
+	__item.long_value = value;
+	for (i = sizeof( long ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( long ) );
+}
+int insert_ulong( char *ptr, unsigned long value ) {
+	int i;
+	__item.ulong_value = value;
+	for (i = sizeof( unsigned long ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( unsigned long ) );
+}
+int insert_short( char *ptr, short value ) {
+	int i;
+	__item.short_value = value;
+	for (i = sizeof( short ) - 1; i >= 0; i-- ) {
+		*ptr = __item.bytes[i]; 
+		ptr++;
+	}
+	return( sizeof( short ) );
+}
 
 /***********************************************************************************/
 
@@ -116,8 +165,19 @@ long double EPMtoSeconds( EPMTelemetryHeaderInfo *header ) {
 
 /***********************************************************************************/
 
-// Fill a structure with the header values from an EPM Transfer Frame packet.
-// The bytes are in ESA/EPM order in the packet, and need to be reversed for Windows.
+// Fill a EPMTransferFrameHeaderInfo structure with the corresponding values from an EPM Transfer Frame packet.
+// The bytes are in ESA/EPM order in the packet, and need to be reversed to be used by Intel/Windows.
+void ExtractEPMTransferFrameHeaderInfo ( EPMTransferFrameHeaderInfo *header, const EPMTelemetryPacket *epm_packet  ) {
+	unsigned char *ptr = ((unsigned char *) epm_packet); 
+	header->epmLanSyncMarker = ExtractReversedLong( ptr );
+	header->spare1 = ExtractChar( ptr );
+	header->softwareUnitID = ExtractChar( ptr );
+	header->packetType = ExtractReversedShort( ptr );
+	header->spare2 = ExtractReversedShort( ptr );
+	header->numberOfWords = ExtractReversedShort( ptr );
+}
+
+// Fill an EPMTelemetryPacket with the information from an EPMTransferFrameHeaderInfo structure.
 // Returns the number of bytes inserted into the buffer.
 int InsertEPMTransferFrameHeaderInfo ( EPMTelemetryPacket *epm_packet, const EPMTransferFrameHeaderInfo *header  ) {
 	unsigned char *ptr = ((unsigned char *) epm_packet); 
@@ -131,15 +191,6 @@ int InsertEPMTransferFrameHeaderInfo ( EPMTelemetryPacket *epm_packet, const EPM
 	return( bytes_inserted );
 }
 
-void ExtractEPMTransferFrameHeaderInfo ( EPMTransferFrameHeaderInfo *header, const EPMTelemetryPacket *epm_packet  ) {
-	unsigned char *ptr = ((unsigned char *) epm_packet); 
-	header->epmLanSyncMarker = ExtractReversedLong( ptr );
-	header->spare1 = ExtractChar( ptr );
-	header->softwareUnitID = ExtractChar( ptr );
-	header->packetType = ExtractReversedShort( ptr );
-	header->spare2 = ExtractReversedShort( ptr );
-	header->numberOfWords = ExtractReversedShort( ptr );
-}
 
 // Insert Telemetry header info into a buffer in byte-reversed order.
 // Returns the number of bytes inserted.
@@ -173,6 +224,7 @@ int InsertEPMTelemetryHeaderInfo ( EPMTelemetryPacket *epm_packet, const EPMTele
 	return( bytes_inserted );
 }
 
+// Extract EPM Telemetry Header information into a usable form, taking into account byte order.
 void ExtractEPMTelemetryHeaderInfo ( EPMTelemetryHeaderInfo *header, const EPMTelemetryPacket *epm_packet  ) {
 	// Fill a structure with the header values from an EPM TCP packet.
 	// The bytes are in ESA/EPM order in the TCP packet, and need to be reversed for Windows.
@@ -301,51 +353,6 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	}
 }
 
-union {
-	float	float_value;
-	long	long_value;
-	unsigned long	ulong_value;
-	short	short_value;
-	unsigned short	ushort_value;
-	char  bytes[16]; // More bytes than we need.
-} __item;
-
-int insert_float( char *ptr, float value ) {
-	int i;
-	__item.float_value = value;
-	for (i = sizeof( float ) - 1; i >= 0; i-- ) {
-		*ptr = __item.bytes[i]; 
-		ptr++;
-	}
-	return( sizeof( float ) );
-}
-int insert_long( char *ptr, long value ) {
-	int i;
-	__item.long_value = value;
-	for (i = sizeof( long ) - 1; i >= 0; i-- ) {
-		*ptr = __item.bytes[i]; 
-		ptr++;
-	}
-	return( sizeof( long ) );
-}
-int insert_ulong( char *ptr, unsigned long value ) {
-	int i;
-	__item.ulong_value = value;
-	for (i = sizeof( unsigned long ) - 1; i >= 0; i-- ) {
-		*ptr = __item.bytes[i]; 
-		ptr++;
-	}
-	return( sizeof( unsigned long ) );
-}
-int insert_short( char *ptr, short value ) {
-	int i;
-	__item.short_value = value;
-	for (i = sizeof( short ) - 1; i >= 0; i-- ) {
-		*ptr = __item.bytes[i]; 
-		ptr++;
-	}
-	return( sizeof( short ) );
-}
 
 // Inssert real-time science data into an EPM data packet.
 void InsertGripRealtimeDataInfo( EPMTelemetryPacket *epm_packet, const GripRealtimeDataInfo *realtime_packet ) {
@@ -467,9 +474,17 @@ void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHe
 	
 
 }
+
+// Packets are stored locally into one of 3 different cache files, one containing only GRIP housekeeping packets
+// (HK), one containing only realtime science data packates (RT) and one containing all valid EPM packets.
+// Here we provide a helper function that creates the appropriate file name in a consistent manner based
+//  on a root name (which may include the path to the files) and the packet type.
+// 
+// The newly created filename is returned in the buffer pointed to by the first paramter.
+// Excedding the specified 'max_characters' will generate an error message and cause the application to exit.
+
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root ) {
 		
-	// Create the file names that hold the packets according to packet type.
 	int	bytes_written;
 
 	switch ( type ) {
@@ -485,7 +500,7 @@ void CreateGripPacketCacheFilename( char *filename, int max_characters, const Gr
 		break;
 
 	}
-	if ( bytes_written < 0 ) {
+	if ( bytes_written < 0 || bytes_written > max_characters ) {
 			fMessageBox( MB_OK, "Grip", "Error in sprintf()." );
 			exit( -1 );
 	}

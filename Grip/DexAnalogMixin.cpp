@@ -7,6 +7,9 @@
 // Methods to process Dex (Grip) analog data, notably the ATI data.
 // Copyright (c) 2012-2013 PsyPhy Consulting. All rights reserved.
 
+// This code was written when developing and testing the algorithms for the 
+//  DEX (now GRIP) hardware. It has be reused in the devepment of the GripMMI.
+
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -36,8 +39,7 @@ DexAnalogMixin::DexAnalogMixin( void ) {
 	ATIRotationAngle[RIGHT_ATI] = RIGHT_ATI_ROTATION;
 
 	// Compute the transformations to put ATI forces in a common reference frame.
-	// TODO: Check what the others are using as a reference frame and make it 
-	// coherent. Ideally, the local manipulandum reference frame should align with
+	// The local manipulandum reference frame should align with
 	// the world reference frame when the manipulandum is held upright in the seated posture.
 	SetQuaterniond( ftAlignmentQuaternion[0], ATIRotationAngle[0], kVector );
 	SetQuaterniond( align, ATIRotationAngle[1], kVector );
@@ -46,6 +48,9 @@ DexAnalogMixin::DexAnalogMixin( void ) {
 
 	// Set a default filter constant.
 	SetFilterConstant( 100.0 );
+
+	// Initialize some instance variables used to hold the current state
+	// when filtering certain vector values.
 	CopyVector( filteredManipulandumPosition, zeroVector );
 	CopyVector( filteredManipulandumRotations, zeroVector );
 	CopyVector( filteredLoadForce, zeroVector );
@@ -57,6 +62,10 @@ DexAnalogMixin::DexAnalogMixin( void ) {
 
 /***************************************************************************/
 
+// Compute the center-of-pressure based on force and torque measurements.
+// The normal force must be above threshold to compute a valid CoP.
+// Returns the CoP in the vector pointed to by cop, and returns the distance of
+//  of the CoP from 0,0 as a double. If CoP cannot be computed, returns -1.0.
 double DexAnalogMixin::ComputeCoP( Vector3 &cop, Vector3 &force, Vector3 &torque, double threshold ) {
 	// If there is enough normal force, compute the center of pressure.
 	if ( fabs( force[X] ) > threshold ) {
@@ -77,6 +86,7 @@ double DexAnalogMixin::ComputeCoP( Vector3 &cop, Vector3 &force, Vector3 &torque
 
 /***************************************************************************/
 
+// Returns the grip force from the 3D force measurements of the sensors under each fingertip.
 double DexAnalogMixin::ComputeGripForce( Vector3 &force1, Vector3 &force2 ) {
 	// Force readings have been transformed into a common reference frame.
 	// Take the average of two opposing forces.
@@ -84,7 +94,9 @@ double DexAnalogMixin::ComputeGripForce( Vector3 &force1, Vector3 &force2 ) {
 	return(  ( force2[X] - force1[X] ) / 2.0 );
 }
 
-
+// Computes the net force (load force) acting on the manipulandum, based on the 
+// measured 3D force vectors from the two ATI sensors. Result is returned in the
+// 3D vector 'load', while the magnitude of the load is returned as a double.
 double DexAnalogMixin::ComputeLoadForce( Vector3 &load, Vector3 &force1, Vector3 &force2 ) {
 	// Compute the net force on the object.
 	// If the reference frames have been properly aligned,
@@ -97,6 +109,7 @@ double DexAnalogMixin::ComputeLoadForce( Vector3 &load, Vector3 &force1, Vector3
 	return( VectorNorm( load ) );
 }
 
+// Same as the above, but the load force normal to the sensors is ignored.
 double DexAnalogMixin::ComputePlanarLoadForce( Vector3 &load, Vector3 &force1, Vector3 &force2 ) {
 	// Compute the net force perpendicular to the pinch axis.
 	ComputeLoadForce( load, force1, force2 );
@@ -111,19 +124,23 @@ double DexAnalogMixin::ComputePlanarLoadForce( Vector3 &load, Vector3 &force1, V
 
 // Take a vector or a scalar, recursively filter it and return the filtered value.
 // Filtering is the same for all quantities in the instance.
+
+// Set the filter constant.
 // The larger the filterConstant value, the more the data is smoothed.
 // A filterConstant of zero results in no filtering.
-
 void DexAnalogMixin::SetFilterConstant( double filter_constant ) {
 	filterConstant = filter_constant;
 }
 
+// Read the current filter constant.
 double DexAnalogMixin::GetFilterConstant( void ) {
 	return( filterConstant );
 }
 
-// Vectors are filtered 'in place', i.e. returned in the same vector.
-// The magnitude of the vector is returned as a scalar value.
+// Vectors are filtered 'in place', i.e. a reference to a vector containing the new
+//  measurement is provided as an input to the method and the filtered vector value
+//  is returned in the same vector. The magnitude of the filtered vector is returned 
+//  as a scalar value.
 
 double DexAnalogMixin::FilterLoadForce( Vector3 load_force ) {
 	// Combine the new force sample with previous filtered value (recursive filtering).
@@ -165,16 +182,6 @@ double DexAnalogMixin::FilterManipulandumRotations( Vector3 rotations ) {
 	return( VectorNorm( rotations ) );
 }
 
-double DexAnalogMixin::FilterGripForce( double grip_force ) {
-	filteredGripForce = (grip_force + filterConstant * filteredGripForce) / (1.0 + filterConstant );
-	return( filteredGripForce );
-}
-
-double DexAnalogMixin::FilterNormalForce( double normal_force, int ati ) {
-	filteredNormalForce[ati] = (normal_force + filterConstant * filteredNormalForce[ati]) / (1.0 + filterConstant );
-	return( filteredNormalForce[ati] );
-}
-
 double DexAnalogMixin::FilterAcceleration( Vector3 acceleration ) {
 	// Combine the new position sample with previous filtered value (recursive filtering).
 	ScaleVector( filteredAcceleration, filteredAcceleration, filterConstant );
@@ -184,3 +191,25 @@ double DexAnalogMixin::FilterAcceleration( Vector3 acceleration ) {
 	CopyVector( acceleration, filteredAcceleration );
 	return( VectorNorm( acceleration ) );
 }
+
+// When filtering a scalar value, the input value is not changed in the calling routine (call by value).
+// Rather, the filtered value is returned as the return value of the method.
+double DexAnalogMixin::FilterGripForce( double grip_force ) {
+	filteredGripForce = (grip_force + filterConstant * filteredGripForce) / (1.0 + filterConstant );
+	return( filteredGripForce );
+}
+
+// The normal force of each ATI sensor is filtered separately. So the input to this method includes
+//  both the newly measured normal force and a specification of which ATI sensor (0 or 1).
+double DexAnalogMixin::FilterNormalForce( double normal_force, int ati ) {
+	if ( ati >= N_FORCE_TRANSDUCERS || ati < 0 ) {
+		// This should not happen, but check if the caller specifies a valid sensor ID.
+		return( MISSING_DOUBLE );
+	}
+	else {
+		filteredNormalForce[ati] = (normal_force + filterConstant * filteredNormalForce[ati]) / (1.0 + filterConstant );
+		return( filteredNormalForce[ati] );
+	}
+}
+
+
