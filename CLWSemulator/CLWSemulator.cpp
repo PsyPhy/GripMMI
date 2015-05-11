@@ -35,14 +35,16 @@ PCSTR EPMport = EPM_DEFAULT_PORT;
 // This is the default path to the file, but it can be changed on the command line.
 const char *DefaultPacketSourceFile = ".\\GripPacketsForSimulator.gpk";
 
+// The bool _debug controls whether certain debugging information is sent to the console.
+// It is true by default when compiled in debug mode and false when compiled in release mode.
 #ifdef _DEBUG
 	bool _debug = true;
 #else
 	bool _debug = false;
 #endif
 
-BOOL verbose = false;
-
+// The bool verbose determines how much information we send to the console during normal operation.
+bool verbose = false;
 
 void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 
@@ -67,7 +69,8 @@ void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 }
 
 // This is the routine that sends out packets that were pre-recorded.
-// Takes as its only input the socket for outputing packets.
+// Takes as its input the socket for outputing packets, the path to the file
+// containing the recorded packets.
 int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 
 	// Count the total numbe of packets sent on the socket.
@@ -125,7 +128,7 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 					// If we get a socket error it is probably because the client has closed the connection.
 					// So we break out of the loop.
 					if (iSendResult == SOCKET_ERROR) {
-						printf( "Recorded packet send failed with error: %3d\n", WSAGetLastError());
+						printf( "Recorded packet send() failed with error: %3d\n", WSAGetLastError());
 						return( packetCount );
 					}
 					// What we SHOULD do here is sleep based on the difference in time between the previous
@@ -133,6 +136,7 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 					// What we DO do here instead is simply sleep 500 ms after sending a realtime data packet, so that
 					//  the RT packets are sent a approximately 2 Hz. This is not exact, but the real GRIP
 					//  data packets do not appear to respect a strict 2 Hz rhythm either.
+					// If the fast flag is set, sleep only 100 ms to output packets more quickly for testing.
 					// If it is not an RT packet, sleep just a little so that packets do not overlap.
 					if ( epmPacketHeaderInfo.TMIdentifier == GRIP_RT_ID ) Sleep( 500 );
 					else Sleep( 20 );
@@ -338,7 +342,7 @@ int sendConstructedPackets ( SOCKET socket ) {
 		// If we get a socket error it is probably because the client has closed the connection.
 		// So we break out of the loop.
 		if (iSendResult == SOCKET_ERROR) {
-			printf( "RT packet send failed with error: %3d\n", WSAGetLastError());
+			printf( "RT packet send() failed with error: %3d\n", WSAGetLastError());
 			return ( packet_count );
 		}
 		printf( "  RT packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
@@ -376,7 +380,7 @@ int sendConstructedPackets ( SOCKET socket ) {
 			// If we get a socket error it is probably because the client has closed the connection.
 			// So we break out of the loop.
 			if (iSendResult == SOCKET_ERROR) {
-				printf( "HK send failed with error: %3d\n", WSAGetLastError());
+				printf( "HK send() failed with error: %3d\n", WSAGetLastError());
 				return ( packet_count );
 			}
 			printf( "  HK packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
@@ -474,7 +478,7 @@ int _tmain( int argc, char **argv )
 	// Resolve the server address and port
 	iResult = getaddrinfo(NULL, EPMport, &hints, &result);
 	if ( iResult != 0 ) {
-		printf("getaddrinfo failed with error: %d\n", iResult);
+		printf("getaddrinfo() failed with error: %d\n", iResult);
 		WSACleanup();
 		return 2;
 	}
@@ -483,7 +487,7 @@ int _tmain( int argc, char **argv )
 	// Create a SOCKET for connecting to client
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (ListenSocket == INVALID_SOCKET) {
-		printf("socket failed with error: %ld\n", WSAGetLastError());
+		printf("socket() failed with error: %ld\n", WSAGetLastError());
 		freeaddrinfo(result);
 		WSACleanup();
 		return 3;
@@ -493,7 +497,7 @@ int _tmain( int argc, char **argv )
 	// Setup the TCP listening socket
 	iResult = bind( ListenSocket, result->ai_addr, (int)result->ai_addrlen);
 	if (iResult == SOCKET_ERROR) {
-		printf("bind failed with error: %d\n", WSAGetLastError());
+		printf("bind() failed with error: %d\n", WSAGetLastError());
 		freeaddrinfo(result);
 		closesocket(ListenSocket);
 		WSACleanup();
@@ -517,7 +521,7 @@ int _tmain( int argc, char **argv )
 		printf( "Listening for a connection ... " );
 		iResult = listen(ListenSocket, SOMAXCONN);
 		if (iResult == SOCKET_ERROR) {
-			printf("listen failed with error: %d\n", WSAGetLastError());
+			printf("listen() failed with error: %d\n", WSAGetLastError());
 			closesocket(ListenSocket);
 			WSACleanup();
 			return 5;
@@ -527,12 +531,12 @@ int _tmain( int argc, char **argv )
 		// Accept a client socket
 		ClientSocket = accept(ListenSocket, NULL, NULL);
 		if (ClientSocket == INVALID_SOCKET) {
-			printf( "accept failed with error: %d\n", WSAGetLastError());
+			printf( "accept() failed with error: %d\n", WSAGetLastError());
 			closesocket(ListenSocket);
 			WSACleanup();
 			return 6;
 		}
-		else if ( _debug ) printf( "acceot() OK " );
+		else if ( _debug ) printf( "accept() OK " );
 		printf( "connected.\n" );
 
 		// Wait for a 'Connect' command to start sending packets.

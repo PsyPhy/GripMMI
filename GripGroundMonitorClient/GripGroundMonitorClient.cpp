@@ -39,6 +39,14 @@ unsigned long rtCount = 0;
 unsigned long hkCount = 0;
 unsigned long anyCount = 0;
 
+// Controls how much information is output to the console.
+// For the moment it is always true.
+bool	verbose = true;
+
+// Can enable some debugging messages, if needed. 
+// Off by default.
+bool _debug = false;
+
 // Output the contents of a packet to a cache file in binary format, using low level write so that 
 //  another process can read the same file without colliding.
 // Parameters include a pilnter to the packer, the length of the packet in bytes and the 
@@ -92,14 +100,19 @@ void outputANY ( EPMTelemetryPacket *packet ) {
 // The main routine, taking arguments from the command line.
 int __cdecl main(int argc, const char **argv) 
 {
+
+	// Stuff for the socket.
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL, *ptr = NULL, hints;
-    int iResult;
+    int iResult, iResult2;
 
+	// Controls sending of Alive EPM packets.
 	struct __timeb32 utctime;
 	long	previous_alive_time = 0;
-	bool	verbose = true;
+	bool	send_alives = true;
+
+	// Flags and values determined by command line arguments.
 	bool	cache_all = true;
 	bool	use_alt_id = false;
 	int		software_unit_id = GRIP_MMI_SOFTWARE_UNIT_ID;
@@ -177,12 +190,14 @@ int __cdecl main(int argc, const char **argv)
     hints.ai_protocol = IPPROTO_TCP;
     iResult = getaddrinfo( server_name, EPMport, &hints, &result );
     if ( iResult != 0 ) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+		printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
-        return 103;
+ 		printf( "Unrecoverable error. Press <Return> to exit.\n" );
+		getchar();
+		return 103;
     }
 
-    // Attempt to connect to the CLWS server one succeeds
+    // Attempt to connect to the CLWS server until one succeeds.
 	printf( "Waiting for connection with host %s on port %s.\n", server_name, EPMport );
 	printf( "Will wait until connection achieved or <ctrl-C>.\n"  );
 
@@ -193,6 +208,8 @@ int __cdecl main(int argc, const char **argv)
 			if (ConnectSocket == INVALID_SOCKET) {
 				printf("socket failed with error: %ld\n", WSAGetLastError());
 				WSACleanup();
+ 				printf( "Unrecoverable error. Press <Return> to exit.\n" );
+				getchar();
 				return 104;
 			}
 			// Try to connect to server.
@@ -224,12 +241,22 @@ int __cdecl main(int argc, const char **argv)
 	// If we get a socket error it is probably because the client has closed the connection.
 	// So we break out of the loop.
 	if ( iResult == SOCKET_ERROR ) {
-		printf( "Command packet send failed with error: %3d\n", WSAGetLastError());
+		printf( "Command packet send() failed with error: %3d\n", WSAGetLastError());
+ 		printf( "Unrecoverable error. Press <Return> to exit.\n" );
 		getchar();
 		exit( -100 );
 	}
 	else printf( "Command packet bytes sent: %3d\n\n", iResult);
-
+	// Now set a timeout for future sends on the connection socket.
+	// This will affect the sending of Alive packets (see below).
+	DWORD timeout_milliseconds = 100;
+	iResult = setsockopt( ConnectSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *) &timeout_milliseconds, sizeof( timeout_milliseconds ));
+	if ( iResult == SOCKET_ERROR ) {
+		printf( "setsockop() failed with error: %3d\n", WSAGetLastError());
+ 		printf( "Unrecoverable error. Press <Return> to exit.\n" );
+		getchar();
+		exit( -110 );
+	}
 	// We no longer need the address info.
     freeaddrinfo(result);
 
@@ -249,7 +276,12 @@ int __cdecl main(int argc, const char **argv)
 	// Receive as long as the server stays connected or until <ctrl-C>.
     do {
 
+		static int recv_counter = 0;
+
+		if ( _debug ) printf( "Entering recv() #%03d ... ", recv_counter++ );
+		fflush( stdout );
         iResult = recv(ConnectSocket, epmPacket.buffer, EPM_BUFFER_LENGTH, 0);
+		if ( _debug) printf( "returned.\n" );
 
 		if ( iResult == EPM_BUFFER_LENGTH ) {
 
@@ -326,23 +358,49 @@ int __cdecl main(int argc, const char **argv)
 				}
 			}
 		}
+		else if ( iResult == 0 ) printf( "Socket closed.\n" );
+		else printf( "Socket error.\n" );
 
 		// Every second or so we should send an Alive command to the server.
 		// The alive packet is defined in GripPackets.h.
-		_ftime32_s( &utctime );
-		if ( utctime.time > previous_alive_time ) {
-			previous_alive_time = utctime.time;
-			// printf( "Sending Alive command.\n" );
-			InsertEPMTransferFrameHeaderInfo( &epmPacket, &alivePacket );
-			iResult = send( ConnectSocket, epmPacket.buffer, alivePacketLengthInBytes, 0 );
-			// If we get a socket error it is probably because the client has closed the connection.
-			// So we break out of the loop.
-			if ( iResult == SOCKET_ERROR ) {
-				printf( "Alive packet send failed with error: %3d\n", WSAGetLastError());
-				getchar();
-				exit( -100 );
+		if ( send_alives ) {
+			_ftime32_s( &utctime );
+			if ( utctime.time > previous_alive_time ) {
+				static int alive_counter = 0;
+				previous_alive_time = utctime.time;
+				// printf( "Sending Alive command.\n" );
+				InsertEPMTransferFrameHeaderInfo( &epmPacket, &alivePacket );
+				if ( _debug ) printf( "Entering send() #%03d ... ", alive_counter++ );
+				iResult2 = send( ConnectSocket, epmPacket.buffer, alivePacketLengthInBytes, 0 );
+				if ( _debug ) printf( "returned.\n" );
+
+				// If we get a socket error it is probably because the client has closed the connection.
+				// So we break out of the loop.
+				if ( iResult2 == SOCKET_ERROR ) {
+					
+					int error_code = WSAGetLastError();
+					printf( "Alive packet send #%d failed with error: %3d\n", alive_counter, error_code );
+					if ( error_code == WSAETIMEDOUT ) {
+						// If the server is not receiving the alive packets, the send() call will timeout, 
+						// thanks to the setsockopt() that was performed just after sending the Connect packet above.
+						// If this happens, we mark the socket as no longer valid which will stop sending Alive packets.
+						// This is implemented because 1) the CLWSEmulator.exe server does not recv() Alive 
+						//  packets and 2) I don't know for sure if the real CLWS Emulator is actively receiving them.
+						// If the real CLWS server is actively receiving them, this will never happen and Alive
+						//  packets will be sent indefinitely.
+						send_alives = false;
+						printf( "Further sending of Alive packets has been inhibited.\n" );
+					}
+					else {
+						// Show any other type of error.
+						printf( "Unrecoverable error. Press <Return> to exit.\n" );
+						getchar();
+						exit( -100 );
+					}
+				}
 			}
 		}
+		if ( _debug ) printf( "Cycle ended.\n" );
 
 	// Keep looping as long as we are receiving packets.
     } while( iResult > 0 ); // End loop if connection is closed or on error.
