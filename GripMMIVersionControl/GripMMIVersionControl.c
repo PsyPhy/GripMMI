@@ -18,6 +18,6 @@
 char *GripMMIVersion = "GripMMI V1.2.0 (debug)";
 char *GripMMIBuildInfo = "Build "__DATE__" "__TIME__;
 #else
-char *GripMMIVersion = "GripMMI V1.2.0 (beta)";
+char *GripMMIVersion = "GripMMI V1.2.0";
 char *GripMMIBuildInfo = "Build "__DATE__" "__TIME__;
 #endif
