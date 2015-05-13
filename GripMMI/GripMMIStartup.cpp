@@ -29,7 +29,7 @@ namespace GripMMI {
 		char hkCacheFilename[1024];
 		CreateGripPacketCacheFilename( rtCacheFilename, sizeof( rtCacheFilename ), GRIP_RT_SCIENCE_PACKET, packetBufferPathRoot );
 		rtCacheFilenameText->Text = gcnew String( rtCacheFilename );
-		CreateGripPacketCacheFilename( hkCacheFilename, sizeof( hkCacheFilename ), GRIP_RT_SCIENCE_PACKET, packetBufferPathRoot );
+		CreateGripPacketCacheFilename( hkCacheFilename, sizeof( hkCacheFilename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
 		hkCacheFilenameText->Text = gcnew String( hkCacheFilename );
 	}
 
