@@ -50,6 +50,10 @@ char packetBufferPathRoot[MAX_PATHLENGTH] = "";
 //  then we insert a blank record into the data buffer to show the break in the strip charts.
 #define PACKET_STREAM_BREAK_THRESHOLD	1.0
 
+// A hint about restarting that may resolve certain intermittant (and hopefully, rare) error conditions.
+const char *restart_hint = 
+	"This is a fatal error.\n\nTry restarting just the graphical interface using the RestartGripMMI.YYYY.MM.DD.bat file\nthat has been createdd in the cache or executables directory.\n\nIf that fails, kill GripGroundMonitorClient.exe, rename or copy to a safe location the cache files\nand execute RunGripMMI.bat again to restart.\n";
+
 ///
 /// Show the data buffers as empty.
 ///
@@ -102,7 +106,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	// the availability of files containing packets before the GripMMIDesktop form is executed.
 	// But if we do fail to open the file, just signal the error and exit the hard way.
 	if ( fid < 0 ) {
-			fMessageBox( MB_OK, "GripMMI", "Error opening packet file %s.", filename );
+			fMessageBox( MB_OK, "GripMMI", "Error opening packet file %s.\n\n%s", filename, restart_hint );
 			exit( -1 );
 	}
 
@@ -111,22 +115,24 @@ int GripMMIDesktop::GetGripRT( void ) {
 	packets_read = 0;
 	while ( nFrames < MAX_FRAMES ) {
 
-		// Attempt to read next packet.
+		// Attempt to read next packet. Any error is terminal.
 		bytes_read = _read( fid, &packet, rtPacketLengthInBytes );
+		if ( bytes_read < 0 ) {
+			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.\n\n%s", filename, restart_hint );
+			exit( -1 );
+		}
+
 		// If the number of bytes read is less than the expected number
 		//  we are at the end of the file and should break out of the loop.
 		if ( rtPacketLengthInBytes != bytes_read ) break;
 
 		// We have a valid packet.
 		packets_read++;
-		if ( bytes_read < 0 ) {
-			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
-			exit( -1 );
-		}
+
 		// Check that it is a valid GRIP packet. It would be strange if it was not.
 		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
 		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_RT_ID ) {
-			fMessageBox( MB_OK, "GripMMIlite", "Unrecognized packet from %s.", filename );
+			fMessageBox( MB_OK, "GripMMIlite", "Unrecognized packet from %s.\n\n%s", filename, restart_hint );
 			exit( -1 );
 		}
 			
@@ -259,7 +265,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 	// Finished reading. Close the file and check for errors.
 	return_code = _close( fid );
 	if ( return_code ) {
-		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
+		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s\n\n%s", filename, return_code, restart_hint );
 		exit( return_code );
 	}
 	// Compute the visibility strings for the markers from the last frame.
@@ -383,7 +389,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 	// the availability of files containing packets before the GripMMIDesktop form is executed.
 	// So if we do fail to open the file, signal the error and exit.
 	if ( fid < 0 ) {
-		fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+		fMessageBox( MB_OK, "GripMMI", "Error reading from %s.\n\n*s", filename, restart_hint );
 		exit( -1 );
 	}
 
@@ -393,7 +399,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 		bytes_read = _read( fid, &packet, hkPacketLengthInBytes );
 		// Return less than zero means read error.
 		if ( bytes_read < 0 ) {
-			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.\n\n%s", filename, restart_hint );
 			exit( -1 );
 		}
 		// Return less than expected number of bytes means we have read all packets.
@@ -403,7 +409,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 		// Check that it is a valid GRIP packet. It would be strange if it was not.
 		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
 		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_HK_ID ) {
-			fMessageBox( MB_OK, "GripMMIlite", "Unrecognized packet from %s.", filename );
+			fMessageBox( MB_OK, "GripMMI", "Unrecognized packet from %s.\n\n%s", filename, restart_hint );
 			exit( -1 );
 		}
 		// Extract the interesting info in proper byte order.
@@ -412,7 +418,7 @@ int GripMMIDesktop::GetLatestGripHK( GripHealthAndStatusInfo *hk ) {
 	// Finished reading. Close the file and check for errors.
 	return_code = _close( fid );
 	if ( return_code ) {
-		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
+		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s\n\n%s", filename, return_code, restart_hint );
 		exit( return_code );
 	}
 

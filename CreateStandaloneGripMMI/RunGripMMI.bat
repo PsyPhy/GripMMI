@@ -50,9 +50,26 @@ REM The client program will look for the GRIP scripts here.
 REM Again, you should include a terminating backslash.
 set ScriptDir=..\GripScripts\
 
+REM 
+REM Location of restart batch file.
+REM
+
+REM When the current script is run, it automatically generates a batch file
+REM that makes it easy to relaunch the graphical interface without restarting
+REM the client process. This batch file must be written in a write-enabled directory.
+REM Logically, I would put it in the current directory, because that is where 
+REM RunGripMMI.bat (this file) has been found and executed. The corresponging assign would be:
+REM
+REM set RestartDir=.\
+REM
+REM But this directory is probably write protected at CADMOS. 
+REM So I write it to the cache directory instead:
+set RestartDir=%CacheDir%
+
 REM
 REM Alternate Software Unit ID.
 REM
+
 REM The CLWS can accept only one connection from a given Software Unit.
 REM If you want to use two client connected to the same CLWS server,
 REM  uncomment the next line to use the alternate Software Unit ID.
@@ -67,14 +84,14 @@ REM  because UTC takes into account leap seconds, while GPS does not.
 REM Default value is -16 which corrects for leap seconds as of Jan. 2015.
 REM Modify the value if new leap seconds have been added (e.g. after July 2015 change to -17).
 
-REM Uncomment the next line if you want to display times in UTC rather than GPS
+REM Uncomment the next line if you want to display times aligned with UTC rather than GPS
 set TIMEBASE_CORRECTION=-16
-REM Uncomment the next line if you want to display in GPS time.
+REM Uncomment the next line if you want to display times aligned with GPS time.
 REM set TIMEBASE_CORRECTION=0
 
 REM **************************************************************************
 
-REM Root of the file names for the cache files
+REM Create a common timestamp in the form YYYY.MM.DD to be used in various file names.
 
 REM Hopefully you will not need to edit this section, but it depends on the Windows configuration.
 REM Here we extract the date from the environment variable %date%. But I have seen two
@@ -84,19 +101,21 @@ REM format of the %date% variable on your system. To find out, type "echo %date%
 
 REM If the 3rd character is a '/' then we have the "DD/MM/YYYY" format.
 if "/"=="%date:~2,1%" goto SHORTDATE
-
 REM If we are here, we presume that we have the "Day MM/DD/YYYY" format.
-set CacheRoot=GripPackets.%date:~10,4%.%date:~4,2%.%date:~7,2%
+set TIMESTAMP=%date:~10,4%.%date:~4,2%.%date:~7,2%
 goto NEXT
-
 :SHORTDATE
-set CacheRoot=GripPackets.%date:~6,4%.%date:~3,2%.%date:~0,2%
-
+set TIMESTAMP=%date:~6,4%.%date:~3,2%.%date:~0,2%
 :NEXT
 
 REM **************************************************************************
 
-REM Normally you will not need to edit below this line, 
+REM Normally you will not need to edit below this line.
+
+REM Root of the file names for the cache files
+set CacheRoot=GripPackets.%TIMESTAMP%
+
+REM Show where we are for debugging purposes.
 echo %cd%
 
 REM Starts up the emulator according to configuration defined above.
@@ -127,3 +146,17 @@ REM Start the actual graphical GripMMI.
 REM First parameter is the path to the packet caches that serve as inputs.
 REM Second paramter is the path to the scripts that are installed on board.
 start .\GripMMI.exe %CacheDir%\%CacheRoot% %ScriptDir% %TIMEBASE_CORRECTION%
+
+REM Now create a batch file that will make it easier to restart the graphical
+REM GripMMI.exe interface without restarting GripGroundMonitorClient.exe
+
+set restart_file=%RestartDir%\RestartGripMMI.%TIMESTAMP%.bat
+echo REM > %restart_file%
+echo REM %restart_file% >> %restart_file%
+echo REM >> %restart_file%
+echo REM A batch file to restart the GripMMI graphical interface. >> %restart_file%
+echo REM This will restart GripMMI.exe with the most recently defined parameters. >> %restart_file%
+echo REM It assumes that GripGoundMonitorClient.exe is still running. >> %restart_file%
+echo REM To start a new session, use RunGripMMI.bat instead. >> %restart_file%
+echo CD %CD% >> %restart_file%
+echo start .\GripMMI.exe %CacheDir%\%CacheRoot% %ScriptDir% %TIMEBASE_CORRECTION% >> %restart_file%

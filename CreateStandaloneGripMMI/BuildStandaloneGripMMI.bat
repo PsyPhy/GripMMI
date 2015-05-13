@@ -31,6 +31,16 @@ REM It will be recopied from the source file further on.
 echo Dummy file. > %DEST%\RunGripMMI.bat
 del %DEST%\RunGripMMI.bat
 
+REM Remove also any batch files that were created to be used to restart GripMMI.exe.
+REM It is possible that there are none. Depending on how RunGripMMI.bat is configured,
+REM the automatically-generated restart batch files might be generated here in the
+REM executables directory, or in the Cache directory. Here we remove them from the 
+REM executables directory. Doing a 'clean' will remove them from the cache directory.
+REM Make sure that there is something to delete.
+echo Dummy file. > %DEST%\RestartGripMMI.bat
+REM Now delete all .bat files.
+del %DEST%\RestartGripMMI*.bat
+
 REM Create a timestamp so that we know when this standalone was created.
 REM Here we create a phony timestamp that will let us know if the make failed before completing.
 set TIMESTAMP=%DEST%\Timestamp.txt

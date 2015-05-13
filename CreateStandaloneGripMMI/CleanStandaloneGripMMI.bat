@@ -14,8 +14,16 @@ REM during testing so that these working files are not included in a software di
 set CACHE=%DEST%\..\GripCache
 REM Make sure that there is something to delete.
 echo Dummy file. > %CACHE%\dummy.gpk
-REM Now delete the cache files.
+REM Now delete all cache (.gpk) files.
 del %CACHE%\*.gpk
+
+REM Remove also any batch files that were created to be used to restart GripMMI.exe.
+REM Make sure that there is something to delete.
+echo Dummy file. > %CACHE%\dummy.bat
+REM Now delete all .bat files.
+del %CACHE%\*.bat
+
+
 
 
 
