@@ -926,8 +926,10 @@ namespace GripMMI {
 			// 
 			// subjectIDBox
 			// 
+			this->subjectIDBox->BackColor = System::Drawing::SystemColors::Window;
 			this->subjectIDBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 11, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
+			this->subjectIDBox->ForeColor = System::Drawing::SystemColors::WindowText;
 			this->subjectIDBox->Location = System::Drawing::Point(95, 21);
 			this->subjectIDBox->Name = L"subjectIDBox";
 			this->subjectIDBox->Size = System::Drawing::Size(47, 24);
@@ -1379,6 +1381,10 @@ namespace GripMMI {
 				 // text boxes and pressed 'GoTo'. We try to go to the specified step, if it exists.
 				 // Script crawler is no longer live.
 				 scriptLiveCheckbox->Checked = false;
+
+				 // If the button has been highlighted, turn it back to normal.
+				 gotoButton->BackColor = SystemColors::Window;
+
 				 int subject_id;
 				 int protocol_id;
 				 int task_id;
@@ -1423,6 +1429,7 @@ namespace GripMMI {
 				 }
 
 				 GoToSpecifiedIDs( subject_id, protocol_id, task_id, step_id );
+				 ForceUpdate();
 
 			 }
 
@@ -1434,53 +1441,89 @@ namespace GripMMI {
 				 // Inhibit script crawler update if we start to manually enter an ID.
 				 scriptLiveCheckbox->Checked = false;
 				 ImpedeUpdate();
+				 // Highlight the box that is awaiting input, in case we clicked by mistake.
+				 subjectIDBox->BackColor = Color::Lime;
+				 // Highlight the GoTo box to hint at what to do next as well.
+				 gotoButton->BackColor = Color::Lime;
 			 }
 	private: System::Void subjectIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Remove the highlighting.
+				 subjectIDBox->BackColor = SystemColors::Window;
 				 // Restart updating after manually specifying a value.
 				 ForceUpdate();
 			 }
 	private: System::Void subjectIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 				 // If user presses <enter>, treat it like pressing GoTo.
-				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+				 if ( e->KeyChar == 0x0d ){
+					 gotoButton->Focus();
+					 InvokeOnClick(gotoButton, System::EventArgs::Empty);	
+				 }
 			 }
 	private: System::Void protocolIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
 				// Inhibit script crawler update if we start to manually enter an ID.
 				scriptLiveCheckbox->Checked = false;
 				ImpedeUpdate();
+				// Highlight the box that is awaiting input, in case we clicked by mistake.
+				protocolIDBox->BackColor = Color::Lime;
+				 // Highlight the GoTo box to hint at what to do next as well.
+				 gotoButton->BackColor = Color::Lime;
 			}
 	private: System::Void protocolIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Remove the highlighting.
+				 protocolIDBox->BackColor = SystemColors::Window;
 				 // Restart updating after manually specifying a value.
 				 ForceUpdate();
 			 }
 	private: System::Void protocolIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 				 // If user presses <enter>, treat it like pressing GoTo.
-				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+				 if ( e->KeyChar == 0x0d ){
+					 gotoButton->Focus();
+					 InvokeOnClick(gotoButton, System::EventArgs::Empty);
+				 }
 			 }
 	private: System::Void taskIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
 				// Inhibit script crawler update if we start to manually enter an ID.
 				scriptLiveCheckbox->Checked = false;
 				ImpedeUpdate();
+				// Highlight the box that is awaiting input, in case we clicked by mistake.
+				taskIDBox->BackColor = Color::Lime;
+				 // Highlight the GoTo box to hint at what to do next as well.
+				 gotoButton->BackColor = Color::Lime;
 			 }
 	private: System::Void taskIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Remove the highlighting.
+				 taskIDBox->BackColor = SystemColors::Window;
 				 // Restart updating after manually specifying a value.
 				 ForceUpdate();
 			 }
 	private: System::Void taskIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 				 // If user presses <enter>, treat it like pressing GoTo.
-				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+				 if ( e->KeyChar == 0x0d ){
+					 gotoButton->Focus();
+					 InvokeOnClick(gotoButton, System::EventArgs::Empty);
+				 }
 			 }
 	private: System::Void stepIDBox_Enter(System::Object^  sender, System::EventArgs^  e) {
 				// Inhibit script crawler update if we start to manually enter an ID.
 				scriptLiveCheckbox->Checked = false;
 				ImpedeUpdate();
+				// Highlight the box that is awaiting input, in case we clicked by mistake.
+				stepIDBox->BackColor = Color::Lime;
+				 // Highlight the GoTo box to hint at what to do next as well.
+				 gotoButton->BackColor = Color::Lime;
 			}
 	private: System::Void stepIDBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				 // Remove the highlighting.
+				 stepIDBox->BackColor = SystemColors::Window;
 				 // Restart updating after manually specifying a value.
 				 ForceUpdate();
 			 }
 	private: System::Void stepIDBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 				 // If user presses <enter>, treat it like pressing GoTo.
-				 if ( e->KeyChar == 0x0d )gotoButton_Click( sender, System::EventArgs::Empty );
+				 if ( e->KeyChar == 0x0d ){
+					 gotoButton->Focus();
+					 InvokeOnClick(gotoButton, System::EventArgs::Empty);
+				 }
 			 }
 
 	// The GUI includes a number of checkboxes and pulldown lists to set the configuration.
@@ -1493,7 +1536,13 @@ namespace GripMMI {
 				 ForceUpdate();
 			 }
 	private: System::Void scriptLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 if ( scriptLiveCheckbox->Checked ) ForceUpdate();
+				 // Check the new state of the checkbox after the state change.
+				 if ( scriptLiveCheckbox->Checked ) {
+					 // Clear the text boxes until the next HK packet comes in.
+					 GoToSpecifiedIDs( UNDEFINED, UNDEFINED, UNDEFINED, UNDEFINED );
+					 // Force an update of the screen.
+					 ForceUpdate();
+				 }
 			 }
 	private: System::Void dataLiveCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 				 if ( dataLiveCheckbox->Checked ) ForceUpdate();
