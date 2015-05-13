@@ -74,11 +74,29 @@ REM set TIMEBASE_CORRECTION=0
 
 REM **************************************************************************
 
-REM Normally you will not need to edit below this line, 
-
 REM Root of the file names for the cache files
-set CacheRoot=GripPackets.%date:~10,4%.%date:~4,2%.%date:~7,2%
 
+REM Hopefully you will not need to edit this section, but it depends on the Windows configuration.
+REM Here we extract the date from the environment variable %date%. But I have seen two
+REM different formats:  "DD/MM/YYYY" and "Day MM/DD/YYYY". Here I try to identify which one it is
+REM and extract accordingly. But you may need to further modify depending on the 
+REM format of the %date% variable on your system. To find out, type "echo %date%" in a command window.
+
+REM If the 3rd character is a '/' then we have the "DD/MM/YYYY" format.
+if "/"=="%date:~2,1%" goto SHORTDATE
+
+REM If we are here, we presume that we have the "Day MM/DD/YYYY" format.
+set CacheRoot=GripPackets.%date:~10,4%.%date:~4,2%.%date:~7,2%
+goto NEXT
+
+:SHORTDATE
+set CacheRoot=GripPackets.%date:~6,4%.%date:~3,2%.%date:~0,2%
+
+:NEXT
+
+REM **************************************************************************
+
+REM Normally you will not need to edit below this line, 
 echo %cd%
 
 REM Starts up the emulator according to configuration defined above.
