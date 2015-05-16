@@ -130,7 +130,9 @@ REM This module receives packets from the CLWS server, selects out the
 REM  Grip packets and sends them to intermediate cache files.
 REM First parameter is the path and root for the cache files.
 REM Second is the host name or IP address in dot format of the CLWS server.
-start .\GripGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST% %UNIT%
+REM The process is launched with /REALTIME priority to help ensure that
+REM  packets from the EPM server are not missed.
+start /REALTIME .\GripGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST% %UNIT%
 
 REM Launch a 'lite', text-only version of the MMI, just to see if 
 REM  the servers are running and the cache files are filling up.
