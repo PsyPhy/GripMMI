@@ -159,6 +159,10 @@ echo REM >> %restart_file%
 echo REM A batch file to restart the GripMMI graphical interface. >> %restart_file%
 echo REM This will restart GripMMI.exe with the most recently defined parameters. >> %restart_file%
 echo REM It assumes that GripGoundMonitorClient.exe is still running. >> %restart_file%
-echo REM To start a new session, use RunGripMMI.bat instead. >> %restart_file%
+echo REM If GripGoundMonitorClient.exe is not running, use RunGripMMI.bat instead. >> %restart_file%
+echo REM >> %restart_file%
+echo REM This batch file can also be used to review previously recorded data >> %restart_file%
+echo REM using the GripMMI graphical interface. >> %restart_file%
+echo REM >> %restart_file%
 echo CD %CD% >> %restart_file%
 echo start .\GripMMI.exe %CacheDir%\%CacheRoot% %ScriptDir% %TIMEBASE_CORRECTION% >> %restart_file%
