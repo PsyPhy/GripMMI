@@ -64,26 +64,46 @@ void GripMMIDesktop::ResetBuffers( void ){
 /// Read in the cached realtime data packets.
 /// The path to the cache file is presumed to be set in global variable packetBufferPathRoot.
 /// The data is stored in the global arrays found in GripMMIGlobals.cpp.
+/// TRUE is returned if there are new packets since the last call.
+
+/// Note that if in a previous call the buffers were filled to the maximum, this
+/// routine will simply return FALSE, leaving the buffers in their former state.
+
+/// Note also that if the buffers reach their maximum, the 'live' mode for RT packets will be disabled.
 int GripMMIDesktop::GetGripRT( void ) {
 
-	static int count = 0;
-
-	int  fid;
-	int packets_read = 0;
-	double previous_packet_timestamp = 0.0;
-	int bytes_read;
-	int return_code;
+	// Keep track of the last packet TM counter from previous call.
+	// This is how we know if new data has arrived.
 	static unsigned short previousTMCounter = 0;
-	unsigned long bit = 0;
-	int retry_count;
 
+	// Keep track of whether we have already seen that the buffers are full.
+	static bool buffers_full_alert = false;
+
+	// Buffers and structures to hold data from the real time science packets.
 	EPMTelemetryPacket		packet;
 	EPMTelemetryHeaderInfo	epmHeader;
 	GripRealtimeDataInfo	rt;
 
-	int mrk, coda;
-
+	// Will hold the filename (path) of the packet file.
 	char filename[MAX_PATHLENGTH];
+	// Will hold the pointer to the open packet file.
+	int  fid;
+
+	// Various local counters and flags.
+	int bytes_read;
+	int packets_read;
+	int return_code;
+	int mrk, coda, count;
+
+	// If buffers were full the last time through, then don't fill them again.
+	// Just leave the buffers in their previous state and return saying that
+	// there is no new data.
+	if ( buffers_full_alert ) {
+		// Disable Live mode for science data so that the 
+		dataLiveCheckbox->Checked = false;
+		dataLiveCheckbox->Enabled = false;
+		return( FALSE );
+	}
 
 	// Create the path to the realtime science packet file, based on the root and the packet type.
 	// The global variable 'packetBufferPathRoot' has been initialized elsewhere.
@@ -94,7 +114,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 
 	// Attempt to open the packet cache to read the accumulated packets.
 	// If it is not immediately available, keep trying for a few seconds.
-	for ( retry_count = 0; retry_count  < MAX_OPEN_CACHE_RETRIES; retry_count ++ ) {
+	for ( int retry_count = 0; retry_count  < MAX_OPEN_CACHE_RETRIES; retry_count ++ ) {
 		// Try to open the packet cache file.
 		fid = _sopen( filename, _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IWRITE | _S_IREAD  );
 		// If open succeeds, it will return zero. So if zero return, break from retry loop.
@@ -109,6 +129,10 @@ int GripMMIDesktop::GetGripRT( void ) {
 			fMessageBox( MB_OK, "GripMMI", "Error opening packet file %s.\n\n%s", filename, restart_hint );
 			exit( -1 );
 	}
+
+	// Prepare for reading in packets. This is used to calculate the elapsed time between two packets.
+	// By setting it to zero here, the first packet read will be signaled as having arrived after a long delay.
+	double previous_packet_timestamp = 0.0;
 
 	// Read in all of the data packets in the file.
 	// Be careful not to overrun the data buffers.
@@ -173,7 +197,6 @@ int GripMMIDesktop::GetGripRT( void ) {
 		}
 		previous_packet_timestamp = rt.packetTimestamp;
 
-
 		for ( int slice = 0; slice < RT_SLICES_PER_PACKET && nFrames < MAX_FRAMES; slice++ ) {
 			// Get the time of the slice.
 			RealMarkerTime[nFrames] = rt.dataSlice[slice].bestGuessPoseTimestamp;
@@ -227,14 +250,14 @@ int GripMMIDesktop::GetGripRT( void ) {
 			// The non-zero values that are set when the marker is visible are a convenient
 			//  trick to make it easy to plot the traces for all markers in one graph.
 			for ( mrk = MANIPULANDUM_FIRST_MARKER; mrk <= MANIPULANDUM_LAST_MARKER; mrk++ ) {
-				bit = 0x01 << mrk;
+				unsigned long bit = 0x01 << mrk;
 				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) MarkerVisibility[nFrames][mrk] = mrk + 1;
 				else MarkerVisibility[nFrames][mrk] = MISSING_DOUBLE;
 			}
 			if (  (rt.dataSlice[slice].manipulandumVisibility & 0x01) ) ManipulandumVisibility[nFrames] = 10;
 			else ManipulandumVisibility[nFrames] = MISSING_DOUBLE;
 			for ( mrk = FRAME_FIRST_MARKER, count = 0; mrk <= FRAME_LAST_MARKER; mrk++ ) {
-				bit = 0x01 << mrk;
+				unsigned long bit = 0x01 << mrk;
 				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
 					MarkerVisibility[nFrames][mrk] = mrk + 3;
 					count++;
@@ -245,7 +268,7 @@ int GripMMIDesktop::GetGripRT( void ) {
 			else FrameVisibility[nFrames] = MISSING_DOUBLE;
 
 			for ( mrk = WRIST_FIRST_MARKER, count = 0; mrk <= WRIST_LAST_MARKER; mrk++ ) {
-				bit = 0x01 << mrk;
+				unsigned long bit = 0x01 << mrk;
 				if ( rt.dataSlice[slice].markerVisibility[0] & bit || rt.dataSlice[slice].markerVisibility[1] & bit ) {
 					MarkerVisibility[nFrames][mrk] = mrk + 5;
 					count++;
@@ -271,7 +294,8 @@ int GripMMIDesktop::GetGripRT( void ) {
 	// Compute the visibility strings for the markers from the last frame.
 	for (coda = 0; coda < CODA_UNITS; coda++ ) {
 		strcpy( markerVisibilityString[coda], "" );
-		for ( mrk = 0, bit = 0x01; mrk < CODA_MARKERS; mrk++, bit = bit << 1 ) {
+		for ( mrk = 0; mrk < CODA_MARKERS; mrk++ ) {
+			unsigned long bit = 0x01 << mrk;
 			if ( mrk == 8 || mrk == 12 ) strcat( markerVisibilityString[coda], "  " );
 			if ( rt.dataSlice[RT_SLICES_PER_PACKET - 1].markerVisibility[coda] & bit ) strcat( markerVisibilityString[coda], "u" );
 			else strcat( markerVisibilityString[coda], "m" );
@@ -280,12 +304,12 @@ int GripMMIDesktop::GetGripRT( void ) {
 	fOutputDebugString( "Acquired Frames (max %d): %d\n", MAX_FRAMES, nFrames );
 	if ( nFrames >= MAX_FRAMES ) {
 		char filename2[MAX_PATHLENGTH];
-		//CreateGripPacketCacheFilename( filename2, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
-		CreateGripPacketCacheFilename( filename2, sizeof( filename ), GRIP_HK_BULK_PACKET, "Joe" );
+		CreateGripPacketCacheFilename( filename2, sizeof( filename ), GRIP_HK_BULK_PACKET, packetBufferPathRoot );
 		fMessageBox( MB_OK | MB_ICONERROR, "GripMMI", 
-			"Internal buffers are full.\nYou can continue plotting existing data.\nTo display latest acquisitons:\n\n1) Halt GripGroundMonitorClient.\n2) Rename or move:\n      %s\n      %s\n3) Restart GripGroundMonitorClient.",
+			"Internal buffers are full.\n\nYou can continue plotting existing data.\nTracking of script progress will also continue.\n\nTo resume following new data transmissions:\n\n1) Halt GripMMI.exe (this program).\n2) Halt GripGroundMonitorClient.exe.\n3) Rename or move:\n      %s\n      %s\n4) Restart using RunGripMMI.bat.",
 			filename, filename2 );
-		dataLiveCheckbox->Checked = false;
+		// Signal for the next call that we have already reached the limit of the buffers.
+		buffers_full_alert = true;
 	}
 	// Check if there were new packets since the last time we read the cache.
 	// Return TRUE if yes, FALSE if no.
