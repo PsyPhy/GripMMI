@@ -15,9 +15,9 @@
 /// Edit the lines below prior to compiling a new release.
 
 #ifdef _DEBUG 
-char *GripMMIVersion = "GripMMI V1.2.1 (debug)";
+char *GripMMIVersion = "GripMMI V1.3.0 (debug)";
 char *GripMMIBuildInfo = "Build "__DATE__" "__TIME__;
 #else
-char *GripMMIVersion = "GripMMI V1.2.1 (beta)";
+char *GripMMIVersion = "GripMMI V1.3.0 (beta)";
 char *GripMMIBuildInfo = "Build "__DATE__" "__TIME__;
 #endif
