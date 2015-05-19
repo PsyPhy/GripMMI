@@ -6,7 +6,7 @@
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720\qc
 
 \f0\b\fs28 \cf0 GripMMI Generation and Installation Instructions\
-Version 1.1.2\
+Version 1.3.0\
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720
 
 \b0\fs24 \cf0 \
@@ -20,8 +20,15 @@ NB It is not necessary to uninstall previous versions.\
 \
 1) Execute an MD5 check on the file GripMMI (version).md5 included in the newly created root directory \'91GripMMI (version)\'92.\
 \
-2) Install Microsoft Visual C++ 2010 Express from the file \'93GripMMI (version)\\GripInstallItems\\vc_web (VS2010 Development Environment).exe\'94 per the instructions from Microsoft.\
+2) Install Microsoft Visual C++ 2010 Express from the file:\
+\
+	 \'93GripMMI (version)\\vc_web (Visual Studio 2010 Express Development Environment).exe\'94 \
+\
+per the instructions from Microsoft.\
+\
 Step 2 is necessary only if Microsoft Visual C++ 2010 Express is not already installed on the machine in question.\
+\
+Note that Visual Studio 2010 Service Pack 1 was not installed for the development of GripMMI. Information available on line about whether or not this service pack should be applied to VC++ 2010 Express was ambiguous. An attempt to recompile GripMMI V1.3.0 after installation of Service Pack 1 failed. Installation of Visual Studio 2010 Service Pack 1 is not recommended.\
 \
 3) Start up Visual C++ 2010 by double clicking the file "GripMMI (version)\\GripMMI (Visual C++ 2010 Express)\\GripMMI.sln"\
 \
@@ -60,8 +67,10 @@ Note that you can edit RunGripMMI.bat to change the source file for the pre-reco
 
 \fs24 \
 0) Install the Microsoft runtime libraries  that can be found in "GripMMI (version)\\GripInstallItems:\
+\
 	vcredist_x86 (VS2010 Redistributable Official English).exe \
 	dotNetFx40_Client_x86_x64.exe\
+\
 Step 0 is necessary only if Microsoft Visual C++ 2010 Express is not already installed on the machine in question.\
 \
 1) On the development machine, Build the GripMMI solution in \'91Release\'92 mode.\
@@ -70,7 +79,7 @@ Step 0 is necessary only if Microsoft Visual C++ 2010 Express is not already ins
 \
 NB The script files are read-only for the MMI program and so they could be installed in the same location as the executable files. However, one might conceivably wish to change the scripts without changing the executables, for example, to run a sim with scripts other than the flight scripts. You might therefore wish to install the script files in a location that has read/write access.\
 \
-4) Select a location for the real-time data packet cache files. \
+4) Select a location for the real-time data packet cache files. This location must be writeable at run time.\
 \
 5) Edit GripExecutables\\RunGripMMI.bat to: \
 \
