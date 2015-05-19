@@ -44,9 +44,6 @@
 
 // Time in milliseconds between screen refreshes.
 #define REFRESH_TIMEOUT	500
-// Recursive filter constant. 
-// The bigger it is, the lower the cutoff frequency.
-#define FILTER_CONSTANT 2.0
 
 // Flags for return values.
 enum { NORMAL_EXIT = 0,ERROR_EXIT };
@@ -169,6 +166,7 @@ namespace GripMMI {
 	private: System::Windows::Forms::TextBox^  earliestTextBox;
 	private: System::Windows::Forms::TextBox^  latestTextBox;
 	private: System::Windows::Forms::TextBox^  rightLimitTextBox;
+private: System::Windows::Forms::TextBox^  filterConstantTextBox;
 	private: System::Windows::Forms::TextBox^  leftLimitTextBox;
 
 	private: 
@@ -195,7 +193,7 @@ namespace GripMMI {
 				// Create a timer to periodically check for data and refresh.
 				CreateRefreshTimer( REFRESH_TIMEOUT );
 				// Set the filter constant according to the initial state of the filter checkbox.
-				if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
+				if ( filterCheckbox->Checked ) dex.SetFilterConstant( System::Convert::ToDouble( filterConstantTextBox->Text ) );
 				else dex.SetFilterConstant( 0.0 );
 				// Select the summary graph collection by default.
 				// This does a ForceUdate as a side effect, which requires that the refresh timer
@@ -355,6 +353,7 @@ namespace GripMMI {
 			this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
 			this->CoPPlot = (gcnew System::Windows::Forms::PictureBox());
 			this->groupBox4 = (gcnew System::Windows::Forms::GroupBox());
+			this->filterConstantTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->rightLimitTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->leftLimitTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->graphCollectionComboBox = (gcnew System::Windows::Forms::ComboBox());
@@ -515,6 +514,7 @@ namespace GripMMI {
 			// 
 			// groupBox4
 			// 
+			this->groupBox4->Controls->Add(this->filterConstantTextBox);
 			this->groupBox4->Controls->Add(this->rightLimitTextBox);
 			this->groupBox4->Controls->Add(this->leftLimitTextBox);
 			this->groupBox4->Controls->Add(this->graphCollectionComboBox);
@@ -529,6 +529,22 @@ namespace GripMMI {
 			this->groupBox4->TabIndex = 7;
 			this->groupBox4->TabStop = false;
 			this->groupBox4->Text = L"Time Series";
+			// 
+			// filterConstantTextBox
+			// 
+			this->filterConstantTextBox->BackColor = System::Drawing::SystemColors::Window;
+			this->filterConstantTextBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, 
+				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+			this->filterConstantTextBox->ForeColor = System::Drawing::SystemColors::WindowText;
+			this->filterConstantTextBox->Location = System::Drawing::Point(928, 0);
+			this->filterConstantTextBox->Name = L"filterConstantTextBox";
+			this->filterConstantTextBox->Size = System::Drawing::Size(47, 22);
+			this->filterConstantTextBox->TabIndex = 26;
+			this->filterConstantTextBox->Text = L"2.0";
+			this->filterConstantTextBox->TextAlign = System::Windows::Forms::HorizontalAlignment::Center;
+			this->filterConstantTextBox->Enter += gcnew System::EventHandler(this, &GripMMIDesktop::filterConstantTextBox_Enter);
+			this->filterConstantTextBox->KeyPress += gcnew System::Windows::Forms::KeyPressEventHandler(this, &GripMMIDesktop::filterConstantTextBox_KeyPress);
+			this->filterConstantTextBox->Leave += gcnew System::EventHandler(this, &GripMMIDesktop::filterConstantTextBox_Leave);
 			// 
 			// rightLimitTextBox
 			// 
@@ -561,7 +577,7 @@ namespace GripMMI {
 				System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
 			this->graphCollectionComboBox->FormattingEnabled = true;
 			this->graphCollectionComboBox->Items->AddRange(gcnew cli::array< System::Object^  >(3) {L"Summary", L"Kinematics", L"Visibility"});
-			this->graphCollectionComboBox->Location = System::Drawing::Point(747, 0);
+			this->graphCollectionComboBox->Location = System::Drawing::Point(704, 0);
 			this->graphCollectionComboBox->Name = L"graphCollectionComboBox";
 			this->graphCollectionComboBox->Size = System::Drawing::Size(142, 23);
 			this->graphCollectionComboBox->TabIndex = 25;
@@ -597,7 +613,7 @@ namespace GripMMI {
 			this->filterCheckbox->AutoSize = true;
 			this->filterCheckbox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->filterCheckbox->Location = System::Drawing::Point(910, 1);
+			this->filterCheckbox->Location = System::Drawing::Point(859, 1);
 			this->filterCheckbox->Name = L"filterCheckbox";
 			this->filterCheckbox->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
 			this->filterCheckbox->Size = System::Drawing::Size(58, 21);
@@ -1525,13 +1541,42 @@ namespace GripMMI {
 					 InvokeOnClick(gotoButton, System::EventArgs::Empty);
 				 }
 			 }
+	private: System::Void filterConstantTextBox_Enter(System::Object^  sender, System::EventArgs^  e) {
+				// Inhibit data update if we start to manually enter a filter constant.
+				ImpedeUpdate();
+				// Highlight to show that the box is awaiting input.
+				filterConstantTextBox->BackColor = Color::Lime;
+			 }
+	private: System::Void filterConstantTextBox_Leave(System::Object^  sender, System::EventArgs^  e) {
+				filterConstantTextBox->BackColor = SystemColors::Window;
+				filterCheckbox_CheckedChanged( sender, e);
+			 }
+	private: System::Void filterConstantTextBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
+				if ( e->KeyChar == 0x0d ){
+					// If user hits return, change the focus to the filter button mainly just to leave focus.
+					filterCheckbox->Focus();
+				}
+			 }
 
 	// The GUI includes a number of checkboxes and pulldown lists to set the configuration.
 	// The Forms objects take care of changing the state according to the action and 
 	// the state of these objects will be read by the various graphing routines. But
 	// we need to force an update when the state of these indicators changes.
 	private: System::Void filterCheckbox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-				 if ( filterCheckbox->Checked ) dex.SetFilterConstant( FILTER_CONSTANT );
+				// Read the filter constant value to be used from the text box on the screen,
+				// taking care that it is a valid number.
+				double filter_constant;
+				try {
+					filter_constant = System::Convert::ToDouble( filterConstantTextBox->Text );
+				}
+				catch (System::FormatException^ e) {
+					// If there is a conversion error signal that the text box value is
+					// not valid and use 0.0 by default.
+					filterConstantTextBox->BackColor = Color::Pink;
+					filter_constant = 0.0;
+					e; // Ingore e. This is here to avoid warning about unused.
+				}
+				 if ( filterCheckbox->Checked ) dex.SetFilterConstant( filter_constant );
 				 else dex.SetFilterConstant( 0.0 );
 				 ForceUpdate();
 			 }
