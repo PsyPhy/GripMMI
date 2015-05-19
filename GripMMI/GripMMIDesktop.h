@@ -1553,6 +1553,8 @@ private: System::Windows::Forms::TextBox^  filterConstantTextBox;
 			 }
 	private: System::Void filterConstantTextBox_KeyPress(System::Object^  sender, System::Windows::Forms::KeyPressEventArgs^  e) {
 				if ( e->KeyChar == 0x0d ){
+					// If the user has changed the filter constant, they probably want filtering to be on.
+					filterCheckbox->Checked = true;
 					// If user hits return, change the focus to the filter button mainly just to leave focus.
 					filterCheckbox->Focus();
 				}
