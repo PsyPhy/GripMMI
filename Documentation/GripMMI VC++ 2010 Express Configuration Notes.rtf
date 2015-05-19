@@ -15,7 +15,7 @@ Configuration of the Microsoft Visual C++ compiler:\
 All projects use default settings, except::\
 \
 
-\i Do not use Unicode/wide characters.\
+\i ** Do not use Unicode/wide characters.\
 
 \i0 <project properties> -> Configuration Properties -> General -> Character Set = Not Set\
 
@@ -23,27 +23,39 @@ All projects use default settings, except::\
 \b0  Be sure that this property is correctly set for both the debug and release configurations for each project.\
 \
 
-\i In some projects I had to turn off Common Language Runtime (CLR) Support to allow compiling of native C code.\
-This is not possible for the top-level GripMMI application because Windows Forms depends on it.\
-Unfortunately, this creates a bunch of problems because CLR does not allow \'91mixed types\'92.\
+\i ** In some projects I had to turn off Common Language Runtime (CLR) Support to allow compiling of native C code.\
+** This is not possible for the top-level GripMMI application because Windows Forms depends on it.\
+** Unfortunately, this creates a bunch of problems because CLR does not allow \'91mixed types\'92.\
 
 \i0 <project properties> -> Configuration Properties -> General -> Common Language Runtime Support = No Common Language Runtime Support\
 \
 
-\i Disable warnings about unsafe functions like strcat().\
-Note that the \'91safe\'92 versions are prone to errors as well, so I don\'92t find it useful to migrate to them.\
+\i ** Disable warnings about unsafe functions like strcat().\
+** Note that the \'91safe\'92 versions are prone to errors as well, so I don\'92t find it useful to migrate to them.\
 
 \i0 <project properties> -> Configuration Properties -> C/C++ -> Advanced -> Disable Specific Warning = 4996\
 \
 
-\i Debug and Release configurations are set to execute in the GripMMI\\GripExecutables directory.\
+\i ** Debug and Release configurations are set to execute in the GripMMI\\GripExecutables directory.\
 
 \i0 <project properties> -> Configuration Properties -> Working Directory = $(ProjectDir)\\..\\..\\..\\GripExecutables\
 \
-CreateStandaloneGripMMI is a makefile project that copies the Release executables to the GripMMI\\GripExecutables directory, allowing one to easily execute outside the Visual C++ environment. Building this project copies the executables and creates two timestamp files to keep track of which version is currently in place.\
+******************************************************************************************************************************************\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720\qc
+
+\b \cf0 Compiler Notes\
+
+\b0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardeftab720
+\cf0 CreateStandaloneGripMMI is a makefile project that copies the Release executables to the GripMMI\\GripExecutables directory, allowing one to easily execute outside the Visual C++ environment. Building this project copies the executables and creates two timestamp files to keep track of which version is currently in place.\
 \
 \pard\pardeftab720
 \cf0 Note that when executing under the debugger it is common to encounter \'91First Chance Exceptions\'92. These are not bugs. The exception may very well be handled by the program (see http://www.helixoft.com/blog/how-to-disable-a-first-chance-exception-of-type-messages-in-vs-2005.html  and  http://blogs.msdn.com/b/davidklinems/archive/2005/07/12/438061.aspx). Specifically in the case of the GripMMI the message \'91
 \f1\fs18 A first chance exception of type 'System.UriFormatException' occurred in System.dll\'92 
 \f0\fs24 occurs systematically.  To avoid the recurring messages in the debugger output window, you can open the Output Window, right-click and uncheck Exception Messages from context menu. \
-}
+\
+
+\b Exception from HRESULT 0x8CE00001
+\b0 \
+\
+This error has occurred occasionally when working inside Visual Studio, notably when trying to open Forms definitions (.h files) in \'93Designer\'94 mode for graphical editing. Sometimes is is sufficient to exit Visual Studio and restart. The last time this occurred the symptoms were quite vicious. Although GripMMI compiled successfully and it was possible to edit Forms .h files in text mode, it was impossible to open the Forms files in the Designer editor. Restarting Visual Studio was not effective. Rolling back the code was not sufficient to resolve the problem. Uninstalling and reinstalling did not solve the problem. Based on the hints found on line and included here as \'93Exception from HRESULT 0x8CE00001.pdf\'94, it was necessary to create a new user account and to resume editing under that account. This suggests errors in the Windows Registry that I was unable to resolve for the original account. This appears to be a problem with Visual Studio. In any case, development was able to continue under the new user account without changing any GripMMI source code.}
