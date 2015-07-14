@@ -394,9 +394,11 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;
 
-	// Skip to the script information.
-	// ICD says that these items should be at an offset of 68 bytes.
-	// I found them at 76.
+	// Skip to the values of interest to us.
+	// DEX-ICD-00383-QS Section 5.2.4.58 says that these items should be at an offset of 68 bytes.
+	// To this must be added an addtional 8 bytes to take into account information about the number
+	// of housekeeping values and the location of the HK Value Check Status List within the packet,
+	// as indicated in EPM-OHB-LI-0039 Table 6-5.
 	ptr += 76;
 
 	health_packet->horizontalTargetFeedback = ExtractReversedShort( ptr );
@@ -427,7 +429,6 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 
 	health_packet->crc = ExtractReversedShort( ptr );
 	
-
 }
 
 // Insert data destined for a Grip housekeeping packet into an EPM packet.
@@ -439,9 +440,11 @@ void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHe
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;
 
-	// Skip to the script information.
-	// ICD says that these items should be at an offset of 68 bytes.
-	// I found them at 76.
+	// Skip to the values of interest to us.
+	// DEX-ICD-00383-QS Section 5.2.4.58 says that these items should be at an offset of 68 bytes.
+	// To this must be added an addtional 8 bytes to take into account information about the number
+	// of housekeeping values and the location of the HK Value Check Status List within the packet,
+	// as indicated in EPM-OHB-LI-0039 Table 6-5.
 	ptr += 76;
 
 	*((unsigned short *)ptr) = swapbytes_short( health_packet->horizontalTargetFeedback ); ptr += sizeof( unsigned short );
@@ -472,7 +475,6 @@ void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHe
 
 	*((unsigned short *)ptr) = swapbytes_short( health_packet->crc ); ptr += sizeof( unsigned short );
 	
-
 }
 
 // Packets are stored locally into one of 3 different cache files, one containing only GRIP housekeeping packets
@@ -481,7 +483,7 @@ void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHe
 //  on a root name (which may include the path to the files) and the packet type.
 // 
 // The newly created filename is returned in the buffer pointed to by the first paramter.
-// Excedding the specified 'max_characters' will generate an error message and cause the application to exit.
+// Exceeding the specified 'max_characters' will generate an error message and cause the application to exit.
 
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root ) {
 		
