@@ -253,8 +253,9 @@ void ViewPlotFilledEllipse (View view, double matrix[2][2], double scale, double
   ViewFillPolygon( view );
 
 }
-
+#if 0
 extern void invert_matrix_2d( const double matrix[2][2], double inverse[2][2] );
+
 
 void ViewPlotSquaredEllipse (View view, double matrix[2][2], 
 			     double scale, double center[2] ) {
@@ -352,7 +353,6 @@ void ViewPlotSpectrumEllipse (View view, double matrix[2][2], double scale, doub
 
 
 }
-
 void ViewPlotSpectrumCircle (View view, double x, double y, double radius, 
                              double (*fn)( void *ptr, double angle ), void *ptr ) {
 
@@ -365,6 +365,7 @@ void ViewPlotSpectrumCircle (View view, double x, double y, double radius,
   ViewPlotSpectrumEllipse( view, ellipse, radius, center, fn, ptr );
 
 }
+#endif 
 
 
 #if 0
