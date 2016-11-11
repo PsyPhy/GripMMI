@@ -75,6 +75,18 @@ REM If you want to use two client connected to the same CLWS server,
 REM  uncomment the next line to use the alternate Software Unit ID.
 REM set UNIT=-alt
 
+REM The CLWS also listens on EPMport 2345. This could be problematic if the MMI is using 
+REM  the same port for other operattions. The following allows one to change the default port.
+REM NB Changing the parameter here changes the setting for the GripMMI (more specifically, for 
+REM  GripGroundMonitorClient.exe, which is the process that actually receives packets from the CLWS)
+REM  and for the CLWSemulator, so that when performing local testing, they are always in sync.
+REM  But changing the port here has no effect on the actual EPM CLWS service. You must set the 
+REM  port here to the port used by the EPM or equivalent. The default EPM port number is 2345.
+REM  But *DO NOT* simply comment out the following line to get the default, because this will 
+REM  generate an anomalous call to GripGroundMonitorClient.exe. PORT must be set to the correct
+REM  port number.
+set PORT=2345
+
 REM 
 REM UTC versus GPS time of day.
 REM
@@ -120,10 +132,10 @@ echo %cd%
 
 REM Starts up the emulator according to configuration defined above.
 if not defined EMULATE goto LAUNCH
-REM CLWSemulator takes a mode flag, -constructed or -recorded, and
+REM CLWSemulator takes a mode flag, -constructed or -recorded, 
+REM  a flag to set the TCP port number, -port=NNNN and
 REM  an optional path to the pre-recorded EPM packets.
-start .\CLWSemulator.exe %EMULATE_MODE% %PACKET_SOURCE%
-
+start .\CLWSemulator.exe %EMULATE_MODE% -port=%PORT% %PACKET_SOURCE%
 :LAUNCH
 REM Launch the TCP/IP Client.
 REM This module receives packets from the CLWS server, selects out the 
@@ -132,7 +144,7 @@ REM First parameter is the path and root for the cache files.
 REM Second is the host name or IP address in dot format of the CLWS server.
 REM The process is launched with /REALTIME priority to help ensure that
 REM  packets from the EPM server are not missed.
-start /REALTIME .\GripGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST% %UNIT%
+start /REALTIME .\GripGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST%:%PORT% %UNIT%
 
 REM Launch a 'lite', text-only version of the MMI, just to see if 
 REM  the servers are running and the cache files are filling up.

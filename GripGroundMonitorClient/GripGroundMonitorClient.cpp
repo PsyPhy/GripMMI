@@ -148,8 +148,15 @@ int __cdecl main(int argc, const char **argv)
 		}
 		// The second argument that is not a -flag is the host name or IP address of the CLWS server host.
 		else if ( server_name == NULL ) {
-			server_name = argv[arg];
-			printf( "Using command-line server name: %s\n", server_name );
+			// Parse the server host name / IP address to see if there is a port number specified as well.
+			char host[256], *ptr;
+			strcpy( host, argv[arg] );
+			if ( ( ptr = strchr( host, ':' ) ) ) {
+				*ptr = 0;
+				EPMport = ++ptr;
+			}
+			server_name = host;
+			printf( "Using command-line server name: %s port: %s \n", server_name, EPMport );
 		}
 		// More than 2 arguments that are not -alt or -only is  an error condition.
 		else printf( "Too many command line arguments (%s)\n", argv[arg] );

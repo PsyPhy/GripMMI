@@ -451,6 +451,7 @@ int _tmain( int argc, char **argv )
 		// Playback previously recorded packets.
 		else if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
 		// Construct simulated packets.
+		else if ( !strncmp( argv[arg], "-port=", strlen( "-port=" ) ) ) EPMport = argv[arg] + strlen( "-port=" );
 		else packet_source_filename = argv[arg];
 	}	
 	if ( packet_source == RECORDED_PACKETS ) {
@@ -518,7 +519,7 @@ int _tmain( int argc, char **argv )
 	while ( 1 ) {
 
 		// Listen until we get a connection.
-		printf( "Listening for a connection ... " );
+		printf( "Listening for a connection on port %s ... ", EPMport  );
 		iResult = listen(ListenSocket, SOMAXCONN);
 		if (iResult == SOCKET_ERROR) {
 			printf("listen() failed with error: %d\n", WSAGetLastError());
@@ -526,7 +527,7 @@ int _tmain( int argc, char **argv )
 			WSACleanup();
 			return 5;
 		}
-		else if ( _debug ) printf( "listen() OK " );
+		else if ( _debug ) printf( "listen() OK ... " );
 
 		// Accept a client socket
 		ClientSocket = accept(ListenSocket, NULL, NULL);

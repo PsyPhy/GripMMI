@@ -86,8 +86,12 @@ NB The script files are read-only for the MMI program and so they could be insta
 	1) to enable or inhibit the execution of the CLWS emulator.\
 	2) to set the IP address or host name of the CLWS server (or emulator).\
 	2) set the full path to the cache file directory (CacheDir), \
-	3) set the location of the GRIP Scirpts (ScriptDir) and \
+	3) set the location of the GRIP Scripts (ScriptDir) and \
 	4) to select the alternate EPM Software Unit ID  if running two clients off of the same CLWS server.\
+\
+The batch file is heavily commented to indicate how to achieve each of these actions.\
+\
+NB The scripts installed on the MMI machine must be identical to the scripts installed on the GRIP hardware that is sending the data. If testing its performed with a ground model, be sure either to install the flight scripts onto the ground machine or install the ground script on the MMI machine.\
 \
 6) Execute RunGripMMI.bat. \
 \
