@@ -93,7 +93,7 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			switch (wParam) {
 				
 			case 27:			/* ESC key */
-				// PostMessage(hWnd, WM_QUIT, 0, 0);
+				PostMessage(hWnd, WM_QUIT, 0, 0);
 				break;
 				
 			case ' ':
