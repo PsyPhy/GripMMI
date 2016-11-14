@@ -3,11 +3,10 @@ echo This is a DOS batch file used to export the current executables to the stan
 REM Follow progress during a build.
 echo CD =      %cd%
 
-
-
 REM Destination is the 'GripExecutables' directory relative to this one.
 set DEST=..\..\GripExecutables
 echo DEST =   %DEST%
+dir %DEST%
 
 REM Source depends on the first command line argument.
 REM Should be 'Debug' or 'Release'
