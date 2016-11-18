@@ -140,6 +140,8 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 					// If it is not an RT packet, sleep just a little so that packets do not overlap.
 					if ( epmPacketHeaderInfo.TMIdentifier == GRIP_RT_ID ) Sleep( 500 );
 					else Sleep( 20 );
+
+					Sleep( 1000 );
 				}
 			}
 		// Loop until there are no more bytes to read.
@@ -406,6 +408,108 @@ int sendConstructedPackets ( SOCKET socket ) {
 	}
 }
 
+// Send out packets that could come from GRASP.
+
+int sendGraspPackets ( SOCKET socket ) {
+
+	EPMTelemetryPacket hkPacket, rtPacket;
+	EPMTelemetryHeaderInfo hkHeaderInfo, rtHeaderInfo;
+	GripHealthAndStatusInfo hkInfo;
+	GripRealtimeDataInfo rtInfo;
+	GripRealtimeDataInfo reverseInfo;
+
+	static int user = 4;
+	static int protocol = 100;
+	static int task = 131;
+	static int step = 0;
+	static int state = 20000;
+	static int snapshots = 17;
+
+	static int trials = 7;
+	static int status = 321;
+
+	static int packet_count = 0;
+    int iSendResult;
+
+	// Prepare the packets by copying constants into local structure.
+	memcpy( &hkHeaderInfo, &hkHeader, sizeof( hkHeaderInfo ) );
+	memcpy( &rtHeaderInfo, &rtHeader, sizeof( rtHeaderInfo ) );
+
+	while ( 1 ) {
+
+		// RT packets get sent out by GRIP twice per second.
+		// This is a trick to avoid drift in the rate.
+		// First, make sure that we sleep enough so as not to repeat.
+		Sleep( 50 );	
+		// Then compute the number of milliseconds to sleep to get back to a 500 ms boundary.
+		struct __timeb32 utctime;
+		_ftime32_s( &utctime );
+		Sleep( (1000 - utctime.millitm ) % 500 );
+
+		if ( rand() > RAND_MAX / 2 ) {
+			
+			snapshots++;
+			
+			if ( ( task % 100 ) == 1 ) {
+				step++;
+				if ( step > 5 ) {
+					step = 0;
+					task++;
+				}
+			}
+			else {
+				step = 0;
+				task++;
+			}
+			if ( task > protocol + 49 ) {
+				protocol += 100;
+				task = protocol + 1;
+			}
+		}
+			
+		state += 10000;
+		if ( state == 60000 ) state++;
+		if ( state > 60000 ) state = 20000;
+
+		status += 111;
+		if ( status > 899) status = 210;
+
+		printf( "User: %d  Protocol: %3d  Task: %3d  Step: %3d   Script: %8d  Tracker: %8d  Snapshots: %3d   ",
+			user, protocol, task, step, state, status, snapshots );
+		// Insert the current packet count and time into the packet.
+		hkHeaderInfo.TMCounter = packet_count++;
+		setPacketTime( &hkHeaderInfo );
+
+		// Set the state of the script interpreter.
+		// These constant values have been chosen more or less randomly.
+		// I don't make them vary, because they depend on the scripts that are loaded
+		//  and it would be too complicated to check whether they are valid values or not.
+		hkInfo.user = user;
+		hkInfo.protocol = protocol;
+		hkInfo.task = task;
+		hkInfo.step = step;
+
+		// Acquisition state.
+		hkInfo.scriptEngineStatusEnum = state;
+		hkInfo.motionTrackerStatusEnum = status;
+		hkInfo.crewCameraStatusEnum = snapshots;
+
+		
+
+		// Insert the housekeeping values into the actual packet and send it out on the socket.
+		InsertEPMTelemetryHeaderInfo( &hkPacket, &hkHeaderInfo );
+		InsertGripHealthAndStatusInfo( &hkPacket, &hkInfo );
+		iSendResult = send( socket, hkPacket.buffer, hkPacketLengthInBytes, 0 );
+		// If we get a socket error it is probably because the client has closed the connection.
+		// So we break out of the loop.
+		if (iSendResult == SOCKET_ERROR) {
+			printf( "HK send() failed with error: %3d\n", WSAGetLastError());
+			return ( packet_count );
+		}
+		printf( "  HK packet %3d Bytes sent: %3d\n", packet_count, iSendResult);
+	}
+}
+
 // This is the main routine of the executable.
 // It parses the command line, initializes a socket to create a CLWS-like server 
 // and calls the routine to output packets according to the command line options.
@@ -422,7 +526,7 @@ int _tmain( int argc, char **argv )
 	struct addrinfo hints;
 
 	// Two possible sources of packets.
-	enum { RECORDED_PACKETS, CONSTRUCTED_PACKETS } packet_source = RECORDED_PACKETS;
+	enum { RECORDED_PACKETS, CONSTRUCTED_PACKETS, CONSTRUCTED_GRASP } packet_source = RECORDED_PACKETS;
 	// Path to file containing pre-recorded packets. Not used in 'constructed' mode.
 	const char *packet_source_filename = DefaultPacketSourceFile;
 	// Keep track of how many packets get sent out.
@@ -447,6 +551,7 @@ int _tmain( int argc, char **argv )
 		// Provide a visual check to see that the command line arguments are passed correclty.
 		// This line helped to debug the character set problem in the project settings.
 		printf( "Command Line Argument #%d: %s\n", arg, argv[arg] );
+		if ( !strcmp( argv[arg], "-grasp" ) ) packet_source = CONSTRUCTED_GRASP;
 		if ( !strcmp( argv[arg], "-constructed" ) ) packet_source = CONSTRUCTED_PACKETS;
 		// Playback previously recorded packets.
 		else if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
@@ -580,6 +685,10 @@ int _tmain( int argc, char **argv )
 
 		case CONSTRUCTED_PACKETS:
 			packet_count = sendConstructedPackets( ClientSocket );
+			break;
+
+		case CONSTRUCTED_GRASP:
+			packet_count = sendGraspPackets( ClientSocket );
 			break;
 
 		}
