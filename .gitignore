@@ -10,3 +10,4 @@ Release
 *.suo
 
 GripGroundMonitor.suo
+*.ipch
