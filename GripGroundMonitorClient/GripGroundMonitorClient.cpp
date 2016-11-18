@@ -45,7 +45,7 @@ bool	verbose = true;
 
 // Can enable some debugging messages, if needed. 
 // Off by default.
-bool _debug = false;
+bool _debug = true;
 
 // Output the contents of a packet to a cache file in binary format, using low level write so that 
 //  another process can read the same file without colliding.
