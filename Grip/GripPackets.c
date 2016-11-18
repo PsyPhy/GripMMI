@@ -11,8 +11,20 @@
 // We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
 #define _CRT_SECURE_NO_WARNINGS
 
+// Max times to try to open the cache file before asking user to continue or not.
+#define MAX_OPEN_CACHE_RETRIES	(5)
+// Pause time in milliseconds between file open retries.
+#define RETRY_PAUSE	20		
+// Error code to return if the cache file cannot be opened.
+#define ERROR_CACHE_NOT_FOUND	-1000
+
+
 #include <stdlib.h>
 #include <stdio.h>
+#include <io.h>
+#include <fcntl.h>
+#include <share.h>
+#include <sys/stat.h>
 #include <Windows.h>
 
 #include "..\Useful\fMessageBox.h"
@@ -509,3 +521,83 @@ void CreateGripPacketCacheFilename( char *filename, int max_characters, const Gr
 
 }
 
+
+/// Read housekeeping cache, taking just the most recent value.
+/// The path to the cache file is presumed to be set in global variable 'packetBufferPathRoot'.
+/// The contents of the latest HK packet are returned in the structure pointed to by parameter 'hk'.
+int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root ) {
+
+	static int count = 0;
+
+	int  fid;
+	int packets_read = 0;
+	int bytes_read;
+	int return_code;
+	static unsigned short previousTMCounter = 0;
+	unsigned long bit = 0;
+	int retry_count;
+
+	EPMTelemetryPacket packet;
+	EPMTelemetryHeaderInfo epmHeader;
+
+	char filename[1024];
+
+	// Create the path to the housekeeping packet file, based on the root and the packet type.
+	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_HK_BULK_PACKET, filename_root );
+
+	// Attempt to open the packet cache to read the accumulated packets.
+	// If it is not immediately available, try for a few seconds.
+	for ( retry_count = 0; retry_count  < MAX_OPEN_CACHE_RETRIES; retry_count ++ ) {
+		// Try to open the packet cache file.
+		fid = _open( filename, _O_RDONLY | _O_BINARY, _S_IWRITE | _S_IREAD  );
+		// If open succeeds, it will return zero. So if zero return, break from retry loop.
+		if ( fid >= 0 ) break;
+		// Wait a second before trying again.
+		Sleep( RETRY_PAUSE );
+	}
+	// If fid is negative, file is not open. This should not happen, because GripMMIStartup should verify 
+	// the availability of files containing packets before the GripMMIDesktop form is executed.
+	// So if we do fail to open the file, signal the error and exit.
+	if ( fid < 0 ) {
+		fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+		exit( -1 );
+	}
+
+	// Read in all of the data packets in the file.
+	packets_read = 0;
+	while ( 1 ) {
+		bytes_read = _read( fid, &packet, hkPacketLengthInBytes );
+		// Return less than zero means read error.
+		if ( bytes_read < 0 ) {
+			fMessageBox( MB_OK, "GripMMI", "Error reading from %s.", filename );
+			exit( -1 );
+		}
+		// Return less than expected number of bytes means we have read all packets.
+		if ( bytes_read < hkPacketLengthInBytes ) break;
+
+		packets_read++;
+		// Check that it is a valid GRIP packet. It would be strange if it was not.
+		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
+		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_HK_ID ) {
+			fMessageBox( MB_OK, "GripMMI", "Unrecognized packet from %s.", filename );
+			exit( -1 );
+		}
+		// Extract the interesting info in proper byte order.
+		ExtractGripHealthAndStatusInfo( hk, &packet );
+	}
+	// Finished reading. Close the file and check for errors.
+	return_code = _close( fid );
+	if ( return_code ) {
+		fMessageBox( MB_OK, "GripMMI", "Error closing %s after binary read.\nError code: %s", filename, return_code );
+		exit( return_code );
+	}
+
+	// The structure pointed to by 'hk' contains the data from the last valid packet that was read from the cache file.
+	// Check if there were new packets since the last time we read the cache.
+	// Return TRUE if yes, FALSE if no.
+	if ( previousTMCounter != epmHeader.TMCounter ) {
+		previousTMCounter = epmHeader.TMCounter;
+		return( TRUE );
+	}
+	else return ( FALSE );
+}
