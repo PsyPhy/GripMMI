@@ -100,6 +100,12 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 			fMessageBox( MB_OK, "CLWSemulator", "Error reading from %s.", PacketSourceFile );
 			exit( -1 );
 		}
+		// Extract the EPM header info into a usable form from the packet that is stored in ESA-required byte order.
+		// Here we use it to initialize the record of the time of the previous packet, which is used
+		// later to compute the time between recorded packets and to sleep accordingly.
+		ExtractEPMTelemetryHeaderInfo( &epmPacketHeaderInfo, &recordedPacket );
+		unsigned int previous_coarse_time = epmPacketHeaderInfo.coarseTime;
+		unsigned int previous_fine_time = epmPacketHeaderInfo.fineTime;
 		
 		// Loop to read all of the packets in the file.
 		do {
@@ -116,7 +122,13 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 				if ( epmPacketHeaderInfo.subsystemID != GRIP_SUBSYSTEM_ID ) printf( "." );
 				// If it is a GRIP packet, modify the pre-recorded packet too make it look like it was generated just now.
 				else {
-					printf( "G" );
+					// Compute the number of milliseconds between this packet and the previous one.
+					// This will be used further down to sleep the appropriate time to space out the packets.
+					int delta_milliseconds = ((int) epmPacketHeaderInfo.fineTime - (int) previous_fine_time ) / 10;
+					int delta_time = (epmPacketHeaderInfo.coarseTime - previous_coarse_time) * 1000 + delta_milliseconds;
+					previous_coarse_time = epmPacketHeaderInfo.coarseTime;
+					previous_fine_time = epmPacketHeaderInfo.fineTime;
+					printf( "G", delta_time );
 					// Set the timestamp of the packet to the current time.
 					setPacketTime( &epmPacketHeaderInfo );
 					// Set the packet counter based on a local count.
@@ -131,17 +143,9 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 						printf( "Recorded packet send() failed with error: %3d\n", WSAGetLastError());
 						return( packetCount );
 					}
-					// What we SHOULD do here is sleep based on the difference in time between the previous
-					//  recorded packet and this one.
-					// What we DO do here instead is simply sleep 500 ms after sending a realtime data packet, so that
-					//  the RT packets are sent a approximately 2 Hz. This is not exact, but the real GRIP
-					//  data packets do not appear to respect a strict 2 Hz rhythm either.
-					// If the fast flag is set, sleep only 100 ms to output packets more quickly for testing.
-					// If it is not an RT packet, sleep just a little so that packets do not overlap.
-					if ( epmPacketHeaderInfo.TMIdentifier == GRIP_RT_ID ) Sleep( 500 );
-					else Sleep( 20 );
+					// Sleep based on the difference in time between the previousrecorded packet and this one.
+					Sleep( delta_time );
 
-					Sleep( 1000 );
 				}
 			}
 		// Loop until there are no more bytes to read.
