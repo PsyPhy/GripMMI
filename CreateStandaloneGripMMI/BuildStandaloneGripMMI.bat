@@ -4,6 +4,7 @@ REM Follow progress during a build.
 echo CD =      %cd%
 
 REM Destination is the 'GripExecutables' directory relative to this one.
+REM This is where the .exe and .dll files go.
 set DEST=..\..\GripExecutables
 echo DEST =   %DEST%
 dir %DEST%
@@ -51,11 +52,11 @@ REM on a client machine, not all of the test executables.
 echo copy ..\%CONFIG%\CLWSemulator.exe %DEST%
 copy ..\%CONFIG%\CLWSemulator.exe %DEST%
 echo copy ..\%CONFIG%\GripGroundMonitorClient.exe %DEST%
-copy ..\%CONFIG%\GripGroundMonitorClient.exe %DEST%
+copy ..\%CONFIG%\DexGroundMonitorClient.exe %DEST%
 echo copy ..\%CONFIG%\GripMMI.exe %DEST%
 copy ..\%CONFIG%\GripMMI.exe %DEST%
 
-REM Copy the batch file used to launch the executables.
+REM Copy the batch files used to launch the executables.
 REM We keep the source copy of the file here so as to track changes.
 copy RunGripMMI.bat %DEST%
 copy RunGraspMMI.bat %DEST%
