@@ -419,11 +419,9 @@ int sendConstructedPackets ( SOCKET socket ) {
 
 int sendGraspPackets ( SOCKET socket ) {
 
-	EPMTelemetryPacket hkPacket, rtPacket;
+	EPMTelemetryPacket hkPacket;
 	EPMTelemetryHeaderInfo hkHeaderInfo, rtHeaderInfo;
 	GripHealthAndStatusInfo hkInfo;
-	GripRealtimeDataInfo rtInfo;
-	GripRealtimeDataInfo reverseInfo;
 
 	static int user = 4;
 	static int protocol = 100;
