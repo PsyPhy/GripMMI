@@ -126,10 +126,10 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 					// This will be used further down to sleep the appropriate time to space out the packets.
 					int delta_milliseconds = ((int) epmPacketHeaderInfo.fineTime - (int) previous_fine_time ) / 10;
 					int delta_time = (epmPacketHeaderInfo.coarseTime - previous_coarse_time) * 1000 + delta_milliseconds;
+					// Store the current time as a reference for the next cycle.
 					previous_coarse_time = epmPacketHeaderInfo.coarseTime;
 					previous_fine_time = epmPacketHeaderInfo.fineTime;
-					printf( "G", delta_time );
-					// Set the timestamp of the packet to the current time.
+					// Set the timestamp of the packet to be output to the current time.
 					setPacketTime( &epmPacketHeaderInfo );
 					// Set the packet counter based on a local count.
 					epmPacketHeaderInfo.TMCounter = packetCount++;
@@ -144,6 +144,9 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 						return( packetCount );
 					}
 					// Sleep based on the difference in time between the previousrecorded packet and this one.
+					// If there has been a long real delay, limit it to 30 seconds.
+					delta_time %= 30000;
+					printf( "G%d", delta_time );
 					Sleep( delta_time );
 
 				}
