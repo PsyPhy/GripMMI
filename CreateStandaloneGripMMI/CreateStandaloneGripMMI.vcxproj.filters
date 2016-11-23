@@ -5,6 +5,5 @@
     <None Include="BuildStandaloneGripMMI.bat" />
     <None Include="CleanStandaloneGripMMI.bat" />
     <None Include="RunGripMMI.bat" />
-    <None Include="RunGraspMMI.bat" />
   </ItemGroup>
 </Project>
