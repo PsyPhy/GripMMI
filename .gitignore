@@ -12,3 +12,5 @@ Grasp
 
 GripGroundMonitor.suo
 *.ipch
+
+DexGroundMonitorClient/DexGroundMonitorClient.vcxproj.user
