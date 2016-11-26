@@ -5,6 +5,7 @@
 
 #include "..\Useful\Useful.h"
 
+
 // The port number used to access EPM servers.
 // EPM-OHB-SP-0005 says:
 //  The Port number for all EPM LAN connections is 2345.
@@ -233,6 +234,7 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHealthAndStatusInfo *health_packet );
 
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root );
+int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root );
 
 #ifdef __cplusplus
 }

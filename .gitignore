@@ -4,9 +4,11 @@ Debug
 debug
 release
 Release
+Grasp
 
 
 
 *.suo
 
 GripGroundMonitor.suo
+*.ipch

@@ -144,7 +144,7 @@ REM First parameter is the path and root for the cache files.
 REM Second is the host name or IP address in dot format of the CLWS server.
 REM The process is launched with /REALTIME priority to help ensure that
 REM  packets from the EPM server are not missed.
-start /REALTIME .\GripGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST%:%PORT% %UNIT%
+start /REALTIME .\DexGroundMonitorClient.exe %CacheDir%%CacheRoot% %HOST%:%PORT% %UNIT%
 
 REM Launch a 'lite', text-only version of the MMI, just to see if 
 REM  the servers are running and the cache files are filling up.
