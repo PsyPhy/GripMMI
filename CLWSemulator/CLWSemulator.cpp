@@ -71,7 +71,7 @@ void setPacketTime( EPMTelemetryHeaderInfo *header ) {
 // This is the routine that sends out packets that were pre-recorded.
 // Takes as its input the socket for outputing packets, the path to the file
 // containing the recorded packets.
-int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
+int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile, int skip_packets = 0 ) {
 
 	// Count the total numbe of packets sent on the socket.
 	static int packetCount = 0;
@@ -100,6 +100,13 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 			fMessageBox( MB_OK, "CLWSemulator", "Error reading from %s.", PacketSourceFile );
 			exit( -1 );
 		}
+		// Skip over a number of packets.
+		while ( skip_packets > 0 ) {
+			bytes_read = _read( fid, recordedPacket.buffer, sizeof( recordedPacket.buffer ) );
+			if ( bytes_read < 0 ) break;
+			skip_packets--;
+		}
+
 		// Extract the EPM header info into a usable form from the packet that is stored in ESA-required byte order.
 		// Here we use it to initialize the record of the time of the previous packet, which is used
 		// later to compute the time between recorded packets and to sleep accordingly.
@@ -109,6 +116,7 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 		
 		// Loop to read all of the packets in the file.
 		do {
+
 			// Extract the EPM header info into a usable form from the packet that is stored in ESA-required byte order.
 			ExtractEPMTelemetryHeaderInfo( &epmPacketHeaderInfo, &recordedPacket );
 			// Check what type of packet it is.
@@ -151,6 +159,7 @@ int sendRecordedPackets ( SOCKET socket, const char *PacketSourceFile ) {
 
 				}
 			}
+			
 		// Loop until there are no more bytes to read.
 		} while ( bytes_read = _read( fid, recordedPacket.buffer, sizeof( recordedPacket.buffer ) ) );
 
@@ -536,6 +545,8 @@ int _tmain( int argc, char **argv )
 	const char *packet_source_filename = DefaultPacketSourceFile;
 	// Keep track of how many packets get sent out.
 	int packet_count;
+	// Skip over some initial recorded packets.
+	int skip_packets = 0;
 
 	// A place to store raw command packets received from the client.
 	EPMTelemetryPacket inputPacket;
@@ -562,6 +573,7 @@ int _tmain( int argc, char **argv )
 		else if ( !strcmp( argv[arg], "-recorded" ) ) packet_source = RECORDED_PACKETS;
 		// Construct simulated packets.
 		else if ( !strncmp( argv[arg], "-port=", strlen( "-port=" ) ) ) EPMport = argv[arg] + strlen( "-port=" );
+		else if ( !strncmp( argv[arg], "-skip=", strlen( "-skip=" ) ) ) sscanf( argv[arg], "-skip=%d", &skip_packets );
 		else packet_source_filename = argv[arg];
 	}	
 	if ( packet_source == RECORDED_PACKETS ) {
@@ -685,7 +697,7 @@ int _tmain( int argc, char **argv )
 		switch ( packet_source ) {
 
 		case RECORDED_PACKETS:
-			packet_count = sendRecordedPackets( ClientSocket, packet_source_filename );
+			packet_count = sendRecordedPackets( ClientSocket, packet_source_filename, skip_packets );
 			break;
 
 		case CONSTRUCTED_PACKETS:
