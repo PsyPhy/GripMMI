@@ -234,7 +234,7 @@ void ExtractGripHealthAndStatusInfo( GripHealthAndStatusInfo *health_packet, con
 void InsertGripHealthAndStatusInfo( EPMTelemetryPacket *epm_packet, const GripHealthAndStatusInfo *health_packet );
 
 void CreateGripPacketCacheFilename( char *filename, int max_characters, const GripPacketType type, const char *root );
-int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root );
+int GetLastPacketHK( EPMTelemetryHeaderInfo *epmHeader, GripHealthAndStatusInfo *hk, char *filename_root );
 
 #ifdef __cplusplus
 }

@@ -525,7 +525,7 @@ void CreateGripPacketCacheFilename( char *filename, int max_characters, const Gr
 /// Read housekeeping cache, taking just the most recent value.
 /// The path to the cache file is presumed to be set in global variable 'packetBufferPathRoot'.
 /// The contents of the latest HK packet are returned in the structure pointed to by parameter 'hk'.
-int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root ) {
+int GetLastPacketHK( EPMTelemetryHeaderInfo *epmHeader, GripHealthAndStatusInfo *hk, char *filename_root ) {
 
 	static int count = 0;
 
@@ -538,8 +538,6 @@ int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root ) {
 	int retry_count;
 
 	EPMTelemetryPacket packet;
-	EPMTelemetryHeaderInfo epmHeader;
-
 	char filename[1024];
 
 	// Create the path to the housekeeping packet file, based on the root and the packet type.
@@ -577,8 +575,8 @@ int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root ) {
 
 		packets_read++;
 		// Check that it is a valid GRIP packet. It would be strange if it was not.
-		ExtractEPMTelemetryHeaderInfo( &epmHeader, &packet );
-		if ( epmHeader.epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader.TMIdentifier != GRIP_HK_ID ) {
+		ExtractEPMTelemetryHeaderInfo( epmHeader, &packet );
+		if ( epmHeader->epmSyncMarker != EPM_TELEMETRY_SYNC_VALUE || epmHeader->TMIdentifier != GRIP_HK_ID ) {
 			fMessageBox( MB_OK, "GripMMI", "Unrecognized packet from %s.", filename );
 			exit( -1 );
 		}
@@ -595,8 +593,8 @@ int GetLastPacketHK( GripHealthAndStatusInfo *hk, char *filename_root ) {
 	// The structure pointed to by 'hk' contains the data from the last valid packet that was read from the cache file.
 	// Check if there were new packets since the last time we read the cache.
 	// Return TRUE if yes, FALSE if no.
-	if ( previousTMCounter != epmHeader.TMCounter ) {
-		previousTMCounter = epmHeader.TMCounter;
+	if ( previousTMCounter != epmHeader->TMCounter ) {
+		previousTMCounter = epmHeader->TMCounter;
 		return( TRUE );
 	}
 	else return ( FALSE );
