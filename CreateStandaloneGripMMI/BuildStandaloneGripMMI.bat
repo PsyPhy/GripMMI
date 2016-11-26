@@ -60,6 +60,8 @@ REM Copy the batch files used to launch the executables.
 REM We keep the source copy of the file here so as to track changes.
 copy RunGripMMI.bat %DEST%
 copy RunGraspMMI.bat %DEST%
+copy *.dll %DEST%
+copy *.gpk %DEST%
 
 REM Show the latest build info.
 set BUILDINFO=..\LatestBuildInfo.txt
