@@ -46,9 +46,6 @@ char packetBufferPathRoot[MAX_PATHLENGTH] = "";
 #define ERROR_CACHE_NOT_FOUND	-1000
 // Grip force threshold for a valid CoP.
 #define COP_MIN_GRIP	0.5
-// If the time between two realtime data packets exceeds the following threshold
-//  then we insert a blank record into the data buffer to show the break in the strip charts.
-#define PACKET_STREAM_BREAK_THRESHOLD	1.0
 
 // A hint about restarting that may resolve certain intermittant (and hopefully, rare) error conditions.
 const char *restart_hint = 

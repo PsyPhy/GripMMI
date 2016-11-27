@@ -11,14 +11,6 @@
 // We use the 'unsafe' versions to maintain source-code compatibility with Visual C++ 6
 #define _CRT_SECURE_NO_WARNINGS
 
-// Max times to try to open the cache file before asking user to continue or not.
-#define MAX_OPEN_CACHE_RETRIES	(5)
-// Pause time in milliseconds between file open retries.
-#define RETRY_PAUSE	20		
-// Error code to return if the cache file cannot be opened.
-#define ERROR_CACHE_NOT_FOUND	-1000
-
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
@@ -283,7 +275,7 @@ void ExtractGripRealtimeDataInfo( GripRealtimeDataInfo *realtime_packet, const E
 	// Point to the actual data in the packet.
 	ptr = epm_packet->sections.rawData;
 	// Get the acquisition ID and packet count for that acquisition.
-	realtime_packet->acquisitionID = ExtractReversedLong( ptr );
+	realtime_packet->acquisitionID = (unsigned long) ExtractReversedLong( ptr );
 	realtime_packet->rtPacketCount = ExtractReversedLong( ptr );
 	for ( slice = 0; slice < RT_SLICES_PER_PACKET; slice++ ) {
 		// Get the manipulandum pose data. 
@@ -538,7 +530,7 @@ int GetLastPacketHK( EPMTelemetryHeaderInfo *epmHeader, GripHealthAndStatusInfo 
 	int retry_count;
 
 	EPMTelemetryPacket packet;
-	char filename[1024];
+	char filename[MAX_PATHLENGTH];
 
 	// Create the path to the housekeeping packet file, based on the root and the packet type.
 	CreateGripPacketCacheFilename( filename, sizeof( filename ), GRIP_HK_BULK_PACKET, filename_root );
@@ -599,3 +591,4 @@ int GetLastPacketHK( EPMTelemetryHeaderInfo *epmHeader, GripHealthAndStatusInfo 
 	}
 	else return ( FALSE );
 }
+

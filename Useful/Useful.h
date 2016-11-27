@@ -2,6 +2,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#define MAX_PATHLENGTH 1024
+
 // Useful constants for accessing components of 
 //  vectors and quaternions.
 #define X	0

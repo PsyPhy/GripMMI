@@ -42,13 +42,6 @@ const char *packetCacheFilenameRoot = ".\\GripPackets";
 char rtPacketCacheFilePath[1024];
 char hkPacketCacheFilePath[1024];
 
-// Max times to try to open the cache file before asking user to continue or not.
-#define MAX_OPEN_CACHE_RETRIES	5
-// Pause time in milliseconds between file open retries.
-#define RETRY_PAUSE	2000		
-// Error code to return if the cache file cannot be opened.
-#define ERROR_CACHE_NOT_FOUND	-1000
-
 // Character strings to indicate the state of the tone generator output.
 // Lowest bit on is a mute switch, so odd elements are empty while each
 // even element has a bar who's position between the brackets represents

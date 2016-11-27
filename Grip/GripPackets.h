@@ -5,7 +5,6 @@
 
 #include "..\Useful\Useful.h"
 
-
 // The port number used to access EPM servers.
 // EPM-OHB-SP-0005 says:
 //  The Port number for all EPM LAN connections is 2345.
@@ -26,6 +25,19 @@
 #define GRIP_MMI_SOFTWARE_UNIT_ID		43
 #define GRIP_MMI_SOFTWARE_ALT_UNIT_ID	42
 #define GRIP_SUBSYSTEM_ID				0x21
+
+// The MMI uses shared binary files to cache the telemetry packets.
+// If one process is reading or writing, another may be denied access.
+// Typically, we will retry some number of times before generating an error.
+#define MAX_OPEN_CACHE_RETRIES	(5)
+// Pause time in milliseconds between file open retries.
+#define RETRY_PAUSE	20		
+// Error code to return if the cache file cannot be opened.
+#define ERROR_CACHE_NOT_FOUND	-1000
+// If the time between two realtime data packets exceeds the following threshold
+//  then we insert a blank record into the data buffer to show the break in the strip charts.
+#define PACKET_STREAM_BREAK_THRESHOLD	1.0
+#define PACKET_STREAM_BREAK_INSERT_SAMPLES	10
 
 // These constants help make it clear in initialization lists
 //  when we are just filling a spare slot in a structure or
