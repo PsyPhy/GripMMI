@@ -187,10 +187,10 @@ typedef union {
 	char buffer[EPM_BUFFER_LENGTH];
 	// Allows easy acces to the header elements by name.
 	struct {
-		char rawTransferFrameHeader[EPM_TRANSFER_FRAME_HEADER_LENGTH];
-		char rawTelemetryHeader[EPM_TELEMETRY_HEADER_LENGTH];
-		char rawData[EPM_BUFFER_LENGTH - (EPM_TRANSFER_FRAME_HEADER_LENGTH + EPM_TELEMETRY_HEADER_LENGTH) - 2];
-		char rawCRC[2];
+		unsigned char rawTransferFrameHeader[EPM_TRANSFER_FRAME_HEADER_LENGTH];
+		unsigned char rawTelemetryHeader[EPM_TELEMETRY_HEADER_LENGTH];
+		unsigned char rawData[EPM_BUFFER_LENGTH - (EPM_TRANSFER_FRAME_HEADER_LENGTH + EPM_TELEMETRY_HEADER_LENGTH) - 2];
+		unsigned char rawCRC[2];
 	} sections;
 } EPMTelemetryPacket; 
 
